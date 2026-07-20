@@ -74,9 +74,21 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ "Blog" tab added to top nav; related posts strip at bottom of each article
 - ✅ Fixed dead AMFI Risk Factors link → now points to current URL `https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds` (verified 200)
 
+## Implemented (2026-07-20 — AI Chatbot + Admin Dashboard + Content polish)
+- ✅ Floating AI Chatbot (`ChatWidget.jsx`) on every page — Gemini 3 Flash via `EMERGENT_LLM_KEY` (emergentintegrations `LlmChat`)
+- ✅ `POST /api/chat` (session-scoped, persists to `chat_history` collection) + `GET /api/chat/{session_id}` for history replay
+- ✅ Domain-specific system prompt: mentions ARN-254254 / MahaRERA / IRDAI / Sandeep Dubal, pivots to lead capture after 3 turns
+- ✅ Admin Dashboard at `/admin` — `POST /api/admin/login` returns token, `GET /api/admin/leads` + `PATCH /api/admin/leads/{id}` guarded by `X-Admin-Token` header
+- ✅ Dashboard UI: search, service filter, sortable columns, CSV export, "Mark contacted" toggle (persisted), sign-out
+- ✅ Admin password `Hetal@110818` stored in backend `.env` as `ADMIN_PASSWORD`; documented in `/app/memory/test_credentials.md`
+- ✅ About page hero copy corrected — removed fictional "25 years / Bandra single-desk" narrative; new copy reflects real Pune-based Pvt Ltd with SEBI/AMFI/IRDAI/RERA registrations
+- ✅ Contact page map iframe updated from Bandra Mumbai → Wadgaon Sheri, Pune 411014 (real HQ address per hetalfinserv.com)
+- ✅ Backend test suite `/app/backend/tests/backend_test.py` — 17/17 pytest green (Leads/Contacts/Callbacks/Admin/Chat)
+
 ## Prioritized backlog (P1/P2)
-- P1 AI Chatbot (Emergent LLM + widget)
-- P1 Admin dashboard for leads
 - P2 Marathi language toggle (i18n)
+- P2 Weekly-digest email to lead list when a new blog post ships
 - P2 Backend `/api/blog` collection so posts are DB-managed
 - P2 Shareable calculator URL params
+- P2 (Hardening) Replace raw-password-as-token admin auth with random session token + TTL; move away from localStorage
+- P2 (Chat) Use LlmChat native session memory instead of replaying history send_message loop; add axios timeout + WhatsApp fallback
