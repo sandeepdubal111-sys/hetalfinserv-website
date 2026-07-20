@@ -10,39 +10,46 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Brand palette */
-  --hf-ivory: #f4efe6;
-  --hf-ivory-2: #ebe3d3;
-  --hf-bone: #f8f5ee;
-  --hf-obsidian: #0e0f0c;
-  --hf-ink: #1a1c18;
-  --hf-emerald: #0f3d2e;
-  --hf-emerald-deep: #082a20;
-  --hf-gold: #b8935a;
-  --hf-gold-2: #9d7a44;
-  --hf-terracotta: #c5583c;
-  --hf-mute: #6b6a63;
+  /* World-class editorial palette — warm ivory + rich jewel-tones + coral CTA */
+  --hf-ivory: #f5efe0;
+  --hf-ivory-2: #ebe3d0;
+  --hf-bone: #faf6ec;
+  --hf-obsidian: #0d0f0b;
+  --hf-ink: #1a1c17;
+  --hf-emerald: #0d5c42;
+  --hf-emerald-deep: #0a4633;
+  --hf-emerald-mid: #0f6d4e;
+  --hf-gold: #d9a54b;
+  --hf-gold-2: #b7873a;
+  --hf-gold-soft: #e6be6f;
+  --hf-coral: #d8663f;
+  --hf-coral-2: #b95530;
+  --hf-mute: #6a6960;
+  /* High-contrast text tokens for dark surfaces */
+  --hf-on-dark-primary: #fdf9ee;
+  --hf-on-dark-secondary: #ede4c9;
+  --hf-on-dark-muted: rgba(253, 249, 238, 0.7);
 
   /* shadcn tokens (light) */
-  --background: 44 33% 93%;
-  --foreground: 60 6% 6%;
-  --card: 44 33% 96%;
-  --card-foreground: 60 6% 6%;
-  --popover: 44 33% 96%;
-  --popover-foreground: 60 6% 6%;
-  --primary: 60 6% 6%;
-  --primary-foreground: 44 33% 96%;
+  --background: 42 45% 92%;
+  --foreground: 60 8% 6%;
+  --card: 42 45% 96%;
+  --card-foreground: 60 8% 6%;
+  --popover: 42 45% 96%;
+  --popover-foreground: 60 8% 6%;
+  --primary: 60 8% 6%;
+  --primary-foreground: 42 45% 96%;
   --secondary: 40 26% 86%;
-  --secondary-foreground: 60 6% 6%;
+  --secondary-foreground: 60 8% 6%;
   --muted: 40 20% 88%;
   --muted-foreground: 45 5% 41%;
-  --accent: 35 40% 54%;
-  --accent-foreground: 60 6% 6%;
+  --accent: 39 66% 57%;
+  --accent-foreground: 60 8% 6%;
   --destructive: 12 60% 51%;
-  --destructive-foreground: 44 33% 96%;
+  --destructive-foreground: 42 45% 96%;
   --border: 40 15% 78%;
   --input: 40 15% 78%;
-  --ring: 35 40% 54%;
+  --ring: 39 66% 57%;
   --radius: 0.25rem;
 }
 
@@ -84,7 +91,7 @@ body {
 }
 
 .text-ivory {
-  color: var(--hf-ivory);
+  color: var(--hf-on-dark-primary);
 }
 .text-obsidian {
   color: var(--hf-obsidian);
@@ -125,7 +132,7 @@ body {
   border: 1px solid rgba(14, 15, 12, 0.12);
 }
 .border-hair-light {
-  border: 1px solid rgba(244, 239, 230, 0.14);
+  border: 1px solid rgba(253, 249, 238, 0.22);
 }
 
 /* Grain overlay */
@@ -171,7 +178,7 @@ body {
   gap: 0.6rem;
   padding: 0.95rem 1.6rem;
   background: var(--hf-obsidian);
-  color: var(--hf-ivory);
+  color: var(--hf-on-dark-primary);
   font-family: "JetBrains Mono", monospace;
   font-size: 0.72rem;
   letter-spacing: 0.22em;
@@ -206,7 +213,7 @@ body {
 }
 .hf-btn-outline:hover {
   background: var(--hf-obsidian);
-  color: var(--hf-ivory);
+  color: var(--hf-on-dark-primary);
   border-color: var(--hf-obsidian);
 }
 
@@ -222,22 +229,56 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   border: 1px solid var(--hf-gold);
-  transition: background-color 260ms ease, transform 260ms ease;
+  font-weight: 600;
+  transition: background-color 260ms ease, transform 260ms ease, box-shadow 260ms ease;
   cursor: pointer;
+  box-shadow: 0 6px 20px -8px rgba(217, 165, 75, 0.55);
 }
 .hf-btn-gold:hover {
-  background: var(--hf-gold-2);
-  border-color: var(--hf-gold-2);
+  background: var(--hf-gold-soft);
+  border-color: var(--hf-gold-soft);
+  box-shadow: 0 10px 26px -8px rgba(217, 165, 75, 0.7);
+}
+
+/* Coral CTA — high-contrast pill for Book Consultation */
+.hf-btn-coral {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--hf-coral);
+  color: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border: 1px solid var(--hf-coral);
+  border-radius: 999px;
+  transition: background-color 260ms ease, transform 260ms ease, box-shadow 260ms ease;
+  cursor: pointer;
+  box-shadow: 0 8px 22px -8px rgba(216, 102, 63, 0.55);
+  white-space: nowrap;
+}
+.hf-btn-coral:hover {
+  background: var(--hf-coral-2);
+  border-color: var(--hf-coral-2);
+  box-shadow: 0 12px 30px -8px rgba(216, 102, 63, 0.75);
+  transform: translateY(-1px);
+}
+.hf-btn-coral:active {
+  transform: translateY(0);
 }
 
 /* Dark section button variants */
 .on-dark .hf-btn-outline {
-  color: var(--hf-ivory);
-  border-color: rgba(244, 239, 230, 0.35);
+  color: var(--hf-on-dark-primary);
+  border-color: rgba(253, 249, 238, 0.55);
 }
 .on-dark .hf-btn-outline:hover {
-  background: var(--hf-ivory);
+  background: var(--hf-on-dark-primary);
   color: var(--hf-obsidian);
+  border-color: var(--hf-on-dark-primary);
 }
 
 /* Inputs */
@@ -260,15 +301,21 @@ body {
   border-color: var(--hf-gold);
 }
 .on-dark .hf-input {
-  color: var(--hf-ivory);
-  border-bottom-color: rgba(244, 239, 230, 0.28);
+  color: var(--hf-on-dark-primary);
+  border-bottom-color: rgba(253, 249, 238, 0.4);
 }
 .on-dark .hf-input::placeholder {
-  color: rgba(244, 239, 230, 0.35);
+  color: rgba(253, 249, 238, 0.5);
 }
 .on-dark .hf-input:focus {
   border-bottom-color: var(--hf-gold);
 }
+.on-dark option { color: var(--hf-obsidian); background: var(--hf-on-dark-primary); }
+
+/* High-contrast text helpers for dark backgrounds */
+.text-on-dark { color: var(--hf-on-dark-primary); }
+.text-on-dark-2 { color: var(--hf-on-dark-secondary); }
+.text-on-dark-mute { color: var(--hf-on-dark-muted); }
 
 textarea.hf-input {
   min-height: 120px;

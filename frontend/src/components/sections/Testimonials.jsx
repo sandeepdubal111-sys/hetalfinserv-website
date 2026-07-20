@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TESTIMONIALS } from "@/lib/data";
-import { ArrowLeft, ArrowRight, Quote } from "lucide-react";
+import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 
 export default function Testimonials() {
   const [i, setI] = useState(0);
@@ -9,7 +9,7 @@ export default function Testimonials() {
   const t = TESTIMONIALS[i];
 
   useEffect(() => {
-    const id = setInterval(() => setI((v) => (v + 1) % count), 7000);
+    const id = setInterval(() => setI((v) => (v + 1) % count), 8000);
     return () => clearInterval(id);
   }, [count]);
 
@@ -21,26 +21,52 @@ export default function Testimonials() {
       <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14">
         <div className="grid grid-cols-12 gap-6 md:gap-10 mb-16">
           <div className="col-span-12 md:col-span-4">
-            <p className="font-mono-label text-mute">— In their words</p>
+            <p className="font-mono-label text-mute">— Client testimonials</p>
+            <div className="mt-6 flex items-baseline gap-3">
+              <span
+                className="font-display text-obsidian"
+                style={{ fontSize: "clamp(2.4rem, 4.6vw, 4.4rem)", lineHeight: 1 }}
+              >
+                4.9
+              </span>
+              <div className="flex items-center gap-0.5" aria-label="4.9 out of 5 stars">
+                {Array.from({ length: 5 }).map((_, k) => (
+                  <Star
+                    key={k}
+                    size={16}
+                    fill="var(--hf-gold)"
+                    stroke="var(--hf-gold)"
+                    strokeWidth={0.5}
+                  />
+                ))}
+              </div>
+            </div>
+            <p className="font-mono-label text-mute mt-3">Based on 200+ verified reviews</p>
           </div>
           <div className="col-span-12 md:col-span-8">
             <h2
               className="font-display text-obsidian"
               style={{ fontSize: "clamp(2.2rem, 4.5vw, 4.5rem)", lineHeight: 0.98 }}
             >
-              The best endorsement<br />
-              is one you don't ask for.
+              What our clients<br />
+              say about us.
             </h2>
           </div>
         </div>
 
         <div className="grid grid-cols-12 gap-6 md:gap-10 items-end">
-          <div className="col-span-12 md:col-span-9 relative min-h-[220px]">
-            <Quote
-              size={64}
-              strokeWidth={1}
-              className="text-[color:var(--hf-gold)] mb-6 opacity-80"
-            />
+          <div className="col-span-12 md:col-span-9 relative min-h-[260px]">
+            <div className="flex items-center gap-1 mb-6" aria-hidden="true">
+              {Array.from({ length: t.rating || 5 }).map((_, k) => (
+                <Star
+                  key={k}
+                  size={20}
+                  fill="var(--hf-gold)"
+                  stroke="var(--hf-gold)"
+                  strokeWidth={0}
+                />
+              ))}
+            </div>
             <AnimatePresence mode="wait">
               <motion.blockquote
                 key={i}
@@ -52,12 +78,17 @@ export default function Testimonials() {
               >
                 <p
                   className="font-display text-obsidian italic"
-                  style={{ fontSize: "clamp(1.6rem, 3.4vw, 3.2rem)", lineHeight: 1.1 }}
+                  style={{ fontSize: "clamp(1.4rem, 2.7vw, 2.5rem)", lineHeight: 1.22 }}
                 >
-                  “{t.quote}”
+                  &ldquo;{t.quote}&rdquo;
                 </p>
-                <footer className="mt-8 flex items-center gap-6">
-                  <span className="h-px w-14 bg-obsidian" />
+                <footer className="mt-10 flex items-center gap-5">
+                  <span
+                    aria-hidden="true"
+                    className="h-12 w-12 rounded-full bg-obsidian text-ivory font-mono-label flex items-center justify-center shrink-0"
+                  >
+                    {t.initials || t.author.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                  </span>
                   <div>
                     <div className="font-mono-label text-obsidian">— {t.author}</div>
                     <div className="font-mono-label text-mute mt-1">{t.context}</div>

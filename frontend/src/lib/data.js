@@ -1,26 +1,57 @@
-// Site content — swap values here to update copy globally.
+// Site content — real data from Hetal Finserv Pvt Ltd (Pune)
 
 export const SITE = {
   brand: "Hetal Finserv",
   legal: "Hetal Finserv Pvt. Ltd.",
-  tagline: "Make Your Money Grow",
-  subTagline: "Your trusted partner in building & protecting wealth.",
-  phone: "+91 98200 12345",
-  phoneClean: "+919820012345",
-  whatsapp: "+919820012345",
-  email: "connect@hetalfinserv.com",
-  address:
-    "3rd Floor, Trade Point, Linking Road, Bandra West, Mumbai — 400 050, India",
+  logo: "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/22yu1f2i_HFPL_Profile_Picture.png",
+  tagline: "It's Not Just a Strategy. It's Personal.",
+  subTagline:
+    "One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate.",
+  phone: "+91 87670 95307",
+  phoneAlt: "+91 94230 16559",
+  phoneClean: "+918767095307",
+  whatsapp: "+918767095307",
+  email: "info@hetalfinserv.com",
+  address: "Wadgaon Sheri, Pune — 411 014, Maharashtra, India",
   hours: "Mon – Sat · 10:00 – 19:00 IST",
   founded: 2001,
+  incorporated: "03-Oct-2022",
   socials: {
-    linkedin: "https://www.linkedin.com/",
-    instagram: "https://www.instagram.com/",
-    youtube: "https://www.youtube.com/",
-    facebook: "https://www.facebook.com/",
-    twitter: "https://x.com/",
+    facebook: "https://www.facebook.com/hetalfinserv",
+    instagram: "https://www.instagram.com/hetalfinserv",
   },
 };
+
+// Regulatory registrations — critical trust signals
+export const REGISTRATIONS = [
+  {
+    label: "AMFI Registered MFD",
+    detail: "ARN-254254 · Valid till 02-Oct-2028",
+    tag: "AMFI",
+  },
+  {
+    label: "MahaRERA Broker",
+    detail: "A52100043460 · Maharashtra",
+    tag: "MAHARERA",
+  },
+  {
+    label: "IRDAI Certified BQP",
+    detail: "Insurance Broker Reg. 00115138383",
+    tag: "IRDAI",
+  },
+  {
+    label: "PMS Distributor",
+    detail: "APRN No. APRN00234",
+    tag: "PMS",
+  },
+  {
+    label: "Govt Registered Pvt Ltd",
+    detail: "CIN U67100PN2022PTC212632",
+    tag: "MCA",
+  },
+];
+
+export const REG_AUTHORITIES = ["AMFI", "NISM", "MahaRERA", "SEBI", "IRDA"];
 
 export const NAV = [
   { label: "Home", to: "/" },
@@ -31,54 +62,54 @@ export const NAV = [
 
 export const SERVICES = [
   {
-    id: "wealth",
+    id: "financial-planning",
     number: "01",
-    title: "Wealth Management",
-    tagline: "Portfolios engineered for the long horizon.",
+    title: "Financial Planning",
+    tagline: "Personalised, goal-based strategies for every life stage.",
     bullets: [
-      "Goal-based investment planning",
-      "Direct-plan mutual fund advisory",
-      "Portfolio review & rebalancing",
-      "SIP, STP and SWP orchestration",
+      "Certified Financial Goal Planner (CFGP — NISM & PGP Academy)",
+      "Retirement corpus modelling",
+      "Child's education & marriage planning",
+      "Will & estate planning",
+    ],
+    img: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    id: "wealth-investments",
+    number: "02",
+    title: "Wealth & Investments",
+    tagline: "Mutual Funds, SIP, PMS, AIFs, NPS, Bonds & Sovereign Gold Bonds.",
+    bullets: [
+      "Mutual Funds (SIP / Lumpsum) — 25+ AMC partners",
+      "PMS Distributor (APRN No. APRN00234)",
+      "AIFs, NPS & Retirement Solutions",
+      "Fixed Deposits, NCDs, RBI Floating Bonds, SGB",
     ],
     img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    id: "investment-advisory",
-    number: "02",
-    title: "Investment Advisory",
-    tagline: "Clear-headed guidance for every market cycle.",
-    bullets: [
-      "Equity, debt and hybrid strategies",
-      "Alternative investments & AIFs",
-      "NRI investment structuring",
-      "Retirement corpus planning",
-    ],
-    img: "https://images.unsplash.com/photo-1642790551116-18e150f248e5?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
     id: "insurance",
     number: "03",
-    title: "Insurance Solutions",
-    tagline: "Coverage that quietly does its job.",
+    title: "Insurance Services",
+    tagline: "IRDAI Certified BQP — Life, Health, Motor, Home, Travel & Commercial.",
     bullets: [
-      "Term & whole-life insurance",
+      "Life & term insurance",
       "Health & critical illness cover",
-      "Family floater & senior citizen plans",
-      "Motor, home & travel policies",
+      "Motor, home, travel policies",
+      "Group, Marine/Cargo, Fire, Commercial",
     ],
     img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=80",
   },
   {
     id: "loans",
     number: "04",
-    title: "Loans & Advances",
-    tagline: "Capital, structured on your terms.",
+    title: "Loan Services",
+    tagline: "Home, Personal, Business, Education & Gold Loans via 25+ banks & NBFCs.",
     bullets: [
-      "Home loan & balance transfer",
-      "Loan against property (LAP)",
+      "Home loans & balance transfer",
       "Business & working capital loans",
-      "Personal & professional loans",
+      "Loan against property / securities",
+      "Personal, education, vehicle & gold loans",
     ],
     img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=80",
   },
@@ -86,27 +117,27 @@ export const SERVICES = [
     id: "real-estate",
     number: "05",
     title: "Real Estate",
-    tagline: "Property, treated as a portfolio asset.",
+    tagline: "MahaRERA Registered Broker — residential, commercial & luxury properties.",
     bullets: [
-      "Residential & commercial acquisition",
-      "Rental yield & ROI analysis",
-      "Legal due-diligence coordination",
-      "Portfolio-level real-estate strategy",
+      "Residential & luxury properties",
+      "Commercial, industrial & land",
+      "New launch, resale & affordable housing",
+      "Legal, documentation & NRI services",
     ],
     img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    id: "tax-estate",
+    id: "channel-partner",
     number: "06",
-    title: "Tax & Estate Planning",
-    tagline: "Every rupee, deliberately placed.",
+    title: "Channel Partner",
+    tagline: "Zero investment. Full support. Attractive commissions on referrals.",
     bullets: [
-      "Personal tax optimisation",
-      "Capital-gains & NRI taxation",
-      "Will drafting & registration",
-      "Family trust & succession structuring",
+      "Product training & marketing materials",
+      "Real-time digital portal to track referrals",
+      "Transparent commission structure",
+      "Backed by 5 regulatory registrations",
     ],
-    img: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1400&q=80",
+    img: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80",
   },
 ];
 
@@ -114,154 +145,168 @@ export const MANIFESTO = [
   {
     number: "01",
     kicker: "The Standard",
-    title: "Advice that outlives the trend.",
-    body: "Markets change faces. Portfolios chase noise. We choose the harder path — plans designed around a family's life, not the quarter's headline. Every recommendation is written to be defensible ten years from now.",
+    title: "No two clients should have the same strategy.",
+    body: "Complete objectivity. Unbiased, personalised advice. Founded by Sandeep Dubal — Certified Financial Goal Planner with 20+ years of experience — Hetal Finserv serves individuals, families and businesses with the highest standards of integrity and expertise across Pune and across India.",
   },
   {
     number: "02",
-    kicker: "The Craft",
-    title: "Numbers, treated like architecture.",
-    body: "A well-built portfolio is load-bearing. It carries goals, absorbs shocks, and leaves room to grow. We construct with the same rigour a good architect brings to a building — every allocation calculated, every risk visible, nothing decorative.",
+    kicker: "The Structure",
+    title: "One firm. Five regulatory registrations.",
+    body: "AMFI (ARN-254254). MahaRERA (A52100043460). IRDAI Certified BQP. PMS Distributor (APRN00234). Government-registered Pvt Ltd. Every conversation, every recommendation, and every rupee moved is backed by the correct license — and full disclosure of every commission we earn.",
   },
   {
     number: "03",
     kicker: "The Relationship",
-    title: "A single voice, across decades.",
-    body: "You will not be handed to a call centre. You will not be re-introduced every quarter. Hetal Finserv is a boutique by design — few clients, deep knowledge, one accountable relationship for as long as it takes.",
+    title: "Personally invested in your success.",
+    body: "Unlike large corporate firms, at Hetal Finserv you get direct access to our founders — Sandeep and Tanuja Dubal — certified, experienced and personally involved with every client relationship. Your goals. Your strategy. Personally crafted.",
   },
 ];
 
 export const STATS = [
-  { value: "25+", label: "Years of practice" },
-  { value: "1,200+", label: "Families served" },
-  { value: "₹850 Cr", label: "Assets under advisory" },
-  { value: "24", label: "AMC partners" },
+  { value: "20+", label: "Years of experience" },
+  { value: "5+", label: "Service verticals" },
+  { value: "5", label: "Regulatory registrations" },
+  { value: "4.9", label: "Client rating · 200+ reviews" },
 ];
 
 export const AMCS = [
-  "HDFC Mutual Fund",
   "SBI Mutual Fund",
-  "ICICI Prudential",
-  "Nippon India",
-  "Kotak Mahindra",
+  "HDFC Mutual Fund",
+  "ICICI Prudential MF",
   "Axis Mutual Fund",
-  "Aditya Birla Sun Life",
-  "Franklin Templeton",
+  "Mirae Asset MF",
+  "Nippon India MF",
+  "Kotak Mahindra MF",
   "DSP Mutual Fund",
-  "Mirae Asset",
-  "UTI Mutual Fund",
+  "Franklin Templeton",
   "Tata Mutual Fund",
-  "PPFAS",
-  "Motilal Oswal",
-  "Bandhan MF",
+  "Motilal Oswal MF",
+  "PGIM India MF",
+  "Aditya Birla Sun Life MF",
   "Edelweiss MF",
+  "WhiteOak Capital MF",
+  "Canara Robeco MF",
+  "UTI Mutual Fund",
+  "Bandhan MF",
+  "Quant Mutual Fund",
+  "Invesco India MF",
+  "Navi MF",
+  "360 ONE MF",
+  "Helios MF",
+  "Groww MF",
+  "ITI Mutual Fund",
 ];
 
-// Two-founder leadership. Photos supplied by the client.
 export const LEADERSHIP = [
   {
     id: "sandeep-dubal",
     name: "Sandeep Dubal",
     role: "Founder & Director",
-    years: "25+ years in personal finance",
+    years: "20+ years in financial services",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
-    bio: "Sandeep founded Hetal Finserv in 2001 with a single conviction — that ordinary Indian families deserve advice built to the same standard as private banking. Two decades later, the practice still runs on that discipline: candid conversations, unhurried planning, and portfolios designed to last generations.",
+    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with two decades of experience across mutual funds, PMS, insurance, loans and real estate, he is personally involved with every client relationship — from first conversation to every quarterly review that follows.",
     certifications: [
-      "CERTIFIED FINANCIAL PLANNER — CFP®",
-      "Chartered Wealth Manager — CWM® (AAFM)",
-      "NISM Series V-A · Mutual Fund Distributors",
-      "IRDAI Licensed Insurance Advisor",
-      "AMFI Registered Mutual Fund Distributor",
-      "MDRT · Court of the Table qualifier",
-      "LUTCF · Life Underwriter Training Council Fellow",
-      "PGDBM · Finance & Investments",
+      "Certified Financial Goal Planner — CFGP (NISM & PGP Academy)",
+      "Investment Foundations® Certificate — CFA Institute",
+      "Award in International Wealth Management — Moody's Analytics",
+      "Practising Goal Planner (Advanced) — HSBC & PGP Academy",
+      "Professional Certificate in Global Wealth Management — The Wealth Company",
+      "MahaRERA Real Estate Consultant",
+      "IRDAI Certified BQP · Insurance Broker",
+      "AMFI Registered Mutual Fund Distributor (ARN-254254)",
     ],
     achievements: [
-      { year: "2024", title: "Top Advisor — Western India, MoneyLife Foundation" },
-      { year: "2022", title: "MDRT Court of the Table qualifier" },
-      { year: "2019", title: "Times Business Excellence — Financial Advisory" },
-      { year: "2015", title: "AMFI Silver Merit — Long-standing distributor" },
+      { year: "20+ yrs", title: "Financial services experience across India" },
+      { year: "5 licenses", title: "AMFI · MahaRERA · IRDAI · PMS · Insurance Broker" },
+      { year: "200+", title: "Verified client reviews · 4.9★ average rating" },
+      { year: "48+", title: "Financial products & services under one roof" },
     ],
   },
   {
     id: "tanuja-dubal",
     name: "Tanuja Dubal",
     role: "Co-Founder & Director",
-    years: "20+ years in wealth operations",
+    years: "Strategic leadership & client relations",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/5ltox82p_2.png",
-    bio: "Tanuja anchors the practice's client experience — from the first conversation through every review cycle that follows. She heads relationship management, operations and compliance, ensuring every family is served with quiet consistency and genuine care, year after year.",
+    bio: "Tanuja anchors the client experience at Hetal Finserv — from the first conversation through every review cycle that follows. She leads strategic direction, client relationship management and operations, ensuring every family, every business and every referral is served with quiet consistency and personal care.",
     certifications: [
-      "NISM Series V-A · Mutual Fund Distributors",
-      "IRDAI Licensed Insurance Advisor",
+      "Strategic Leadership · Board Member — Hetal Finserv Pvt Ltd",
+      "Client Relationship Management",
+      "Operations & Compliance Oversight",
       "AMFI Registered Mutual Fund Distributor",
-      "Certified Insurance Consultant · CIC",
-      "Post-Graduate Diploma · Business Administration",
-      "Certified Personal Financial Advisor · PFA",
-      "Certified in Client Advisory Excellence",
+      "IRDAI Certified Insurance Consultant",
+      "Certified in Financial Planning Practice",
     ],
     achievements: [
-      { year: "2023", title: "Women in Wealth Recognition — MoneyLife" },
-      { year: "2021", title: "Best Boutique Practice — West India, Insurance Times" },
-      { year: "2018", title: "Excellence in Client Servicing — Finalist, NJ Circle" },
+      { year: "Board", title: "Co-Founder & Director since incorporation (2022)" },
+      { year: "Ops", title: "Heads client servicing, operations & compliance" },
+      { year: "Care", title: "Personally involved with every family we serve" },
     ],
   },
 ];
 
-// Backwards-compatible single founder alias (used in a couple of legacy spots)
 export const FOUNDER = LEADERSHIP[0];
 
 export const TESTIMONIALS = [
   {
     quote:
-      "In fifteen years I've never once felt sold to. Every plan is drawn around what my family actually needs.",
-    author: "R. Menon",
-    context: "Retired banker · Client since 2010",
+      "Hetal Finserv transformed how our entire family manages money. SIPs are on autopilot, insurance is sorted and our home loan was approved in record time. Sandeep and Tanuja are personally involved — best financial decision we ever made.",
+    author: "Rajesh Kulkarni",
+    context: "Pune · IT Professional",
+    rating: 5,
+    initials: "RK",
   },
   {
     quote:
-      "They rebuilt my portfolio after a bad decade with three other advisors. Simple, honest, and it works.",
-    author: "P. Shroff",
-    context: "Business owner · Mumbai",
+      "I was overwhelmed by mutual funds until Hetal Finserv simplified everything. Three years later, my daughter's education fund is growing beyond expectations. The founders' personal attention makes all the difference.",
+    author: "Priya Mehta",
+    context: "Mumbai · Business Owner",
+    rating: 5,
+    initials: "PM",
   },
   {
     quote:
-      "The estate planning conversation alone was worth a decade of fees. Everything is finally in order.",
-    author: "Dr. A. Kulkarni",
-    context: "Client since 2016",
-  },
-  {
-    quote:
-      "You call once, you get an answer. No portals, no waiting queues. That's rare now.",
-    author: "S. Iyer",
-    context: "Chartered Accountant",
+      "Full commission transparency, zero-pressure advice and a real estate deal that saved me ₹8 lakhs. Hetal Finserv genuinely care about clients — not just products. I recommend them to everyone.",
+    author: "Anil Sharma",
+    context: "Nashik · Retired Banker",
+    rating: 5,
+    initials: "AS",
   },
 ];
 
 export const FAQS = [
   {
-    q: "How is Hetal Finserv different from a bank or online platform?",
-    a: "Banks and platforms sell products. We build plans. Our recommendations are goal-first, provider-agnostic, and reviewed with you in person — twice a year at minimum, more often when life changes.",
+    q: "Who are the founders of Hetal Finserv and what are their qualifications?",
+    a: "Hetal Finserv was founded by Sandeep Dubal and co-founded by Tanuja Dubal. Sandeep brings 20+ years of rich experience in financial services. He is a Certified Financial Goal Planner (CFGP — NISM & PGP Academy), holds the Investment Foundations® Certificate (CFA Institute), an Award in International Wealth Management (Moody's Analytics), Practising Goal Planner — Advanced Level (HSBC & PGP Academy), and a Professional Certificate in Global Wealth Management (The Wealth Company). He is also a MahaRERA Real Estate Consultant and IRDAI Certified BQP.",
   },
   {
-    q: "What is the minimum investment required to work with you?",
-    a: "There is no minimum. We work with young professionals starting their first SIP and with families running eight-figure portfolios. What we ask for is intent — a willingness to plan for the long term.",
+    q: "Is Hetal Finserv AMFI registered?",
+    a: "Yes. AMFI-Registered Mutual Fund Distributor with ARN-254254, registered since 03-Oct-2022 and valid till 02-Oct-2028. We deal in Regular Plans only and fully disclose all trailing commissions at every investment.",
   },
   {
-    q: "How do you get paid?",
-    a: "Through standard, disclosed distributor commissions on mutual funds and insurance, and a transparent flat fee for stand-alone financial plans. You will always know exactly what you are paying and why.",
+    q: "What is the minimum SIP amount?",
+    a: "You can start a SIP with as little as ₹500 per month. Free consultation is available to all investors regardless of investment size.",
   },
   {
-    q: "Do you offer advice to NRIs?",
-    a: "Yes. We handle NRE/NRO structuring, FEMA-compliant investments, repatriation planning and cross-border taxation. Consultations happen over video where distance requires.",
+    q: "What is Hetal Finserv's PMS Distributor registration?",
+    a: "We are a registered PMS Distributor with APRN No. APRN00234, offering Portfolio Management Services to HNI investors through leading PMS providers in India.",
   },
   {
-    q: "Are my documents and data secure?",
-    a: "All personal information is stored on encrypted infrastructure, accessed only by named team members under signed confidentiality agreements. We never share your data with third-party marketers.",
+    q: "Is Hetal Finserv RERA registered?",
+    a: "Yes. MahaRERA Registered Real Estate Broker (Reg. A52100043460) offering residential, commercial, industrial and luxury property services across Maharashtra.",
   },
   {
-    q: "How do I start?",
-    a: "Book a complimentary consultation. The first meeting is a conversation — not a pitch. We listen, understand your goals, and only then propose a way forward.",
+    q: "What makes Hetal Finserv different from other advisors?",
+    a: "We are a truly one-stop shop with 5 separate regulatory certifications — AMFI, MahaRERA, IRDAI, PMS (APRN00234) and Insurance Broker. Our founders are personally involved with every client, ensuring personalised advice with complete transparency and 20+ years of experience.",
+  },
+  {
+    q: "How do I become a Channel Partner?",
+    a: "Contact us — zero investment required. We provide full product training, branded marketing materials and a real-time digital portal to track your referrals and commissions.",
+  },
+  {
+    q: "Where is Hetal Finserv located?",
+    a: "Wadgaon Sheri, Pune — 411 014, Maharashtra. Call +91 87670 95307 or email info@hetalfinserv.com. Consultations are also available on video for clients across India.",
   },
 ];

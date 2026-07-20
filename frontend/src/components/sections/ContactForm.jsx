@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { createLead } from "@/lib/api";
 import { SERVICES, SITE } from "@/lib/data";
-
 const EMPTY = { name: "", phone: "", email: "", service: "", message: "" };
 
 function buildWhatsAppUrl(lead) {
@@ -63,31 +62,43 @@ export default function ContactForm({ compact = false }) {
         <div className="grid grid-cols-12 gap-6 md:gap-12">
           {/* Left copy */}
           <div className="col-span-12 md:col-span-5">
-            <p className="font-mono-label text-[color:var(--hf-gold)]">— Request a consultation</p>
+            <p className="font-mono-label text-[color:var(--hf-gold-soft)]">— Request a consultation</p>
             <h2
-              className="font-display text-ivory mt-6"
+              className="font-display mt-6 text-on-dark"
               style={{ fontSize: "clamp(2.4rem, 5vw, 5rem)", lineHeight: 0.95 }}
             >
               Begin<br />a conversation.
             </h2>
-            <p className="mt-8 text-[color:rgba(244,239,230,0.75)] leading-[1.7] max-w-md">
+            <p className="mt-8 text-on-dark-2 leading-[1.7] max-w-md">
               Share a few details and a senior advisor will call you within one working day.
               The first meeting is complimentary — and quietly candid.
             </p>
 
-            <div className="mt-12 space-y-6 text-[color:rgba(244,239,230,0.85)]">
+            <div className="mt-12 space-y-6 text-on-dark">
               <div>
-                <p className="font-mono-label text-[color:var(--hf-gold)] mb-1">Direct line</p>
+                <p className="font-mono-label text-[color:var(--hf-gold-soft)] mb-1">Direct line</p>
                 <a href={`tel:${SITE.phoneClean}`} className="font-display text-2xl">
                   {SITE.phone}
                 </a>
+                {SITE.phoneAlt && (
+                  <a
+                    href={`tel:${(SITE.phoneAlt || "").replace(/\D/g, "")}`}
+                    className="block text-on-dark-2 mt-1"
+                  >
+                    {SITE.phoneAlt}
+                  </a>
+                )}
               </div>
               <div>
-                <p className="font-mono-label text-[color:var(--hf-gold)] mb-1">Write to us</p>
+                <p className="font-mono-label text-[color:var(--hf-gold-soft)] mb-1">Write to us</p>
                 <a href={`mailto:${SITE.email}`} className="link-underline">{SITE.email}</a>
               </div>
               <div>
-                <p className="font-mono-label text-[color:var(--hf-gold)] mb-1">Practice hours</p>
+                <p className="font-mono-label text-[color:var(--hf-gold-soft)] mb-1">Office</p>
+                <span className="leading-relaxed">{SITE.address}</span>
+              </div>
+              <div>
+                <p className="font-mono-label text-[color:var(--hf-gold-soft)] mb-1">Practice hours</p>
                 <span>{SITE.hours}</span>
               </div>
             </div>
@@ -103,14 +114,14 @@ export default function ContactForm({ compact = false }) {
                 className="border border-hair-light p-10"
                 data-testid="lead-success-panel"
               >
-                <p className="font-mono-label text-[color:var(--hf-gold)]">— Received</p>
+                <p className="font-mono-label text-[color:var(--hf-gold-soft)]">— Received</p>
                 <h3
                   className="font-display mt-4"
                   style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)", lineHeight: 1, color: "#f4efe6" }}
                 >
                   Thank you.<br /><span style={{ color: "var(--hf-gold)" }} className="italic">We'll be in touch shortly.</span>
                 </h3>
-                <p className="mt-6 text-[color:rgba(244,239,230,0.75)] max-w-md">
+                <p className="mt-6 text-on-dark-2 max-w-md">
                   Your enquiry has been logged. To reach us instantly, forward the same
                   details on WhatsApp — it lands directly with our advisory desk.
                 </p>
@@ -120,7 +131,7 @@ export default function ContactForm({ compact = false }) {
                       href={buildWhatsAppUrl(lastLead)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hf-btn-gold"
+                      className="hf-btn-coral"
                       data-testid="lead-success-whatsapp"
                     >
                       <MessageCircle size={16} strokeWidth={1.5} />
@@ -135,9 +146,9 @@ export default function ContactForm({ compact = false }) {
                     Send another
                   </button>
                 </div>
-                <p className="mt-6 font-mono-label text-[color:rgba(244,239,230,0.5)]">
+                <p className="mt-6 font-mono-label text-on-dark-mute">
                   Or call us directly at{" "}
-                  <a href={`tel:${SITE.phoneClean}`} className="text-ivory link-underline">
+                  <a href={`tel:${SITE.phoneClean}`} className="text-on-dark link-underline">
                     {SITE.phone}
                   </a>
                 </p>
@@ -149,7 +160,7 @@ export default function ContactForm({ compact = false }) {
                 data-testid="lead-form"
               >
                 <div className="col-span-2 md:col-span-1">
-                  <label className="font-mono-label text-[color:var(--hf-gold)] block mb-2">
+                  <label className="font-mono-label text-[color:var(--hf-gold-soft)] block mb-2">
                     Full name
                   </label>
                   <input
@@ -163,7 +174,7 @@ export default function ContactForm({ compact = false }) {
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1">
-                  <label className="font-mono-label text-[color:var(--hf-gold)] block mb-2">
+                  <label className="font-mono-label text-[color:var(--hf-gold-soft)] block mb-2">
                     Phone
                   </label>
                   <input
@@ -177,7 +188,7 @@ export default function ContactForm({ compact = false }) {
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1 mt-6">
-                  <label className="font-mono-label text-[color:var(--hf-gold)] block mb-2">
+                  <label className="font-mono-label text-[color:var(--hf-gold-soft)] block mb-2">
                     Email <span className="opacity-60 normal-case">(optional)</span>
                   </label>
                   <input
@@ -191,7 +202,7 @@ export default function ContactForm({ compact = false }) {
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1 mt-6">
-                  <label className="font-mono-label text-[color:var(--hf-gold)] block mb-2">
+                  <label className="font-mono-label text-[color:var(--hf-gold-soft)] block mb-2">
                     Interested in
                   </label>
                   <select
@@ -211,7 +222,7 @@ export default function ContactForm({ compact = false }) {
                   </select>
                 </div>
                 <div className="col-span-2 mt-6">
-                  <label className="font-mono-label text-[color:var(--hf-gold)] block mb-2">
+                  <label className="font-mono-label text-[color:var(--hf-gold-soft)] block mb-2">
                     Tell us a little more <span className="opacity-60 normal-case">(optional)</span>
                   </label>
                   <textarea
@@ -228,13 +239,13 @@ export default function ContactForm({ compact = false }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="hf-btn-gold disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="hf-btn-coral disabled:opacity-60 disabled:cursor-not-allowed"
                     data-testid="lead-submit"
                   >
                     {loading ? "Sending…" : "Request a Callback"}
                     <ArrowUpRight size={16} strokeWidth={1.5} />
                   </button>
-                  <p className="font-mono-label text-[color:rgba(244,239,230,0.55)]">
+                  <p className="font-mono-label text-on-dark-mute">
                     We reply within 1 working day
                   </p>
                 </div>

@@ -64,22 +64,22 @@ export default function Hero() {
           >
             <span className="h-px w-10 bg-obsidian" />
             <span className="font-mono-label text-obsidian">
-              A boutique advisory · Est. {SITE.founded}
+              Hetal Finserv Private Limited — Pune, India
             </span>
           </motion.div>
 
           <h1
             className="font-display text-obsidian"
-            style={{ fontSize: "clamp(3.4rem, 10.5vw, 12rem)", lineHeight: 0.9 }}
+            style={{ fontSize: "clamp(3rem, 10vw, 11rem)", lineHeight: 0.9 }}
           >
             <span className="block">
-              <MaskLine delay={0.35}>Wealth,</MaskLine>
-            </span>
-            <span className="block italic text-[color:var(--hf-gold-2)]">
-              <MaskLine delay={0.55}>architected</MaskLine>
+              <MaskLine delay={0.35}>It's Not Just</MaskLine>
             </span>
             <span className="block">
-              <MaskLine delay={0.75}>with heritage.</MaskLine>
+              <MaskLine delay={0.55}>a Strategy.</MaskLine>
+            </span>
+            <span className="block italic text-[color:var(--hf-gold-2)]">
+              <MaskLine delay={0.75}>It's Personal.</MaskLine>
             </span>
           </h1>
 
@@ -89,9 +89,9 @@ export default function Hero() {
             transition={{ duration: 0.9, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 max-w-xl text-lg md:text-xl text-[color:var(--hf-ink)]/80 leading-relaxed"
           >
-            Hetal Finserv Pvt. Ltd. — your trusted partner in building & protecting wealth
-            since 2001. We plan patiently, invest deliberately, and stay accountable
-            across decades — not quarters.
+            One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and
+            Real Estate. Founded by certified experts. Personally delivered — from Pune,
+            across India.
           </motion.p>
 
           <motion.div
@@ -100,12 +100,12 @@ export default function Hero() {
             transition={{ duration: 0.9, delay: 1.25, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 flex flex-wrap items-center gap-4"
           >
-            <Link to="/contact" className="hf-btn-primary" data-testid="hero-book-cta">
-              Book a Consultation
+            <Link to="/contact" className="hf-btn-coral" data-testid="hero-book-cta">
+              Book Free Consultation
               <ArrowUpRight size={16} strokeWidth={1.5} />
             </Link>
-            <Link to="/services" className="hf-btn-outline" data-testid="hero-explore-cta">
-              Explore Services
+            <Link to="/about" className="hf-btn-outline" data-testid="hero-explore-cta">
+              Discover Our Firm
             </Link>
           </motion.div>
         </motion.div>
@@ -149,6 +149,53 @@ export default function Hero() {
       >
         <span className="font-mono-label text-obsidian">Scroll</span>
         <span className="h-px w-16 bg-obsidian" />
+      </motion.div>
+
+      {/* Rotating logo seal — editorial trust mark */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.4, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="hidden md:block absolute z-10"
+        style={{ top: "9rem", right: "3rem" }}
+        aria-hidden="true"
+      >
+        <div className="relative h-24 w-24 lg:h-28 lg:w-28">
+          <motion.div
+            className="absolute inset-0"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+          >
+            <svg viewBox="0 0 200 200" className="h-full w-full">
+              <defs>
+                <path
+                  id="hero-seal-path"
+                  d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0"
+                />
+              </defs>
+              <text
+                fill="var(--hf-obsidian)"
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "14px",
+                  letterSpacing: "0.28em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <textPath xlinkHref="#hero-seal-path" startOffset="0">
+                  Hetal Finserv · Make Your Money Grow ·
+                </textPath>
+              </text>
+            </svg>
+          </motion.div>
+          <div className="absolute inset-5 flex items-center justify-center">
+            <img
+              src={SITE.logo}
+              alt=""
+              className="h-full w-full rounded-full object-cover"
+            />
+          </div>
+        </div>
       </motion.div>
     </section>
   );

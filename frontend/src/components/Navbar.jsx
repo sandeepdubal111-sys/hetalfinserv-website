@@ -37,15 +37,24 @@ export default function Navbar() {
           <Link
             to="/"
             data-testid="brand-logo-link"
-            className="flex items-baseline gap-2 group"
+            className="flex items-center gap-3 group"
             aria-label="Hetal Finserv — Home"
           >
-            <span className="font-display text-[1.75rem] leading-none text-obsidian">
-              Hetal<span className="text-gold">.</span>
-            </span>
-            <span className="font-mono-label text-[0.6rem] text-mute pl-1 hidden sm:inline">
-              FINSERV — EST. {SITE.founded}
-            </span>
+            <img
+              src={SITE.logo}
+              alt="Hetal Finserv Pvt Ltd logo"
+              className="h-11 w-11 md:h-12 md:w-12 rounded-full object-cover shrink-0 shadow-[0_2px_8px_rgba(14,15,12,0.15)]"
+              width="48"
+              height="48"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="font-display text-[1.4rem] md:text-[1.55rem] leading-none text-obsidian">
+                Hetal<span className="text-gold">.</span> Finserv
+              </span>
+              <span className="font-mono-label text-[0.55rem] text-mute mt-1.5 hidden sm:inline">
+                PVT LTD · MAKE YOUR MONEY GROW
+              </span>
+            </div>
           </Link>
 
           {/* Desktop nav */}
@@ -74,7 +83,7 @@ export default function Navbar() {
             <Link
               to="/contact"
               data-testid="nav-book-consultation-cta"
-              className="hidden md:inline-flex hf-btn-gold"
+              className="hidden md:inline-flex hf-btn-coral"
             >
               Book Consultation
               <span aria-hidden="true">→</span>
@@ -119,7 +128,7 @@ export default function Navbar() {
                 </motion.div>
               ))}
               <div className="mt-6">
-                <Link to="/contact" className="hf-btn-gold" data-testid="mobile-book-cta">
+                <Link to="/contact" className="hf-btn-coral" data-testid="mobile-book-cta">
                   Book Consultation →
                 </Link>
               </div>

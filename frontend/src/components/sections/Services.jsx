@@ -24,7 +24,7 @@ export default function Services({ compact = false }) {
             </h2>
           </div>
           <div className="col-span-12 md:col-span-6 md:col-start-7 flex md:items-end">
-            <p className="text-lg md:text-xl text-[color:rgba(244,239,230,0.72)] leading-[1.7] max-w-lg">
+            <p className="text-lg md:text-xl text-on-dark-2 leading-[1.7] max-w-lg">
               Every family reaches us for a single reason and stays for the rest.
               Explore the six practices we run under one accountable roof.
             </p>
@@ -92,7 +92,7 @@ export default function Services({ compact = false }) {
                   </p>
                 </div>
               </div>
-              <ul className="mt-6 space-y-3 text-[color:rgba(244,239,230,0.8)]">
+              <ul className="mt-6 space-y-3 text-on-dark-2">
                 {SERVICES[active].bullets.map((b) => (
                   <li key={b} className="flex items-start gap-3">
                     <span className="mt-2 h-1.5 w-1.5 bg-[color:var(--hf-gold)] shrink-0" />
