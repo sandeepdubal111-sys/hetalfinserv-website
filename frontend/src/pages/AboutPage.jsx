@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { MaskLine } from "@/components/MaskedReveal";
-import Founder from "@/components/sections/Founder";
+import Leadership from "@/components/sections/Leadership";
 import Stats from "@/components/sections/Stats";
 import EditorialMarquee from "@/components/sections/EditorialMarquee";
 import Testimonials from "@/components/sections/Testimonials";
@@ -88,7 +88,7 @@ export default function AboutPage() {
         variant="dark"
         words={["Trust", "Craft", "Discretion", "Longevity", "Independence", "Care"]}
       />
-      <Founder />
+      <Leadership inline />
       <Testimonials />
       <ContactForm />
     </main>

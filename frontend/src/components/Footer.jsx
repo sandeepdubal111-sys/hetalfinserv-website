@@ -48,7 +48,8 @@ export default function Footer() {
             Hetal<span className="text-gold">.</span> Finserv
           </div>
           <p className="mt-6 text-[color:rgba(244,239,230,0.7)] max-w-sm leading-relaxed">
-            {SITE.tagline} A boutique financial advisory practice serving Indian families since {SITE.founded}.
+            Make Your Money Grow. Your trusted partner in building & protecting wealth,
+            serving Indian families since {SITE.founded}.
           </p>
 
           <div className="mt-8 flex items-center gap-3" data-testid="footer-socials">

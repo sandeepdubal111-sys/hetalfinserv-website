@@ -89,8 +89,9 @@ export default function Hero() {
             transition={{ duration: 0.9, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 max-w-xl text-lg md:text-xl text-[color:var(--hf-ink)]/80 leading-relaxed"
           >
-            A boutique financial practice serving Indian families since 2001. We plan
-            patiently, invest deliberately, and stay accountable across decades — not quarters.
+            Hetal Finserv Pvt. Ltd. — your trusted partner in building & protecting wealth
+            since 2001. We plan patiently, invest deliberately, and stay accountable
+            across decades — not quarters.
           </motion.p>
 
           <motion.div

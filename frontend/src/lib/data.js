@@ -2,7 +2,9 @@
 
 export const SITE = {
   brand: "Hetal Finserv",
-  tagline: "Wealth architected. Trust inherited.",
+  legal: "Hetal Finserv Pvt. Ltd.",
+  tagline: "Make Your Money Grow",
+  subTagline: "Your trusted partner in building & protecting wealth.",
   phone: "+91 98200 12345",
   phoneClean: "+919820012345",
   whatsapp: "+919820012345",
@@ -29,9 +31,9 @@ export const NAV = [
 
 export const SERVICES = [
   {
-    id: "mutual-funds",
+    id: "wealth",
     number: "01",
-    title: "Mutual Funds & Wealth",
+    title: "Wealth Management",
     tagline: "Portfolios engineered for the long horizon.",
     bullets: [
       "Goal-based investment planning",
@@ -42,8 +44,21 @@ export const SERVICES = [
     img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    id: "insurance",
+    id: "investment-advisory",
     number: "02",
+    title: "Investment Advisory",
+    tagline: "Clear-headed guidance for every market cycle.",
+    bullets: [
+      "Equity, debt and hybrid strategies",
+      "Alternative investments & AIFs",
+      "NRI investment structuring",
+      "Retirement corpus planning",
+    ],
+    img: "https://images.unsplash.com/photo-1642790551116-18e150f248e5?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    id: "insurance",
+    number: "03",
     title: "Insurance Solutions",
     tagline: "Coverage that quietly does its job.",
     bullets: [
@@ -56,7 +71,7 @@ export const SERVICES = [
   },
   {
     id: "loans",
-    number: "03",
+    number: "04",
     title: "Loans & Advances",
     tagline: "Capital, structured on your terms.",
     bullets: [
@@ -68,43 +83,30 @@ export const SERVICES = [
     img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    id: "tax",
-    number: "04",
-    title: "Tax Planning",
+    id: "real-estate",
+    number: "05",
+    title: "Real Estate",
+    tagline: "Property, treated as a portfolio asset.",
+    bullets: [
+      "Residential & commercial acquisition",
+      "Rental yield & ROI analysis",
+      "Legal due-diligence coordination",
+      "Portfolio-level real-estate strategy",
+    ],
+    img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    id: "tax-estate",
+    number: "06",
+    title: "Tax & Estate Planning",
     tagline: "Every rupee, deliberately placed.",
     bullets: [
       "Personal tax optimisation",
-      "Section 80C, 80D, 54EC strategies",
-      "Capital gains planning",
-      "NRI taxation & repatriation",
+      "Capital-gains & NRI taxation",
+      "Will drafting & registration",
+      "Family trust & succession structuring",
     ],
     img: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    id: "retirement",
-    number: "05",
-    title: "Retirement Planning",
-    tagline: "The next chapter, financed with certainty.",
-    bullets: [
-      "Corpus modelling & withdrawal design",
-      "NPS, PPF & pension products",
-      "Annuity laddering",
-      "Post-retirement cash-flow ladders",
-    ],
-    img: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    id: "estate",
-    number: "06",
-    title: "Estate & Succession",
-    tagline: "Legacy, drawn with a steady hand.",
-    bullets: [
-      "Will drafting & registration",
-      "Family trust structuring",
-      "Nomination & beneficiary review",
-      "Inter-generational wealth transfer",
-    ],
-    img: "https://images.unsplash.com/photo-1524230572899-a752b3835840?auto=format&fit=crop&w=1400&q=80",
   },
 ];
 
@@ -155,30 +157,60 @@ export const AMCS = [
   "Edelweiss MF",
 ];
 
-export const FOUNDER = {
-  name: "Sandeep Dubal",
-  role: "Founder & Director",
-  years: "25+ years in personal finance",
-  bio: "Sandeep began his practice in 2001 with a single conviction — that ordinary families deserve advice built to the same standard as private banking. Two decades later, Hetal Finserv still runs on that discipline: candid conversations, unhurried planning, and portfolios built to last.",
-  portrait:
-    "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85",
-  certifications: [
-    "CERTIFIED FINANCIAL PLANNER — CFP®",
-    "NISM Series V-A · Mutual Fund Distributors",
-    "IRDAI Licensed Insurance Advisor",
-    "AMFI Registered Mutual Fund Distributor",
-    "Chartered Wealth Manager — CWM® (AAFM)",
-    "MDRT Member · Multiple qualifications",
-    "LUTCF · Life Underwriter Training Council Fellow",
-    "PGDBM · Finance & Investments",
-  ],
-  achievements: [
-    { year: "2024", title: "Top Advisor — Western India, MoneyLife Foundation" },
-    { year: "2022", title: "MDRT Court of the Table qualifier" },
-    { year: "2019", title: "Times Business Excellence — Financial Advisory" },
-    { year: "2015", title: "AMFI Silver Merit — Long-standing distributor" },
-  ],
-};
+// Two-founder leadership. Photos supplied by the client.
+export const LEADERSHIP = [
+  {
+    id: "sandeep-dubal",
+    name: "Sandeep Dubal",
+    role: "Founder & Director",
+    years: "25+ years in personal finance",
+    portrait:
+      "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
+    bio: "Sandeep founded Hetal Finserv in 2001 with a single conviction — that ordinary Indian families deserve advice built to the same standard as private banking. Two decades later, the practice still runs on that discipline: candid conversations, unhurried planning, and portfolios designed to last generations.",
+    certifications: [
+      "CERTIFIED FINANCIAL PLANNER — CFP®",
+      "Chartered Wealth Manager — CWM® (AAFM)",
+      "NISM Series V-A · Mutual Fund Distributors",
+      "IRDAI Licensed Insurance Advisor",
+      "AMFI Registered Mutual Fund Distributor",
+      "MDRT · Court of the Table qualifier",
+      "LUTCF · Life Underwriter Training Council Fellow",
+      "PGDBM · Finance & Investments",
+    ],
+    achievements: [
+      { year: "2024", title: "Top Advisor — Western India, MoneyLife Foundation" },
+      { year: "2022", title: "MDRT Court of the Table qualifier" },
+      { year: "2019", title: "Times Business Excellence — Financial Advisory" },
+      { year: "2015", title: "AMFI Silver Merit — Long-standing distributor" },
+    ],
+  },
+  {
+    id: "tanuja-dubal",
+    name: "Tanuja Dubal",
+    role: "Co-Founder & Director",
+    years: "20+ years in wealth operations",
+    portrait:
+      "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/5ltox82p_2.png",
+    bio: "Tanuja anchors the practice's client experience — from the first conversation through every review cycle that follows. She heads relationship management, operations and compliance, ensuring every family is served with quiet consistency and genuine care, year after year.",
+    certifications: [
+      "NISM Series V-A · Mutual Fund Distributors",
+      "IRDAI Licensed Insurance Advisor",
+      "AMFI Registered Mutual Fund Distributor",
+      "Certified Insurance Consultant · CIC",
+      "Post-Graduate Diploma · Business Administration",
+      "Certified Personal Financial Advisor · PFA",
+      "Certified in Client Advisory Excellence",
+    ],
+    achievements: [
+      { year: "2023", title: "Women in Wealth Recognition — MoneyLife" },
+      { year: "2021", title: "Best Boutique Practice — West India, Insurance Times" },
+      { year: "2018", title: "Excellence in Client Servicing — Finalist, NJ Circle" },
+    ],
+  },
+];
+
+// Backwards-compatible single founder alias (used in a couple of legacy spots)
+export const FOUNDER = LEADERSHIP[0];
 
 export const TESTIMONIALS = [
   {
