@@ -54,12 +54,14 @@ export const REGISTRATIONS = [
 export const REG_AUTHORITIES = ["AMFI", "NISM", "MahaRERA", "SEBI", "IRDA"];
 
 // Regulator authorities — used in the Regulators grid + Verify Us modal
+// Brand color per authority for the elegant text-token fallback.
 export const REGULATORS = [
   {
     key: "amfi",
     name: "AMFI",
     full: "Association of Mutual Funds in India",
     domain: "amfiindia.com",
+    brandColor: "#0F4C81",
     verifyUrl:
       "https://www.amfiindia.com/locator/search-by-arn?arncode=254254",
     regNo: "ARN-254254",
@@ -69,6 +71,7 @@ export const REGULATORS = [
     name: "SEBI",
     full: "Securities & Exchange Board of India",
     domain: "sebi.gov.in",
+    brandColor: "#00437A",
     verifyUrl: "https://www.sebi.gov.in/",
     regNo: "SEBI-regulated distributor",
   },
@@ -77,6 +80,7 @@ export const REGULATORS = [
     name: "IRDAI",
     full: "Insurance Regulatory & Development Authority of India",
     domain: "irdai.gov.in",
+    brandColor: "#B8232F",
     verifyUrl:
       "https://www.irdai.gov.in/con_intermediaries/List-of-Insurance-Brokers.aspx",
     regNo: "Broker Reg. 00115138383 · Certified BQP",
@@ -86,6 +90,7 @@ export const REGULATORS = [
     name: "MahaRERA",
     full: "Maharashtra Real Estate Regulatory Authority",
     domain: "maharera.maharashtra.gov.in",
+    brandColor: "#8A5A00",
     verifyUrl:
       "https://maharera.maharashtra.gov.in/en/agents-search-result",
     regNo: "A52100043460",
@@ -95,6 +100,7 @@ export const REGULATORS = [
     name: "NISM",
     full: "National Institute of Securities Markets",
     domain: "nism.ac.in",
+    brandColor: "#0E7C4A",
     verifyUrl: "https://www.nism.ac.in/",
     regNo: "Certified Financial Goal Planner",
   },

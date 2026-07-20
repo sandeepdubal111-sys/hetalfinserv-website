@@ -1,45 +1,19 @@
-import { AMCS, SITE } from "@/lib/data";
-import { useState } from "react";
-
-// Prefer Google's public favicon service — reliable across CORS + returns up to 128px logos.
-function logoUrl(domain, size = 128) {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
-}
+import { AMCS } from "@/lib/data";
+import BrandLogo from "@/components/BrandLogo";
 
 function LogoChip({ item, variant = "light" }) {
-  const [broken, setBroken] = useState(false);
   const dark = variant === "dark";
+  // Deterministic soft-brand color per AMC for the text-token fallback.
+  // Uses the obsidian palette so it always looks premium if remote logo fails.
+  const brandColor = "#0E0F0C";
   return (
     <div className="flex items-center gap-4 shrink-0">
-      <span
-        className="h-11 w-11 md:h-12 md:w-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
-        style={{
-          background: dark ? "rgba(253,249,238,0.94)" : "#ffffff",
-          border: "1px solid rgba(14,15,12,0.12)",
-          boxShadow: "0 4px 12px -4px rgba(14,15,12,0.15)",
-        }}
-      >
-        {broken ? (
-          <span
-            className="font-mono-label"
-            style={{ color: "var(--hf-obsidian)", fontSize: "0.65rem" }}
-          >
-            {item.name
-              .split(" ")
-              .map((w) => w[0])
-              .join("")
-              .slice(0, 3)}
-          </span>
-        ) : (
-          <img
-            src={logoUrl(item.domain, 128)}
-            alt={`${item.name} logo`}
-            className="h-8 w-8 md:h-9 md:w-9 object-contain"
-            loading="lazy"
-            onError={() => setBroken(true)}
-          />
-        )}
-      </span>
+      <BrandLogo
+        domain={item.domain}
+        name={item.name}
+        brandColor={brandColor}
+        size={48}
+      />
       <span
         className={dark ? "font-display italic" : "font-display"}
         style={{

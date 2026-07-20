@@ -48,13 +48,13 @@ export default function Navbar() {
               height="40"
             />
             <span className="font-display text-[1.25rem] md:text-[1.4rem] leading-none text-obsidian">
-              Hetal<span className="text-gold">.</span> Finserv
+              Hetal Finserv
             </span>
           </Link>
 
-          {/* Desktop nav — larger, tracked, with clear active state */}
+          {/* Desktop nav — bold display type, animated pill highlight for active */}
           <nav
-            className="hidden md:flex items-center gap-1"
+            className="hidden md:flex items-center gap-1 lg:gap-2 relative"
             aria-label="Primary"
             data-testid="primary-nav"
           >
@@ -65,30 +65,25 @@ export default function Navbar() {
                 data-testid={`nav-link-${item.label.toLowerCase()}`}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `relative px-4 lg:px-5 py-2.5 transition-colors duration-300 nav-tab ${
-                    isActive ? "nav-tab-active" : "text-obsidian"
+                  `relative px-4 lg:px-5 py-2.5 rounded-full transition-colors duration-300 font-display leading-none ${
+                    isActive
+                      ? "text-white"
+                      : "text-obsidian hover:text-[color:var(--hf-coral)]"
                   }`
                 }
+                style={{ fontSize: "1.0625rem", letterSpacing: "-0.005em" }}
               >
                 {({ isActive }) => (
                   <>
-                    <span
-                      className="font-mono-label"
-                      style={{
-                        fontSize: "0.72rem",
-                        letterSpacing: "0.24em",
-                      }}
-                    >
-                      {item.label}
-                    </span>
                     {isActive && (
                       <motion.span
-                        layoutId="nav-active-dot"
-                        className="absolute left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full"
-                        style={{ background: "var(--hf-coral)", bottom: "-2px" }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        layoutId="nav-active-pill"
+                        className="absolute inset-0 rounded-full -z-0"
+                        style={{ background: "var(--hf-obsidian)" }}
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     )}
+                    <span className="relative z-10">{item.label}</span>
                   </>
                 )}
               </NavLink>

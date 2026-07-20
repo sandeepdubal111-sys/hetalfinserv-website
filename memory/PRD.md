@@ -34,16 +34,24 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Lenis smooth scrolling + framer-motion scroll reveals
 - ✅ Grain overlay, editorial framing on imagery
 - ✅ Data-testid attributes across interactive elements
+- ✅ Regulators grid (AMFI, SEBI, IRDAI, MahaRERA, NISM) with branded text-token marks
+- ✅ Verify Us CTA in footer
+- ✅ Animated H-monogram intro loader
+
+## Implemented (2026-07-20 — UI polish)
+- ✅ AMC logos now render via icon.horse (hi-res) with Google favicon + branded-initials fallback chain (shared `BrandLogo.jsx` component)
+- ✅ Regulators use elegant branded text tokens (AMFI blue, SEBI navy, IRDAI red, MahaRERA bronze, NISM green) — consistent premium look regardless of remote availability
+- ✅ Navbar wordmark: "Hetal Finserv" (removed period)
+- ✅ Navbar tabs: larger display type + animated black rounded-pill highlight for active route (framer-motion layoutId spring transition)
 
 ## Prioritized backlog (P1/P2)
-- P1 Admin dashboard to view leads
-- P1 Email notification on new lead (Resend integration)
+- P1 EMI / SIP calculator widget to increase lead-capture intent
+- P1 Admin dashboard to view/manage leads
+- P2 Email notification on new lead (Resend integration)
 - P2 Blog / knowledge center for SEO
-- P2 EMI / SIP calculator
 - P2 AI chatbot for lead qualification
 - P2 Multi-language support
 
 ## Next tasks
-- Run automated tests (backend + frontend)
-- Address any critical issues
-- Optional enhancement post-testing
+- P1 EMI / SIP calculator
+- P1 Admin dashboard for leads

@@ -1,37 +1,6 @@
 import { REGULATORS } from "@/lib/data";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-
-function LogoBadge({ domain, name }) {
-  const [broken, setBroken] = useState(false);
-  return (
-    <span
-      className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0"
-      style={{
-        border: "1px solid rgba(14,15,12,0.12)",
-        boxShadow: "0 6px 18px -8px rgba(14,15,12,0.25)",
-      }}
-    >
-      {broken ? (
-        <span
-          className="font-mono-label"
-          style={{ color: "var(--hf-obsidian)", fontSize: "0.7rem" }}
-        >
-          {name.slice(0, 4)}
-        </span>
-      ) : (
-        <img
-          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
-          alt={`${name} logo`}
-          className="h-10 w-10 md:h-11 md:w-11 object-contain"
-          loading="lazy"
-          onError={() => setBroken(true)}
-        />
-      )}
-    </span>
-  );
-}
 
 export default function Regulators() {
   return (
@@ -78,14 +47,38 @@ export default function Regulators() {
                 href={r.verifyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-5 py-7 md:px-6 md:py-8 h-full bg-white transition-all duration-300"
+                className="block px-5 py-7 md:px-6 md:py-8 h-full bg-white transition-all duration-300 hover:-translate-y-1"
                 style={{
                   border: "1px solid rgba(14,15,12,0.12)",
+                  boxShadow: "0 8px 24px -18px rgba(14,15,12,0.4)",
                 }}
                 aria-label={`Verify ${r.name} registration`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <LogoBadge domain={r.domain} name={r.name} />
+                  <span
+                    className="rounded-full flex items-center justify-center shrink-0 font-display"
+                    style={{
+                      height: 64,
+                      width: 64,
+                      background: r.brandColor,
+                      color: "#fff",
+                      letterSpacing: "-0.005em",
+                      boxShadow:
+                        "inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 20px -12px rgba(14,15,12,0.45)",
+                    }}
+                    aria-label={`${r.name} mark`}
+                    data-testid={`regulator-mark-${r.key}`}
+                  >
+                    <span
+                      style={{
+                        fontSize: r.name.length >= 7 ? 12 : r.name.length >= 5 ? 15 : 20,
+                        lineHeight: 1,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {r.name}
+                    </span>
+                  </span>
                   <ArrowUpRight
                     size={16}
                     strokeWidth={1.5}
