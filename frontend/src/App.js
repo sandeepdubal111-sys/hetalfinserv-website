@@ -16,6 +16,8 @@ import CalculatorsPage from "@/pages/CalculatorsPage";
 import LegalPage from "@/pages/LegalPage";
 import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
+import AdminPage from "@/pages/AdminPage";
+import ChatWidget from "@/components/ChatWidget";
 
 // Lenis smooth scrolling — respects reduced-motion
 function useLenis() {
@@ -56,6 +58,8 @@ function ScrollToTopOnRoute() {
 
 function Shell() {
   useLenis();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
   const [introDone, setIntroDone] = useState(() => {
     if (typeof window === "undefined") return true;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
@@ -74,10 +78,10 @@ function Shell() {
 
   return (
     <>
-      <IntroLoader onDone={() => setIntroDone(true)} />
+      {!isAdmin && <IntroLoader onDone={() => setIntroDone(true)} />}
       <ScrollToTopOnRoute />
-      <GrainOverlay />
-      <Navbar />
+      {!isAdmin && <GrainOverlay />}
+      {!isAdmin && <Navbar />}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/services" element={<ServicesPage />} />
@@ -88,10 +92,12 @@ function Shell() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/legal" element={<LegalPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
-      <Footer />
-      <WhatsAppFloat />
+      {!isAdmin && <Footer />}
+      {!isAdmin && <WhatsAppFloat />}
+      {!isAdmin && <ChatWidget />}
       <Toaster
         position="bottom-center"
         toastOptions={{

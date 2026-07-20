@@ -232,6 +232,138 @@ async def create_callback(payload: CallbackCreate):
     return cb
 
 
+# ---------- Admin ----------
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+
+
+class AdminLoginRequest(BaseModel):
+    password: str
+
+
+@api_router.post("/admin/login")
+async def admin_login(payload: AdminLoginRequest):
+    if not ADMIN_PASSWORD or payload.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid password")
+    # Return the raw password as the token — used by admin_guard() below.
+    # (This site has a single trusted admin; a stronger token flow would use JWT.)
+    return {"token": ADMIN_PASSWORD}
+
+
+def admin_guard(x_admin_token: Optional[str] = None):
+    """Verifies a per-request X-Admin-Token header matches ADMIN_PASSWORD."""
+    if not ADMIN_PASSWORD or x_admin_token != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+from fastapi import Header
+
+
+@api_router.get("/admin/leads")
+async def admin_list_leads(
+    x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token"),
+    limit: int = 500,
+):
+    admin_guard(x_admin_token)
+    rows = await db.leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(limit)
+    return rows
+
+
+@api_router.patch("/admin/leads/{lead_id}")
+async def admin_update_lead(
+    lead_id: str,
+    payload: dict,
+    x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token"),
+):
+    admin_guard(x_admin_token)
+    allowed = {k: v for k, v in payload.items() if k in {"contacted", "notes"}}
+    if not allowed:
+        raise HTTPException(status_code=400, detail="No valid fields")
+    await db.leads.update_one({"id": lead_id}, {"$set": allowed})
+    return {"ok": True}
+
+
+# ---------- AI Chatbot ----------
+HETAL_SYSTEM_PROMPT = """You are the friendly, knowledgeable assistant on hetalfinserv.com — Hetal Finserv Pvt Ltd, a boutique financial services practice in Pune founded by Sandeep Dubal (Founder & Director, 20+ years).
+
+Your job: answer visitor questions warmly and concisely, then convert genuine interest into a lead.
+
+WHO WE ARE
+- Registrations: AMFI (ARN-254254), MahaRERA (A52100043460), IRDAI Insurance Broker (00115138383), PMS (APRN00234), NISM certified. Regular Plans only, full commission disclosure.
+- Services: Mutual Funds (SIP/Lumpsum/PMS), Insurance (life, health, general), Loans (home, business, personal), Real Estate consulting, Financial Planning.
+- Pune-based, serving families across India. info@hetalfinserv.com  ·  +91 87670 95307
+- Founders: Sandeep Dubal & Tanuja Dubal — personally involved with every client.
+
+STYLE
+- Warm, plain English. Never robotic. Never use "As an AI".
+- Keep replies to 3-5 sentences unless the user asks for depth.
+- Never give specific fund names, stock tips, or return guarantees. Always frame as "your advisor can review this".
+- If user asks about a competitor or unrelated topic, gently pivot back.
+
+CONVERSION
+- If the visitor shows buying/planning intent (asks about starting SIP, insurance, loans, retirement, education) OR after 3 substantive turns, invite them to leave name + phone: "Would you like Sandeep to call you back? Please share your name and a phone number." Do this ONCE per conversation, not repeatedly.
+- If they share contact details, thank them warmly and confirm we'll reach out within one working day. Do NOT ask again.
+- Point people to our calculator suite (/calculators) or blog (/blog) when relevant.
+
+Never make up regulatory numbers, phone numbers, or emails beyond what's listed above."""
+
+
+class ChatMessage(BaseModel):
+    session_id: str = Field(..., min_length=6, max_length=64)
+    text: str = Field(..., min_length=1, max_length=2000)
+
+
+@api_router.post("/chat")
+async def chat_endpoint(msg: ChatMessage):
+    """Non-streaming chat — simpler client, quicker to ship. Returns full response."""
+    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="LLM key not configured")
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+    except ImportError:
+        raise HTTPException(status_code=500, detail="emergentintegrations not installed")
+
+    # Load recent history for this session (last 20 messages)
+    history = await db.chat_history.find(
+        {"session_id": msg.session_id}, {"_id": 0}
+    ).sort("ts", 1).to_list(20)
+
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=msg.session_id,
+        system_message=HETAL_SYSTEM_PROMPT,
+    ).with_model("gemini", "gemini-3-flash-preview")
+
+    # Replay history so the model has context
+    for h in history:
+        if h.get("role") == "user":
+            try:
+                await chat.send_message(UserMessage(text=h["text"]))
+            except Exception:
+                pass  # best-effort replay
+
+    try:
+        reply = await chat.send_message(UserMessage(text=msg.text))
+    except Exception as e:
+        logger.error(f"LLM error: {e}")
+        raise HTTPException(status_code=502, detail="Assistant is temporarily unavailable")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.chat_history.insert_many([
+        {"session_id": msg.session_id, "role": "user", "text": msg.text, "ts": now},
+        {"session_id": msg.session_id, "role": "assistant", "text": reply, "ts": now},
+    ])
+    return {"reply": reply}
+
+
+@api_router.get("/chat/{session_id}")
+async def chat_history(session_id: str):
+    rows = await db.chat_history.find(
+        {"session_id": session_id}, {"_id": 0}
+    ).sort("ts", 1).to_list(100)
+    return {"messages": rows}
+
+
 app.include_router(api_router)
 
 app.add_middleware(

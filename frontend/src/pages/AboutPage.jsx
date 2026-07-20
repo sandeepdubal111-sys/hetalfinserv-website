@@ -24,9 +24,9 @@ export default function AboutPage() {
               className="font-display text-obsidian"
               style={{ fontSize: "clamp(3rem, 8vw, 9rem)", lineHeight: 0.92 }}
             >
-              <span className="block"><MaskLine delay={0.15}>Twenty-five years</MaskLine></span>
-              <span className="block italic text-[color:var(--hf-gold-2)]"><MaskLine delay={0.35}>of steady</MaskLine></span>
-              <span className="block"><MaskLine delay={0.55}>counsel.</MaskLine></span>
+              <span className="block"><MaskLine delay={0.15}>One trusted desk.</MaskLine></span>
+              <span className="block italic text-[color:var(--hf-gold-2)]"><MaskLine delay={0.35}>For every financial</MaskLine></span>
+              <span className="block"><MaskLine delay={0.55}>decision.</MaskLine></span>
             </h1>
             <motion.p
               initial={{ opacity: 0, y: 16 }}
@@ -34,10 +34,11 @@ export default function AboutPage() {
               transition={{ delay: 0.9, duration: 0.9 }}
               className="mt-10 max-w-2xl text-lg md:text-xl text-[color:var(--hf-ink)]/80 leading-[1.7]"
             >
-              Hetal Finserv was founded to bring private-banking standards to ordinary
-              families. What began as a single-desk practice in Bandra is now a small,
-              deliberate team advising more than a thousand households across three
-              generations.
+              Hetal Finserv Private Limited is a Pune-based financial services company,
+              purpose-built to be your one-stop advisor for wealth, protection, credit, and
+              real estate. Backed by SEBI, AMFI, IRDAI and RERA registrations, we help
+              individuals, families and businesses make informed, confident decisions —
+              with the discretion and rigour usually reserved for institutions.
             </motion.p>
           </div>
         </div>

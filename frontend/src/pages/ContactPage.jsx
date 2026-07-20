@@ -83,7 +83,7 @@ export default function ContactPage() {
           <div className="aspect-[16/9] w-full overflow-hidden border border-hair framed-img">
             <iframe
               title="Hetal Finserv office location"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.3407547548745!2d72.83540637510308!3d19.05984838214598!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c8e34e2b0a91%3A0x2b4b7f5aeb8a9c1a!2sBandra%20West%2C%20Mumbai!5e0!3m2!1sen!2sin!4v1700000000000"
+              src="https://www.google.com/maps?q=Wadgaon+Sheri,+Pune+411014&output=embed"
               className="w-full h-full"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
