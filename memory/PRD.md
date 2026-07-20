@@ -135,11 +135,18 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Frontend: new **History** button in the Blog tab header opens a slide-over `HistoryDrawer` — color-coded action pills, timestamp, title, slug, `by <8-hex>` label, `changed_fields` chips. Now has a Refresh button; rows carry `data-action` and `data-slug` attrs for easy targeting.
 - ✅ Suite is now **47/47 pytest** (+9 in TestBlogAudit — includes a strict "token never leaks" assertion). Playwright verified drawer open/close/backdrop + 4-row scratch-post lifecycle.
 
+## Implemented (2026-07-20 — Quick publish toggle)
+- ✅ New **Status** column in the Blog tab table with an inline pill button (`data-testid="blog-toggle-publish-<slug>"`, `data-published="true|false"`) — `PUBLISHED` (gold) or `DRAFT` (mute) with an Eye/EyeOff icon.
+- ✅ Optimistic update on click, rollback on failure. Sends `PUT {published: !current}` — hits the backend flip-heuristic and writes a clean `published` / `unpublished` audit row.
+- ✅ Verified end-to-end via Playwright: 5-Signals post published → click → hidden from public `/api/blog` → click again → restored, with the History drawer showing the exact `[unpublished, published]` sequence for that slug.
+- ✅ 47/47 pytest still green.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
 - P2 Custom confirm modal instead of `window.confirm`; unsaved-changes guard on editor backdrop click
-- P2 Admin polish: pagination cursor (`?before=<ts>`) for the audit endpoint; quick publish/unpublish toggle button per row (no editor open needed)
+- P2 Audit endpoint pagination cursor (`?before=<ts>`) for browsing past the 500-row cap
 - P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
 - P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
-- P2 Code-split the `/admin` bundle via `React.lazy` so it doesn't ship on marketing pages
+- P2 Code-split the `/admin` bundle via `React.lazy`
+- P2 Slack/WhatsApp webhook on `deleted` audit actions (optional ops-signal)

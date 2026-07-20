@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Plus, Pencil, Trash2, X, Save, RefreshCw, History } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Save, RefreshCw, History, Eye, EyeOff } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -370,6 +370,7 @@ export function BlogTab({ token, onLogout }) {
   const [err, setErr] = useState("");
   const [editing, setEditing] = useState(null); // { post, isNew }
   const [deleting, setDeleting] = useState(""); // slug
+  const [toggling, setToggling] = useState(""); // slug currently mid-toggle
   const [historyOpen, setHistoryOpen] = useState(false);
 
   async function load() {
@@ -398,6 +399,25 @@ export function BlogTab({ token, onLogout }) {
       alert(e.response?.data?.detail || "Delete failed.");
     } finally {
       setDeleting("");
+    }
+  }
+
+  async function togglePublish(slug, next) {
+    setToggling(slug);
+    // Optimistic
+    setPosts((rows) => rows.map((r) => (r.slug === slug ? { ...r, published: next } : r)));
+    try {
+      await axios.put(
+        `${API}/api/admin/blog/${slug}`,
+        { published: next },
+        { headers: { "X-Admin-Token": token } }
+      );
+    } catch (e) {
+      // Roll back on failure
+      setPosts((rows) => rows.map((r) => (r.slug === slug ? { ...r, published: !next } : r)));
+      alert(e.response?.data?.detail || "Toggle failed.");
+    } finally {
+      setToggling("");
     }
   }
 
@@ -442,7 +462,7 @@ export function BlogTab({ token, onLogout }) {
           <table className="w-full text-left" style={{ fontSize: "0.88rem" }}>
             <thead>
               <tr className="border-b border-hair">
-                {["Date", "Title", "Category", "Slug", "Read", ""].map((h) => (
+                {["Date", "Title", "Category", "Slug", "Read", "Status", ""].map((h) => (
                   <th key={h} className="py-3 pr-4 font-mono-label text-mute whitespace-nowrap" style={{ fontSize: "0.66rem" }}>{h}</th>
                 ))}
               </tr>
@@ -455,6 +475,27 @@ export function BlogTab({ token, onLogout }) {
                   <td className="py-4 pr-4 text-mute">{p.category}</td>
                   <td className="py-4 pr-4 text-mute" style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>{p.slug}</td>
                   <td className="py-4 pr-4 text-mute whitespace-nowrap">{p.readMinutes} min</td>
+                  <td className="py-4 pr-4 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => togglePublish(p.slug, !p.published)}
+                      disabled={toggling === p.slug}
+                      data-testid={`blog-toggle-publish-${p.slug}`}
+                      data-published={p.published ? "true" : "false"}
+                      title={p.published ? "Click to unpublish (hide from /blog)" : "Click to publish"}
+                      className="inline-flex items-center gap-1.5 font-mono-label px-2.5 py-1.5 border transition-colors disabled:opacity-50"
+                      style={{
+                        fontSize: "0.62rem",
+                        letterSpacing: "0.14em",
+                        color: p.published ? "#0E0F0C" : "var(--hf-mute)",
+                        background: p.published ? "var(--hf-gold-soft, #F7E7B0)" : "transparent",
+                        borderColor: p.published ? "var(--hf-gold)" : "var(--hf-hair)",
+                      }}
+                    >
+                      {p.published ? <Eye size={11} /> : <EyeOff size={11} />}
+                      {toggling === p.slug ? "…" : p.published ? "PUBLISHED" : "DRAFT"}
+                    </button>
+                  </td>
                   <td className="py-4 pr-0 text-right whitespace-nowrap">
                     <button
                       onClick={() => setEditing({ post: { ...p }, isNew: false })}
