@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+import { Instagram, Facebook, Linkedin, Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
 import { SITE, NAV, SERVICES } from "@/lib/data";
 import VerifyUsButton from "@/components/VerifyUsButton";
 
@@ -9,14 +9,21 @@ const socials = [
     icon: Instagram,
     href: SITE.socials.instagram,
     label: "Instagram",
-    handle: "@hetalfinserv",
+    handle: "@hetalfinservpvtltd",
   },
   {
     key: "facebook",
     icon: Facebook,
     href: SITE.socials.facebook,
     label: "Facebook",
-    handle: "/hetalfinserv",
+    handle: "/hetalfinservpvtltd",
+  },
+  {
+    key: "linkedin",
+    icon: Linkedin,
+    href: SITE.socials.linkedin,
+    label: "LinkedIn",
+    handle: "Sandeep Dubal",
   },
 ];
 
@@ -134,7 +141,7 @@ export default function Footer() {
               height="64"
             />
             <div className="font-display text-2xl md:text-3xl" style={{ color: "var(--hf-on-dark-primary)" }}>
-              Hetal<span style={{ color: "var(--hf-gold)" }}>.</span> Finserv
+              Hetal Finserv
               <div className="font-mono-label mt-1" style={{ color: "var(--hf-gold-soft)", fontSize: "0.55rem" }}>
                 PVT LTD · MAKE YOUR MONEY GROW
               </div>

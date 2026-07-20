@@ -17,8 +17,9 @@ export const SITE = {
   founded: 2001,
   incorporated: "03-Oct-2022",
   socials: {
-    facebook: "https://www.facebook.com/hetalfinserv",
-    instagram: "https://www.instagram.com/hetalfinserv",
+    facebook: "https://www.facebook.com/hetalfinservpvtltd",
+    instagram: "https://www.instagram.com/hetalfinservpvtltd/",
+    linkedin: "https://in.linkedin.com/in/sandeep-dubal-44a29547",
   },
 };
 
@@ -260,6 +261,7 @@ export const LEADERSHIP = [
     name: "Sandeep Dubal",
     role: "Founder & Director",
     years: "20+ years in financial services",
+    linkedin: "https://in.linkedin.com/in/sandeep-dubal-44a29547",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
     bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with two decades of experience across mutual funds, PMS, insurance, loans and real estate, he is personally involved with every client relationship — from first conversation to every quarterly review that follows.",

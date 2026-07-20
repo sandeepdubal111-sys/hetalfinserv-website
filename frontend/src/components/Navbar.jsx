@@ -56,7 +56,7 @@ export default function Navbar() {
               width="40"
               height="40"
             />
-            <span className="font-display text-[1.25rem] md:text-[1.4rem] leading-none text-obsidian">
+            <span className={`font-display text-[1.25rem] md:text-[1.4rem] leading-none transition-colors ${brandTextClass}`}>
               Hetal Finserv
             </span>
           </Link>
@@ -76,8 +76,8 @@ export default function Navbar() {
                 className={({ isActive }) =>
                   `relative px-4 lg:px-5 py-2.5 rounded-full transition-colors duration-300 font-display leading-none ${
                     isActive
-                      ? "text-white"
-                      : "text-obsidian hover:text-[color:var(--hf-coral)]"
+                      ? activePillText
+                      : `${inactiveTabClass} hover:text-[color:var(--hf-coral)]`
                   }`
                 }
                 style={{ fontSize: "1.0625rem", letterSpacing: "-0.005em" }}
@@ -88,7 +88,7 @@ export default function Navbar() {
                       <motion.span
                         layoutId="nav-active-pill"
                         className="absolute inset-0 rounded-full -z-0"
-                        style={{ background: "var(--hf-obsidian)" }}
+                        style={{ background: activePillBg }}
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     )}

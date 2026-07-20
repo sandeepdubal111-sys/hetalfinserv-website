@@ -44,14 +44,21 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Navbar wordmark: "Hetal Finserv" (removed period)
 - ✅ Navbar tabs: larger display type + animated black rounded-pill highlight for active route (framer-motion layoutId spring transition)
 
-## Implemented (2026-07-20 — SIP/EMI Calculator)
-- ✅ New `Calculator.jsx` section — dual-mode (SIP / EMI) with segmented pill toggle
-- ✅ Editorial dark-mode layout with gold accents, custom range sliders (`hf-range`)
-- ✅ Real-time calculations: SIP future value, invested, gains · EMI monthly, interest, total
-- ✅ INR formatting with Cr/L suffixes
-- ✅ CTA "Send this to an advisor" → routes to `/contact` and **pre-fills lead form** service + message via React Router `state`
-- ✅ Placed on both HomePage (before Leadership) and ServicesPage (after AMC marquee)
-- ✅ `ContactForm` reads `location.state` on mount to pre-populate fields
+## Implemented (2026-07-20 — 15-Calculator Suite)
+- ✅ Schema-driven calculator engine `CalcRunner.jsx` + math library `calcMath.js` + 15 configs in `calculators.js`
+- ✅ Dedicated `/calculators` page with sidebar navigation grouped by Investment / Loan & Withdrawal / Goal Planning + mobile chip nav; each calc has its own URL (`/calculators/:slug`)
+- ✅ 15 calculators (matching hetalfinserv.com): SIP · Lumpsum · Cost of Delay · SIP Top-Up · Limited Period SIP · Birthday SIP · Home-Loan SIP · EMI · SWP · Retirement · Child Education · Grand Wedding · Dream Car/Property · Dream Vacation · Life Insurance Need (HLV)
+- ✅ Every calc: live gold sliders, editorial result card, "Send to advisor" CTA that pre-fills the lead form
+- ✅ "Calculators" tab added to top nav; SIP+EMI teaser on Home links to full suite
+- ✅ Navbar dark-hero aware (ivory text + gold active pill on `/calculators`)
+
+## Implemented (2026-07-20 — Brand hygiene)
+- ✅ Removed old LLP socials. New Pvt Ltd links:
+  - Instagram: `https://www.instagram.com/hetalfinservpvtltd/`
+  - Facebook: `https://www.facebook.com/hetalfinservpvtltd`
+  - LinkedIn (Sandeep Dubal): `https://in.linkedin.com/in/sandeep-dubal-44a29547`
+- ✅ LinkedIn added to Footer socials strip + "Connect on LinkedIn" CTA on Sandeep's leadership card
+- ✅ Footer wordmark: "Hetal Finserv" (removed period)
 
 ## Prioritized backlog (P1/P2)
 - P1 Admin dashboard to view/manage leads

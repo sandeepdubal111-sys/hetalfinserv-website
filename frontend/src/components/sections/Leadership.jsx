@@ -201,6 +201,20 @@ export default function Leadership({ inline = false }) {
                 {leader.bio}
               </p>
 
+              {leader.linkedin && (
+                <a
+                  href={leader.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`linkedin-${leader.id}`}
+                  className="mt-6 inline-flex items-center gap-2 font-mono-label link-underline"
+                  style={{ color: "var(--hf-gold)" }}
+                >
+                  Connect on LinkedIn
+                  <ArrowUpRight size={14} strokeWidth={1.5} />
+                </a>
+              )}
+
               {/* Certifications — badge grid */}
               <div className="mt-14">
                 <div className="flex items-baseline gap-4 mb-8">
