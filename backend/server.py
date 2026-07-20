@@ -252,13 +252,14 @@ async def admin_login(payload: AdminLoginRequest):
         raise HTTPException(status_code=401, detail="Invalid password")
     token = secrets.token_urlsafe(32)
     now = datetime.now(timezone.utc)
+    expires = now + timedelta(hours=ADMIN_SESSION_HOURS)
     await db.admin_sessions.insert_one({
         "token": token,
-        "created_at": now.isoformat(),
-        "expires_at": (now + timedelta(hours=ADMIN_SESSION_HOURS)).isoformat(),
+        "created_at": now,
+        "expires_at": expires,
     })
-    # Prune expired sessions opportunistically (best-effort)
-    await db.admin_sessions.delete_many({"expires_at": {"$lt": now.isoformat()}})
+    # Prune expired sessions opportunistically (best-effort; TTL index does the rest)
+    await db.admin_sessions.delete_many({"expires_at": {"$lt": now}})
     return {"token": token, "expires_in_hours": ADMIN_SESSION_HOURS}
 
 
@@ -271,7 +272,13 @@ async def require_admin(
     session = await db.admin_sessions.find_one({"token": x_admin_token})
     if not session:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    if session["expires_at"] < datetime.now(timezone.utc).isoformat():
+    expires_at = session["expires_at"]
+    # Backward-compat: legacy ISO-string rows from before this change
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
         await db.admin_sessions.delete_one({"token": x_admin_token})
         raise HTTPException(status_code=401, detail="Session expired")
     return session
@@ -570,6 +577,18 @@ async def _weekly_digest_job():
         logger.info(f"Weekly digest result: {result}")
     except Exception as e:
         logger.exception(f"Weekly digest job failed: {e}")
+
+
+@app.on_event("startup")
+async def _ensure_indexes():
+    """Idempotent — ensures the admin session TTL index exists and legacy string rows are purged."""
+    try:
+        # Purge legacy ISO-string rows so the TTL index can operate consistently.
+        await db.admin_sessions.delete_many({"expires_at": {"$type": "string"}})
+        await db.admin_sessions.create_index("expires_at", expireAfterSeconds=0)
+        logger.info("admin_sessions TTL index ensured (expireAfterSeconds=0)")
+    except Exception as e:
+        logger.warning(f"Failed to ensure admin_sessions TTL index: {e}")
 
 
 @app.on_event("startup")

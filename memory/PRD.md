@@ -93,9 +93,15 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Env: added `ADMIN_SESSION_HOURS=8`, `PUBLIC_SITE_URL=<preview-url>` to `/app/backend/.env`. Added `APScheduler==3.11.3` to requirements.
 - ✅ Backend test coverage grew 17 → 25 (TestAdminSession, TestBlogDigest); all green.
 
+## Implemented (2026-07-20 — admin_sessions housekeeping)
+- ✅ `admin_sessions.created_at` and `expires_at` are now native `datetime` (BSON date) instead of ISO strings — comparison is now type-safe.
+- ✅ Mongo TTL index `expires_at_1` with `expireAfterSeconds=0` — MongoDB now auto-purges expired sessions server-side.
+- ✅ Startup migration purges any legacy string-typed rows before creating the index (idempotent).
+- ✅ `require_admin` retains a backward-compat parser (ISO string → datetime) as a safety net.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
 - P2 Backend `/api/blog` collection so posts are DB-managed (currently mirrored in `blog_data.py`)
 - P2 Shareable calculator URL params
-- P2 (Hardening) Add Mongo TTL index on `admin_sessions.expires_at`; store as native datetime instead of ISO strings
 - P2 Chatbot auto-lead capture (regex-detect phone/name in user message, silent POST to /api/leads with source="chatbot")
+- P2 Digest email opt-out link (`/api/unsubscribe?token=...`) in the footer for cleaner list hygiene
