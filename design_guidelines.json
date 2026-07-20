@@ -1,0 +1,133 @@
+{
+  "theme_decision": "Dark Theme Default. A 'New Money Heritage' aesthetic using Deep Obsidian, Bone White, and Muted Gold. Financial services reimagined through the lens of a luxury editorial magazine or high-end real estate.",
+  "art_direction": {
+    "concept": "Kinetic Editorial",
+    "description": "Bold, confident, and unlike generic finance templates. No blue gradients, no cheap stock imagery. Focus on massive typography, dramatic masked reveals, raw product/material textures, and deep negative space. The brand feels established yet hyper-modern.",
+    "core_principles": [
+      "Negative Space as Luxury: Let elements breathe with immense padding (p-12 to p-32).",
+      "Optical Framing: Use clipped frames and 1px subtle gold/white borders for imagery.",
+      "Tension through Typography: Massive Serifs paired with tiny, wide-tracked Monospace/Geometric Sans labels.",
+      "Motion is the Floor: Lenis momentum scrolling and Framer Motion staggered reveals are mandatory."
+    ]
+  },
+  "typography": {
+    "headings": {
+      "family": "Cormorant Garamond, serif",
+      "weights": ["300", "400", "500", "600"],
+      "usage": "Used for the massive Hero kinetic reveal, manifesto chapter titles, and pull-quotes.",
+      "style": "tracking-tighter leading-none"
+    },
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["300", "400", "500"],
+      "usage": "Used for all paragraphs, UI text, and descriptions.",
+      "style": "leading-relaxed tracking-normal"
+    },
+    "labels": {
+      "family": "Manrope, sans-serif",
+      "weights": ["600", "700"],
+      "usage": "Overlines, tags, form labels, small navigational items.",
+      "style": "uppercase tracking-[0.2em] text-xs"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-6xl lg:text-[7vw] xl:text-[8vw]",
+      "h2": "text-4xl md:text-5xl lg:text-6xl",
+      "h3": "text-2xl md:text-3xl",
+      "body": "text-base md:text-lg",
+      "small": "text-sm md:text-xs"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#0A0A0A",
+      "secondary": "#121212",
+      "surface": "#1A1A1A"
+    },
+    "text": {
+      "primary": "#F3F2F0",
+      "secondary": "#A1A1AA",
+      "accent": "#D4AF37"
+    },
+    "brand": {
+      "primary": "#D4AF37",
+      "primary_hover": "#B59A53",
+      "border": "rgba(243, 242, 240, 0.1)"
+    },
+    "rules": [
+      "No full-screen gradients. Use solid dark colors with subtle grain or localized glows.",
+      "Text must meet APCA contrast ratios. Do not use pure white (#FFFFFF), use Bone White (#F3F2F0).",
+      "Buttons use the brand primary (Gold) for extreme contrast against the dark background."
+    ]
+  },
+  "visual_enhancers": {
+    "surfaces": "Use the 'Grid Borders' and 'Glassmorphism' rules. Transparent dark overlays (bg-black/60) with heavy blur (backdrop-blur-xl) and a 1px inner stroke (border-white/10).",
+    "borders": "1px solid border-white/10 or border-[#D4AF37]/20. Use for clipping images, delineating grid items, and wrapping cards.",
+    "textures": "Apply a subtle SVG noise filter overlay across the entire site to kill digital flatness.",
+    "shapes": "Sharp corners or very subtle 2px radii. No heavy rounded corners to maintain the editorial/brutalist edge."
+  },
+  "layouts": {
+    "hero": "Full viewport height. Content bottom-aligned or center-aligned. Massive typography. A hidden curtain/mask reveals the text as the page loads.",
+    "manifesto": "Bento Grid Mode A (Tetris). 12-column grid. Asymmetrical placement of text blocks and images. Numbered chapters with large typography (01, 02).",
+    "services_grid": "High density grid, 1px borders between items, hover reveals.",
+    "spacing": "Massive padding between sections (py-32 or py-48). Internal container padding (p-8 to p-16)."
+  },
+  "motion": {
+    "libraries": ["framer-motion", "lenis"],
+    "hero_reveal": "Masked line-by-line reveal. Text elements start with translateY(100%) and opacity 0 inside a container with overflow-hidden, animating to translateY(0).",
+    "scroll_stagger": "Elements inside sections appear progressively. Use Framer Motion 'whileInView' with staggerChildren.",
+    "marquee": "Use react-fast-marquee. Slow, smooth drift. Editorial Ribbon style: very large outline text (text-transparent stroke-white) acting as a background texture.",
+    "parallax": "Subtle y-axis translation on images as users scroll past them."
+  },
+  "components": {
+    "buttons": "Sharp edges, flat background. Default: bg-[#D4AF37] text-black hover:bg-[#B59A53]. Secondary: border border-white/20 text-white hover:bg-white hover:text-black. Interaction: Scale down slightly on press.",
+    "forms": "Minimalist inputs. border-b only (flair-less), bg-transparent, floating labels or simple overlines. High contrast on focus.",
+    "accordion": "For FAQ. Clean lines. 1px border top and bottom. Arrow rotates on open. Content animates height smoothly."
+  },
+  "media": {
+    "treatment": "Images must feel like art pieces. Clip them into structural frames. Use a subtle grayscale or high-contrast filter to match the mood.",
+    "image_urls": [
+      {
+        "url": "https://images.pexels.com/photos/18218174/pexels-photo-18218174.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "hero_or_parallax",
+        "description": "Modern architecture for subtle background parallax or clipped visual interest in the hero."
+      },
+      {
+        "url": "https://images.pexels.com/photos/38399171/pexels-photo-38399171.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "about_trust",
+        "description": "Sophisticated studio portrait for the Manifesto / About section to build trust."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1656055450593-5f9fc1e88b65?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwxfHxtYWNybyUyMHRleHR1cmUlMjBzdG9uZSUyMGdvbGQlMjBsaWdodHxlbnwwfHx8fDE3ODQ1NjUxNTB8MA&ixlib=rb-4.1.0&q=85",
+        "category": "services_or_texture",
+        "description": "Golden textured background, use as a hover reveal state for service cards or accent imagery."
+      }
+    ]
+  },
+  "accessibility": {
+    "contrast": "Maintain 4.5:1 ratio for standard text. Ensure Gold on Black and Bone White on Black meet readability standards.",
+    "motion": "Respect prefers-reduced-motion CSS media query. Disable parallax and heavy masks if active.",
+    "aria": "Include aria-labels for all form inputs and the WhatsApp CTA.",
+    "testing": "All interactive elements MUST include a data-testid attribute in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Do NOT use 'Inter' for headings. Strictly use Cormorant Garamond for headings and Manrope for body text.",
+    "Install and configure '@studio-freight/react-lenis' for smooth scrolling.",
+    "Implement the 'Masked Reveal' using framer-motion: wrap text lines in overflow-hidden divs and animate the inner elements' y-axis.",
+    "Never use generic centered layouts. Use asymmetrical grids.",
+    "Do not use generic blue gradients. Stick to the luxury dark/gold palette.",
+    "Ensure the WhatsApp CTA is prominent but elegantly integrated, perhaps as a floating pill.",
+    "Build the application in React with Tailwind CSS.",
+    "Use Phosphor Icons (@phosphor-icons/react) with Light or Thin weights to match the luxury aesthetic.",
+    "Create a noisy grain overlay fixed to the viewport to add subtle texture."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters where appropriate.",
+    "DO NOT apply universal transition (transition: all). Target specific properties.",
+    "DO NOT center align the app container (.App { text-align: center; }).",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Never use AI assistant Emoji characters (🤖🧠💭💡🔮🎯) for icons.",
+    "All interactive and key informational elements MUST include a data-testid attribute (e.g., data-testid='contact-submit-button')."
+  ]
+}
