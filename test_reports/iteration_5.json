@@ -1,0 +1,40 @@
+{
+  "summary": "Iteration 5 — validated the NEW GET /api/admin/blog endpoint and the Admin Dashboard tabs + Blog CRUD UI. Backend: added test_admin_list_blog_includes_drafts to /app/backend/tests/backend_test.py (covers 401 unauth, admin sees draft, public /api/blog does NOT include draft, admin list >=9 including seed+draft). Total suite is now 38 tests, all pass (12.67s under pytest-xdist). Frontend Playwright end-to-end: /admin login with Hetal@110818 → [admin-dashboard] with [admin-tabs] and both [admin-tab-leads] and [admin-tab-blog] visible. Blog tab shows [blog-posts-table] with 8 seed [blog-row-*] rows. [blog-new] opens [blog-editor], filled slug/title/excerpt (category=investing default), added a paragraph block, added a list block, switched its <select> to 'list' → list-item input appeared correctly, toggled published OFF, saved → editor auto-closed and new [blog-row-<scratch>] appeared in the admin table (draft still shown in admin). Verified via fetch that GET /api/blog does NOT include the draft slug. Clicked [blog-edit-<scratch>] → editor re-opened pre-filled with same title; changed title to '…EDITED', toggled published ON, saved → row title updated; verified public GET /api/blog now returns the edited post with the new title. Clicked [blog-delete-<scratch>] with a pre-registered dialog.accept() handler → confirm dialog accepted, row removed from admin table. Regression: Leads tab shows [admin-leads-table] with [admin-refresh], [admin-export-csv], [admin-service-filter], [admin-search] all present and typing in search updates value. Sign-out clears local token and reveals login form again. No lingering scratch data.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py:680-684 admin_list_blog uses .to_list(500) — hard cap; fine for 8-post seed but if collection grows past 500 the admin dashboard will silently truncate. Consider pagination or removing the cap for admin-only listing.",
+    "BlogTab.jsx:391 window.confirm() is a native browser API — works but blocks JS thread and looks less polished than the rest of the admin UI which uses custom styling. Consider a custom confirm modal for consistency.",
+    "BlogTab.jsx:378 axios.get on mount does not send AbortController — if the user quickly logs out or unmounts before the response the setPosts call runs on an unmounted component (React will just warn, no bug, but eslint-warning territory).",
+    "BlogTab.jsx:451 setEditing({ ...p, read_minutes: p.readMinutes }) — the backend now returns both `read_minutes` AND `readMinutes` in the public payload (server.py:632 _blog_to_public). The frontend explicitly re-maps readMinutes→read_minutes for the editor state. On PUT the payload sends `read_minutes` which is the correct field. This works but the two-name duality is fragile — consider standardising on a single wire format (either read_minutes everywhere or readMinutes everywhere) in a follow-up.",
+    "BlogTab.jsx:196 slug field is disabled on edit (correct, matches backend PUT which doesn't accept slug in body) — good, but the disabled input still has data-testid='blog-editor-slug'; testing agents should be aware it is non-editable during edit flows.",
+    "BlogTab.jsx:170-175 the outer backdrop calls onClose() on click, and the inner SlideOver stops propagation via onClick={(e)=>e.stopPropagation()} — verified works correctly (clicks inside panel do not close). But note this means an accidental click on the dark overlay drops all unsaved edits with no confirm. A 'You have unsaved changes' guard would be a nice future improvement.",
+    "AdminPage.jsx:11 useAdminToken reads from localStorage but does not verify the token is still valid at mount — Shell will render, then any admin API call inside LeadsTab/BlogTab that returns 401 triggers onLogout. That works, but a proactive `GET /api/admin/leads` ping on mount would show the login screen faster if the token expired. Minor.",
+    "server.py:687-695 admin_create_blog echoes back the doc via _blog_to_public but sets doc['id']=str(uuid.uuid4()) then inserts — id is not part of the public payload (excluded by _blog_to_public presumably). Verify that BlogPostBase doesn't also require an id, else two ids would coexist. Current tests pass so this is fine, but noting for future refactor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {
+    "backend": "100% (38/38 pytest)",
+    "frontend": "100% (14/14 Playwright steps for the admin blog CRUD + regression flows)"
+  },
+  "test_credentials": "Admin password Hetal@110818 (from /app/memory/test_credentials.md). POST /api/admin/login returns 43-char opaque session token via X-Admin-Token header (8h TTL).",
+  "seed_data_creation": "Playwright scratch post 'playwright-scratch-<random8>' was created, edited to 'EDITED', then deleted within the same run. pytest scratch posts 'pytest-scratch-<hex10>' are created and deleted in each TestBlogAdmin test's finally block. The new test_admin_list_blog_includes_drafts also creates+deletes its own draft. No lingering state; base seed remains 8 posts.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Suite is now 38 tests in /app/backend/tests/backend_test.py. TestBlogAdmin has 8 tests including the new test_admin_list_blog_includes_drafts which validates GET /api/admin/blog returns drafts + public /api/blog excludes them. Full run: `pytest backend/tests/backend_test.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml` (~12s under pytest-xdist). For the admin UI blog flow, note: (a) BlockEditor uses a plain HTML <select> — use Playwright's `.select_option('list')` to switch a block to 'list' type, which then renders an `input[placeholder='List item 1']`. (b) Editor backdrop is data-testid='blog-editor' (fixed, z-95) and closes when the backdrop is clicked; the inner SlideOver stops propagation, so clicks inside form fields do NOT close it. (c) Delete uses window.confirm — always register `page.once('dialog', lambda d: d.accept())` BEFORE the click. (d) Editor auto-closes after successful save (state=detached wait works). (e) Cleanup path: DELETE /api/admin/blog/<slug> with X-Admin-Token header — token is stored in localStorage as 'hf-admin-token'. Regression selectors on Leads tab: [admin-refresh], [admin-export-csv], [admin-service-filter], [admin-search], [admin-leads-table]. Sign-out selector [admin-logout] calls /api/admin/logout and clears localStorage token.",
+  "rca of the issue": "N/A — no bugs found in this iteration. First run had a Python f-string escaping bug in the test harness (single '}' inside triple-quoted f-string) which was fixed by moving the JS template outside the f-string and interpolating via a call-expression."
+}

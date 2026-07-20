@@ -609,6 +609,44 @@ class TestBlogAdmin:
         d2 = api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
         assert d2.status_code == 404
 
+    def test_admin_list_blog_includes_drafts(self, api, admin_headers):
+        """GET /api/admin/blog must return ALL posts including published:false drafts,
+        while public GET /api/blog must continue to exclude them."""
+        # 1. Unauth 401
+        r_unauth = api.get(f"{BASE_URL}/api/admin/blog")
+        assert r_unauth.status_code == 401
+
+        # 2. Create a scratch draft (published:false)
+        slug = self._scratch_slug()
+        payload = self._payload(slug)
+        payload["published"] = False
+        payload["title"] = "Pytest Scratch Draft — Hidden From Public"
+        try:
+            c = api.post(f"{BASE_URL}/api/admin/blog", json=payload, headers=admin_headers)
+            assert c.status_code == 201, c.text
+
+            # 3. Admin endpoint MUST include the draft
+            a = api.get(f"{BASE_URL}/api/admin/blog", headers=admin_headers)
+            assert a.status_code == 200, a.text
+            admin_rows = a.json()
+            assert isinstance(admin_rows, list)
+            admin_slugs = [row["slug"] for row in admin_rows]
+            assert slug in admin_slugs, f"admin list missing draft slug {slug}"
+            row = next(r for r in admin_rows if r["slug"] == slug)
+            # Draft flag preserved (published:false) in admin payload
+            assert row.get("published") is False, f"admin payload dropped published flag: {row}"
+
+            # 4. Public endpoint MUST NOT include the draft
+            p = api.get(f"{BASE_URL}/api/blog")
+            assert p.status_code == 200
+            public_slugs = [row["slug"] for row in p.json()]
+            assert slug not in public_slugs, "draft leaked into public /api/blog"
+
+            # 5. Admin list should be at least 8 (seed) + 1 (draft)
+            assert len(admin_rows) >= 9, f"admin list too small: {len(admin_rows)}"
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
     def test_digest_after_deleting_newest_picks_next_newest(self, api, admin_headers):
         """Create a scratch post dated in the future so it becomes newest, then delete it and
         ensure send_blog_digest (no slug) picks a different slug (the next-newest)."""

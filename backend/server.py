@@ -677,6 +677,13 @@ async def get_related_posts(slug: str, limit: int = 3):
     return [_blog_to_public(r) for r in (same + others)]
 
 
+@api_router.get("/admin/blog")
+async def admin_list_blog(_: dict = Depends(require_admin)):
+    """Admin variant of GET /api/blog — includes drafts (published:false)."""
+    rows = await db.blog_posts.find({}, {"_id": 0}).sort("date", -1).to_list(500)
+    return [_blog_to_public(r) for r in rows]
+
+
 @api_router.post("/admin/blog", status_code=201)
 async def admin_create_blog(payload: BlogPostBase, _: dict = Depends(require_admin)):
     doc = payload.model_dump()
