@@ -731,6 +731,7 @@ export function BlogTab({ token, onLogout }) {
                       if (el) el.indeterminate = selected.size > 0 && selected.size < posts.length;
                     }}
                     onChange={toggleSelectAll}
+                    disabled={bulkBusy}
                     data-testid="blog-select-all"
                   />
                 </th>
@@ -752,6 +753,7 @@ export function BlogTab({ token, onLogout }) {
                       type="checkbox"
                       checked={selected.has(p.slug)}
                       onChange={() => toggleSelect(p.slug)}
+                      disabled={bulkBusy}
                       data-testid={`blog-select-${p.slug}`}
                     />
                   </td>
