@@ -414,7 +414,7 @@ CATEGORY_LABELS = {
 def _digest_email_html(post: dict) -> str:
     url = f"{PUBLIC_SITE_URL}/blog/{post['slug']}"
     cat = CATEGORY_LABELS.get(post.get("category", ""), (post.get("category") or "").title())
-    read = post.get("read_minutes") or 5
+    read = post.get("readMinutes") or 5
     return f"""
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f2;padding:32px 0;">
       <tr><td align="center">
@@ -611,7 +611,7 @@ class BlogPostBase(BaseModel):
     excerpt: str = Field(..., min_length=10, max_length=600)
     category: str = Field(..., min_length=2, max_length=40)
     date: str = Field(..., min_length=10, max_length=10)  # YYYY-MM-DD
-    read_minutes: int = Field(default=5, ge=1, le=60)
+    readMinutes: int = Field(default=5, ge=1, le=60)
     cover: str = Field(..., min_length=8, max_length=800)
     body: List[BlogBlock] = Field(default_factory=list)
     published: bool = True
@@ -623,18 +623,14 @@ class BlogPostUpdate(BaseModel):
     excerpt: Optional[str] = None
     category: Optional[str] = None
     date: Optional[str] = None
-    read_minutes: Optional[int] = None
+    readMinutes: Optional[int] = None
     cover: Optional[str] = None
     body: Optional[List[BlogBlock]] = None
     published: Optional[bool] = None
 
 
 def _blog_to_public(doc: dict) -> dict:
-    d = {k: v for k, v in doc.items() if k not in {"_id"}}
-    # Frontend reads `readMinutes` (camelCase); drop the snake_case dupe from payload.
-    if "read_minutes" in d:
-        d["readMinutes"] = d.pop("read_minutes")
-    return d
+    return {k: v for k, v in doc.items() if k != "_id"}
 
 
 @api_router.get("/blog")
@@ -718,9 +714,17 @@ async def admin_delete_blog(slug: str, _: dict = Depends(require_admin)):
 
 @app.on_event("startup")
 async def _seed_blog_posts():
-    """One-time seed: insert BLOG_SEED only if the collection is empty. Ensures a unique index on slug."""
+    """One-time seed: insert BLOG_SEED only if the collection is empty. Ensures a unique index on slug.
+    Also performs the one-time rename of legacy `read_minutes` → `readMinutes` on any existing docs."""
     try:
         await db.blog_posts.create_index("slug", unique=True)
+        # One-time migration: legacy docs used snake_case
+        migrated = await db.blog_posts.update_many(
+            {"read_minutes": {"$exists": True}},
+            {"$rename": {"read_minutes": "readMinutes"}},
+        )
+        if migrated.modified_count:
+            logger.info(f"Renamed read_minutes → readMinutes on {migrated.modified_count} blog_posts docs")
         count = await db.blog_posts.count_documents({})
         if count == 0:
             docs = []

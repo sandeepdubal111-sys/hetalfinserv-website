@@ -34,7 +34,7 @@ function emptyDraft() {
     excerpt: "",
     category: "investing",
     date: today(),
-    read_minutes: 5,
+    readMinutes: 5,
     cover: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80",
     body: [{ type: "p", text: "" }],
     published: true,
@@ -148,7 +148,7 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
 
     setBusy(true);
     try {
-      const payload = { ...draft, read_minutes: Number(draft.read_minutes) || 5 };
+      const payload = { ...draft, readMinutes: Number(draft.readMinutes) || 5 };
       if (isNew) {
         await axios.post(`${API}/api/admin/blog`, payload, { headers: { "X-Admin-Token": token } });
       } else {
@@ -256,8 +256,8 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
                 type="number"
                 min={1}
                 max={60}
-                value={draft.read_minutes}
-                onChange={(e) => set("read_minutes", e.target.value)}
+                value={draft.readMinutes}
+                onChange={(e) => set("readMinutes", e.target.value)}
                 data-testid="blog-editor-read-minutes"
                 className="w-full border border-hair px-3 py-2 bg-white text-obsidian"
               />
@@ -448,7 +448,7 @@ export function BlogTab({ token, onLogout }) {
                   <td className="py-4 pr-4 text-mute whitespace-nowrap">{p.readMinutes} min</td>
                   <td className="py-4 pr-0 text-right whitespace-nowrap">
                     <button
-                      onClick={() => setEditing({ post: { ...p, read_minutes: p.readMinutes }, isNew: false })}
+                      onClick={() => setEditing({ post: { ...p }, isNew: false })}
                       className="inline-flex items-center gap-1 border border-hair px-3 py-2 text-obsidian hover:bg-white transition-colors"
                       data-testid={`blog-edit-${p.slug}`}
                     >

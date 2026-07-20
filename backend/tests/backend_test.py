@@ -507,7 +507,7 @@ class TestBlogAdmin:
             "excerpt": "A temporary post created by the automated test suite. Safe to delete.",
             "category": "investing",
             "date": "2026-07-01",
-            "read_minutes": 4,
+            "readMinutes": 4,
             "cover": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1600&q=80",
             "body": [
                 {"type": "p", "text": "Body paragraph one."},

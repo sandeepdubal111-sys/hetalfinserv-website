@@ -121,10 +121,16 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Backend test suite now 38/38 (added `test_admin_list_blog_includes_drafts` covering 401, admin-sees-draft, public-excludes-draft).
 - ✅ Frontend Playwright verified full flow: login → tabs → new post → edit → publish toggle → delete + regression on Leads tab.
 
+## Implemented (2026-07-20 — Wire format standardised)
+- ✅ Standardised on **camelCase `readMinutes`** across wire, Python (Pydantic), DB, and frontend.
+- ✅ One-time startup migration: `db.blog_posts.update_many({"read_minutes":{"$exists":true}}, {"$rename":{"read_minutes":"readMinutes"}})` — 8 seed docs migrated automatically.
+- ✅ Removed the boundary re-map in `BlogTab.jsx` (edit-click no longer needs `{ ...p, read_minutes: p.readMinutes }`); `_blog_to_public` back to a one-liner.
+- ✅ 38/38 pytest still green; Playwright verified editor pre-fills `readMinutes=6` for the seed post.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
 - P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
 - P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
 - P2 Admin polish: custom confirm modal instead of `window.confirm`, unsaved-changes guard on editor backdrop click, pagination for admin blog list (500-cap)
-- P2 Standardise wire format on `read_minutes` vs `readMinutes` (currently the frontend re-maps at the editor boundary)
+- P2 Audit log for admin blog CRUD (`blog_audit` collection + History pane in Blog tab)

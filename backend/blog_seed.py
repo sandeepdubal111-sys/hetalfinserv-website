@@ -12,7 +12,7 @@ BLOG_SEED = [
         "excerpt": "Your monthly SIP statement quietly whispers five things. Learn to read them like an advisor does, and you'll act with confidence instead of reacting to noise.",
         "category": "investing",
         "date": "2026-06-29",
-        "read_minutes": 6,
+        "readMinutes": 6,
         "cover": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Most investors open their fund statement, glance at the total value, and close it. But every statement contains five signals — quiet indicators that reveal whether your portfolio is compounding on plan or drifting off course."},
@@ -36,7 +36,7 @@ BLOG_SEED = [
         "excerpt": "Health insurance suffers from a peculiar cognitive bias: it's the most important product you'll never feel motivated to buy today. Here's the fix.",
         "category": "insurance",
         "date": "2026-06-18",
-        "read_minutes": 5,
+        "readMinutes": 5,
         "cover": "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Behavioural economists call it hyperbolic discounting — the tendency to value the certain present far more than the uncertain future. Nowhere is it more expensive than in health insurance."},
@@ -58,7 +58,7 @@ BLOG_SEED = [
         "excerpt": "That green arrow. That red candle. Colour is not neutral — it's the single strongest bias built into every trading app.",
         "category": "behaviour",
         "date": "2026-05-30",
-        "read_minutes": 5,
+        "readMinutes": 5,
         "cover": "https://images.unsplash.com/photo-1642790551116-18e150f248e5?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Open any broker app. What draws your eye first — the number, or the colour of the arrow next to it? Behavioural finance research shows that colour registers 20% faster than the numeric change, and it shapes the decision that follows."},
@@ -80,7 +80,7 @@ BLOG_SEED = [
         "excerpt": "You landed the brand deals. The bank balance is real. But if the SIPs aren't automated, the wealth won't outlast the algorithm.",
         "category": "planning",
         "date": "2026-05-19",
-        "read_minutes": 5,
+        "readMinutes": 5,
         "cover": "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Creator-economy income is lumpy: three months of ₹6L brand deals followed by a quiet quarter. Traditional financial planning wasn't designed for this cash-flow shape — but the math still works if you set up the right auto-pilots."},
@@ -102,7 +102,7 @@ BLOG_SEED = [
         "excerpt": "Not the famous quotes on Twitter. The quieter ones — from letters, interviews and boardrooms — that describe how discipline actually looks.",
         "category": "behaviour",
         "date": "2026-04-17",
-        "read_minutes": 5,
+        "readMinutes": 5,
         "cover": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Every serious investor eventually collects quotes — not for LinkedIn posts, but as anchors when markets misbehave. Five that we return to often."},
@@ -122,7 +122,7 @@ BLOG_SEED = [
         "excerpt": "The Nifty has corrected 10%+ every 18 months on average. The portfolios that get hurt are the ones whose owners try to time the recovery.",
         "category": "behaviour",
         "date": "2026-03-24",
-        "read_minutes": 4,
+        "readMinutes": 4,
         "cover": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "In the last 30 years, the Nifty has seen a 10%+ correction roughly every 18 months. Yet the same index has compounded at ~12% CAGR over long stretches. The gap between the index return and the average investor's return is almost entirely explained by reaction — not by the correction itself."},
@@ -142,7 +142,7 @@ BLOG_SEED = [
         "excerpt": "Every other domain rewards active effort. Investing rewards the opposite — set it, forget it, and don't fiddle with it.",
         "category": "investing",
         "date": "2026-03-06",
-        "read_minutes": 4,
+        "readMinutes": 4,
         "cover": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Effort is over-rated in investing. Study after study confirms that the investors who touch their portfolio the least — after setting it up correctly — beat the ones who tinker. Vanguard's Advisor Alpha study puts the 'behaviour gap' at 1.5% per year. Compounded over 25 years, that's more than half your final corpus."},
@@ -162,7 +162,7 @@ BLOG_SEED = [
         "excerpt": "They grew up watching two crashes on their phones. Counter-intuitively, that may make them the calmest generation India has seen at the wheel of its capital.",
         "category": "planning",
         "date": "2026-02-13",
-        "read_minutes": 5,
+        "readMinutes": 5,
         "cover": "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=1600&q=80",
         "body": [
             {"type": "p", "text": "Every generation is shaped by the crashes it lived through. Baby-boomer investors in India remember 1992. Millennials remember 2008. Gen Z has watched two major drawdowns before their 25th birthday — and unlike their parents, they've watched them on a phone in real-time."},
