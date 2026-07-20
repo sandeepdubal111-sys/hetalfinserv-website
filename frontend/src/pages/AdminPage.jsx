@@ -19,7 +19,7 @@ function LoginPanel({ onLogin }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  async function submit(e) {
+    async function submit(e) {
     e.preventDefault();
     setErr("");
     setBusy(true);
@@ -340,6 +340,20 @@ function Dashboard({ token, onLogout }) {
 
 export default function AdminPage() {
   const [token, setToken] = useAdminToken();
+  const logout = async () => {
+    if (token) {
+      try {
+        await axios.post(
+          `${API}/api/admin/logout`,
+          {},
+          { headers: { "X-Admin-Token": token } }
+        );
+      } catch {
+        /* server-side invalidation is best-effort — local token is always cleared */
+      }
+    }
+    setToken("");
+  };
   if (!token) return <LoginPanel onLogin={setToken} />;
-  return <Dashboard token={token} onLogout={() => setToken("")} />;
+  return <Dashboard token={token} onLogout={logout} />;
 }

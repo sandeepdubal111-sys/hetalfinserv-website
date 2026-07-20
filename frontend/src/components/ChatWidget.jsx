@@ -24,9 +24,6 @@ const OPENING = {
     "Hi! I'm the Hetal Finserv assistant. Ask me about SIPs, insurance, loans, taxes, our founders — anything. I'll also arrange a call with Sandeep if you'd like.",
 };
 
-const FALLBACK_TEXT =
-  "Our assistant is taking a moment. Would you like to continue on WhatsApp — you'll usually hear back within minutes.";
-
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([OPENING]);
@@ -65,7 +62,9 @@ export default function ChatWidget() {
         ...m,
         {
           role: "assistant",
-          text: timedOut ? FALLBACK_TEXT : FALLBACK_TEXT,
+          text: timedOut
+            ? "Our assistant is taking longer than usual. Would you like to continue on WhatsApp — you'll usually hear back within minutes."
+            : "I can't reach our assistant right now. WhatsApp is the fastest way to get a real reply from Sandeep.",
           fallback: true,
         },
       ]);

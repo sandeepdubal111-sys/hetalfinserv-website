@@ -85,10 +85,17 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Contact page map iframe updated from Bandra Mumbai → Wadgaon Sheri, Pune 411014 (real HQ address per hetalfinserv.com)
 - ✅ Backend test suite `/app/backend/tests/backend_test.py` — 17/17 pytest green (Leads/Contacts/Callbacks/Admin/Chat)
 
+## Implemented (2026-07-20 — Hardening + Blog digest cron)
+- ✅ **Admin session tokens**: `/api/admin/login` now returns a random 32-byte URL-safe token (43 chars), persisted in `admin_sessions` with 8h TTL. Old raw-password-as-token flow is 401. New `POST /api/admin/logout` server-side invalidates. Frontend sign-out calls it before clearing localStorage. Expired sessions are opportunistically pruned on every login.
+- ✅ **ChatWidget resilience**: axios `timeout=20000ms` on `/api/chat`. On timeout/error, a bespoke fallback message renders with a "CONTINUE ON WHATSAPP →" CTA (data-testid `chat-whatsapp-fallback`) linking to `https://wa.me/918767095307`. Timeout and generic-error messages are now differentiated.
+- ✅ **Weekly blog digest cron**: APScheduler `AsyncIOScheduler` fires every Monday 09:00 IST calling `send_blog_digest()` — picks newest post from `blog_data.py` (mirror of frontend blog.js), emails every unique lead-email via Emergent Email, records in `blog_digests_sent` (idempotent — same slug won't re-send unless `force=true`). If 0/N recipients succeeded upstream, we do NOT mark as sent so a retry is possible.
+- ✅ Admin endpoints for the digest: `POST /api/admin/blog-digest/send` (body `{slug?, force?}`) + `GET /api/admin/blog-digest/history`.
+- ✅ Env: added `ADMIN_SESSION_HOURS=8`, `PUBLIC_SITE_URL=<preview-url>` to `/app/backend/.env`. Added `APScheduler==3.11.3` to requirements.
+- ✅ Backend test coverage grew 17 → 25 (TestAdminSession, TestBlogDigest); all green.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
-- P2 Weekly-digest email to lead list when a new blog post ships
-- P2 Backend `/api/blog` collection so posts are DB-managed
+- P2 Backend `/api/blog` collection so posts are DB-managed (currently mirrored in `blog_data.py`)
 - P2 Shareable calculator URL params
-- P2 (Hardening) Replace raw-password-as-token admin auth with random session token + TTL; move away from localStorage
-- P2 (Chat) Use LlmChat native session memory instead of replaying history send_message loop; add axios timeout + WhatsApp fallback
+- P2 (Hardening) Add Mongo TTL index on `admin_sessions.expires_at`; store as native datetime instead of ISO strings
+- P2 Chatbot auto-lead capture (regex-detect phone/name in user message, silent POST to /api/leads with source="chatbot")

@@ -507,6 +507,20 @@ async def send_blog_digest(slug: Optional[str] = None, force: bool = False) -> d
     results = await asyncio.gather(*(_one(a) for a in recipients), return_exceptions=False)
     sent_ok = sum(1 for r in results if r)
 
+    if sent_ok == 0:
+        # Every recipient failed upstream (rejected by provider). Do NOT mark as sent,
+        # so a subsequent non-force retry is still allowed.
+        logger.warning(
+            f"Blog digest '{post['slug']}': 0/{len(recipients)} recipients accepted — not marking as sent"
+        )
+        return {
+            "ok": False,
+            "sent": 0,
+            "attempted": len(recipients),
+            "slug": post["slug"],
+            "reason": "all_recipients_failed",
+        }
+
     await db.blog_digests_sent.update_one(
         {"slug": post["slug"]},
         {"$set": {
