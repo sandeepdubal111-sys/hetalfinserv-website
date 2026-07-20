@@ -110,10 +110,21 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ `fetchPosts()` guards against non-array responses with `Array.isArray`.
 - ✅ Backend test suite grew 25 → 37 (added `TestBlogPublic` 5 + `TestBlogAdmin` 7); all 37 green. Frontend Playwright verified /blog and /blog/:slug flows including 404 redirect.
 
+## Implemented (2026-07-20 — Admin UI for Blog CRUD)
+- ✅ Refactored `/admin` into a tabbed Shell (Leads | Blog). Split into `admin/LeadsTab.jsx` (extracted, unchanged behaviour) and `admin/BlogTab.jsx` (new).
+- ✅ New backend endpoint `GET /api/admin/blog` — admin-scoped list that includes drafts (published:false). Public `GET /api/blog` still excludes drafts.
+- ✅ Blog tab: table of all posts (date/title/category/slug/read + Edit/Delete). "New post" and "Edit" open a slide-over `PostEditor` with:
+  - slug (auto-generate from title on new; disabled on edit), title, excerpt, category dropdown, date, read-minutes, cover URL + preview
+  - `BlockEditor` per body block: paragraph / heading / quote / list, with add/remove/reorder-up-down; list items get their own add/remove UX
+  - "Published" toggle for draft workflow
+  - Validation surfaced inline (slug pattern, min-length checks) + backend error messages
+- ✅ Backend test suite now 38/38 (added `test_admin_list_blog_includes_drafts` covering 401, admin-sees-draft, public-excludes-draft).
+- ✅ Frontend Playwright verified full flow: login → tabs → new post → edit → publish toggle → delete + regression on Leads tab.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
-- P2 Admin UI for blog CRUD (currently API-only — the endpoints exist, no dashboard screen yet)
 - P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
 - P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
-- P2 Blog list pagination (currently hard-capped at 200); "Back to All" CTA on empty category; user-facing "post not found" toast on 404 redirect
+- P2 Admin polish: custom confirm modal instead of `window.confirm`, unsaved-changes guard on editor backdrop click, pagination for admin blog list (500-cap)
+- P2 Standardise wire format on `read_minutes` vs `readMinutes` (currently the frontend re-maps at the editor boundary)
