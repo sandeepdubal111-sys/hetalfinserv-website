@@ -1,8 +1,114 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Plus, Pencil, Trash2, X, Save, RefreshCw, History, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Save, RefreshCw, History, Eye, EyeOff, AlertTriangle } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// ---------- Reusable branded confirm dialog + imperative hook ----------
+function useConfirm() {
+  const [state, setState] = useState(null); // { title, message, confirmLabel, cancelLabel, tone, resolve }
+  const confirm = (opts) =>
+    new Promise((resolve) => {
+      setState({
+        title: "Are you sure?",
+        message: "",
+        confirmLabel: "Confirm",
+        cancelLabel: "Cancel",
+        tone: "obsidian", // "obsidian" | "danger"
+        ...opts,
+        resolve,
+      });
+    });
+  const settle = (result) => {
+    if (state) state.resolve(result);
+    setState(null);
+  };
+  const dialog = state ? (
+    <ConfirmDialog
+      state={state}
+      onConfirm={() => settle(true)}
+      onCancel={() => settle(false)}
+    />
+  ) : null;
+  return { confirm, dialog };
+}
+
+function ConfirmDialog({ state, onConfirm, onCancel }) {
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") onCancel();
+      if (e.key === "Enter") onConfirm();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel, onConfirm]);
+
+  const isDanger = state.tone === "danger";
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center px-6"
+      style={{ background: "rgba(14,15,12,0.68)" }}
+      onClick={onCancel}
+      data-testid="confirm-dialog"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[440px] bg-ivory shadow-2xl"
+        style={{ border: "1px solid var(--hf-hair)" }}
+      >
+        <div className="px-6 pt-6 pb-4 flex items-start gap-3">
+          <div
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 36,
+              height: 36,
+              background: isDanger ? "rgba(242,122,84,0.14)" : "rgba(14,15,12,0.08)",
+              color: isDanger ? "var(--hf-coral)" : "var(--hf-obsidian)",
+              border: `1px solid ${isDanger ? "var(--hf-coral)" : "var(--hf-hair)"}`,
+            }}
+          >
+            <AlertTriangle size={16} strokeWidth={1.6} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-mono-label text-mute" style={{ fontSize: "0.62rem", letterSpacing: "0.16em" }}>
+              — {isDanger ? "CONFIRM DESTRUCTIVE ACTION" : "CONFIRM"}
+            </p>
+            <h3 className="font-display text-obsidian mt-1.5" style={{ fontSize: "1.35rem", lineHeight: 1.1 }}>
+              {state.title}
+            </h3>
+            {state.message && (
+              <p className="mt-3 text-obsidian/80" style={{ fontSize: "0.9rem", lineHeight: 1.55 }}>
+                {state.message}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="px-6 pb-5 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="font-mono-label text-mute hover:text-obsidian transition-colors px-3 py-2"
+            style={{ fontSize: "0.7rem" }}
+            data-testid="confirm-cancel"
+          >
+            {state.cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            data-testid="confirm-accept"
+            className="inline-flex items-center gap-1.5 font-mono-label px-4 py-2 text-white"
+            style={{
+              fontSize: "0.7rem",
+              letterSpacing: "0.08em",
+              background: isDanger ? "var(--hf-coral)" : "var(--hf-obsidian)",
+            }}
+          >
+            {state.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const BLOCK_TYPES = [
   { key: "p", label: "Paragraph" },
@@ -117,12 +223,13 @@ function BlockEditor({ block, onChange, onRemove, onMoveUp, onMoveDown }) {
   );
 }
 
-function PostEditor({ token, initial, onClose, onSaved, isNew }) {
+function PostEditor({ token, initial, onClose, onSaved, isNew, confirm }) {
   const [draft, setDraft] = useState(initial || emptyDraft());
+  const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
-  function set(k, v) { setDraft((d) => ({ ...d, [k]: v })); }
+  function set(k, v) { setDraft((d) => ({ ...d, [k]: v })); setDirty(true); }
 
   function updateBlock(i, next) {
     const body = [...draft.body];
@@ -138,6 +245,20 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
     set("body", body);
   }
   function addBlock() { set("body", [...draft.body, { type: "p", text: "" }]); }
+
+  async function tryClose() {
+    if (dirty) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved edits on this post. Closing now will lose them.",
+        confirmLabel: "Discard",
+        cancelLabel: "Keep editing",
+        tone: "danger",
+      });
+      if (!ok) return;
+    }
+    onClose();
+  }
 
   async function save() {
     setErr("");
@@ -157,6 +278,7 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
         await axios.put(`${API}/api/admin/blog/${slug}`, rest, { headers: { "X-Admin-Token": token } });
       }
       onSaved();
+      setDirty(false);
     } catch (e) {
       const msg = e.response?.data?.detail || e.message;
       setErr(typeof msg === "string" ? msg : "Save failed.");
@@ -170,19 +292,24 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
       className="fixed inset-0 z-[95] flex justify-end"
       data-testid="blog-editor"
       style={{ background: "rgba(14,15,12,0.55)" }}
-      onClick={onClose}
+      onClick={tryClose}
     >
       <SlideOver onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-hair sticky top-0 bg-ivory z-10">
           <div>
             <p className="font-mono-label text-mute" style={{ fontSize: "0.66rem" }}>
               — {isNew ? "NEW POST" : "EDIT POST"}
+              {dirty && (
+                <span className="ml-2" style={{ color: "var(--hf-coral)" }} data-testid="blog-editor-dirty">
+                  · UNSAVED
+                </span>
+              )}
             </p>
             <h3 className="font-display text-obsidian mt-1" style={{ fontSize: "1.4rem", lineHeight: 1 }}>
               {isNew ? "Draft a new piece" : draft.title || "Untitled"}
             </h3>
           </div>
-          <button onClick={onClose} className="p-2 border border-hair text-obsidian" data-testid="blog-editor-close">
+          <button onClick={tryClose} className="p-2 border border-hair text-obsidian" data-testid="blog-editor-close">
             <X size={16} />
           </button>
         </div>
@@ -327,7 +454,7 @@ function PostEditor({ token, initial, onClose, onSaved, isNew }) {
         </div>
 
         <div className="sticky bottom-0 bg-ivory border-t border-hair px-6 py-4 flex items-center justify-end gap-3">
-          <button onClick={onClose} className="font-mono-label text-mute hover:text-obsidian" style={{ fontSize: "0.7rem" }}>
+          <button onClick={tryClose} className="font-mono-label text-mute hover:text-obsidian" style={{ fontSize: "0.7rem" }}>
             Cancel
           </button>
           <button onClick={save} disabled={busy} className="hf-btn-coral disabled:opacity-50" data-testid="blog-editor-save">
@@ -372,6 +499,7 @@ export function BlogTab({ token, onLogout }) {
   const [deleting, setDeleting] = useState(""); // slug
   const [toggling, setToggling] = useState(""); // slug currently mid-toggle
   const [historyOpen, setHistoryOpen] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function load() {
     setLoading(true);
@@ -390,7 +518,14 @@ export function BlogTab({ token, onLogout }) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   async function del(slug) {
-    if (!window.confirm(`Delete "${slug}"? This can't be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete "${slug}"?`,
+      message: "This removes the post permanently. Audit rows are kept.",
+      confirmLabel: "Delete post",
+      cancelLabel: "Keep",
+      tone: "danger",
+    });
+    if (!ok) return;
     setDeleting(slug);
     try {
       await axios.delete(`${API}/api/admin/blog/${slug}`, { headers: { "X-Admin-Token": token } });
@@ -527,6 +662,7 @@ export function BlogTab({ token, onLogout }) {
           token={token}
           initial={editing.post}
           isNew={editing.isNew}
+          confirm={confirm}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); load(); }}
         />
@@ -534,6 +670,7 @@ export function BlogTab({ token, onLogout }) {
       {historyOpen && (
         <HistoryDrawer token={token} onClose={() => setHistoryOpen(false)} />
       )}
+      {confirmDialog}
     </div>
   );
 }

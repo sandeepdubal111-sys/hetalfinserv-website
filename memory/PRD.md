@@ -141,12 +141,19 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Verified end-to-end via Playwright: 5-Signals post published → click → hidden from public `/api/blog` → click again → restored, with the History drawer showing the exact `[unpublished, published]` sequence for that slug.
 - ✅ 47/47 pytest still green.
 
+## Implemented (2026-07-20 — Custom confirm modal + unsaved-changes guard)
+- ✅ New reusable branded `ConfirmDialog` component + `useConfirm()` hook — imperative promise-returning API (`await confirm({title, message, confirmLabel, cancelLabel, tone: "danger"|"obsidian"})`). Keyboard: Enter accepts, Escape cancels, backdrop click cancels.
+- ✅ Delete flow now uses the custom confirm (matches design system) instead of the native `window.confirm` — zero `window.confirm` usages remain in BlogTab.
+- ✅ PostEditor tracks a `dirty` flag (any field mutation). Header shows a red `· UNSAVED` badge when dirty. Backdrop click, Cancel button, and the X-close button all route through `tryClose()` which shows a `Discard changes?` confirm when dirty. Clean close when nothing has been edited (no false-positive prompts).
+- ✅ Playwright verified: Cancel keeps row/editor; Accept deletes / discards; ESC & Enter keybindings work.
+- ✅ 47/47 pytest still green.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
-- P2 Custom confirm modal instead of `window.confirm`; unsaved-changes guard on editor backdrop click
 - P2 Audit endpoint pagination cursor (`?before=<ts>`) for browsing past the 500-row cap
 - P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
 - P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
 - P2 Code-split the `/admin` bundle via `React.lazy`
-- P2 Slack/WhatsApp webhook on `deleted` audit actions (optional ops-signal)
+- P2 Slack/WhatsApp webhook on `deleted` audit actions
+- P2 Bulk-actions bar (multi-select rows for mass publish/unpublish/delete)
