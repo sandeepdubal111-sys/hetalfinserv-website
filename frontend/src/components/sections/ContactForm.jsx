@@ -1,16 +1,35 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { createLead } from "@/lib/api";
 import { SERVICES, SITE } from "@/lib/data";
 
 const EMPTY = { name: "", phone: "", email: "", service: "", message: "" };
 
+function buildWhatsAppUrl(lead) {
+  const lines = [
+    `Hi Hetal Finserv,`,
+    ``,
+    `I just submitted an enquiry on your website.`,
+    ``,
+    `• Name: ${lead.name}`,
+    `• Phone: ${lead.phone}`,
+    lead.email ? `• Email: ${lead.email}` : null,
+    lead.service ? `• Interested in: ${lead.service}` : null,
+    lead.message ? `• Note: ${lead.message}` : null,
+    ``,
+    `Please reach out at your convenience.`,
+  ].filter(Boolean);
+  const text = encodeURIComponent(lines.join("\n"));
+  return `https://wa.me/${SITE.whatsapp.replace(/\D/g, "")}?text=${text}`;
+}
+
 export default function ContactForm({ compact = false }) {
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [lastLead, setLastLead] = useState(null);
 
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -23,6 +42,7 @@ export default function ContactForm({ compact = false }) {
     try {
       setLoading(true);
       await createLead({ ...form, source: "website-contact-form" });
+      setLastLead({ ...form });
       setDone(true);
       setForm(EMPTY);
       toast.success("Received. We'll be in touch shortly.");
@@ -91,16 +111,36 @@ export default function ContactForm({ compact = false }) {
                   Thank you.<br /><span style={{ color: "var(--hf-gold)" }} className="italic">We'll be in touch shortly.</span>
                 </h3>
                 <p className="mt-6 text-[color:rgba(244,239,230,0.75)] max-w-md">
-                  Your enquiry has been logged. In the meantime, feel free to reach us
-                  directly at <a href={`tel:${SITE.phoneClean}`} className="text-ivory link-underline">{SITE.phone}</a>.
+                  Your enquiry has been logged. To reach us instantly, forward the same
+                  details on WhatsApp — it lands directly with our advisory desk.
                 </p>
-                <button
-                  onClick={() => setDone(false)}
-                  className="mt-8 hf-btn-outline"
-                  data-testid="lead-send-another"
-                >
-                  Send another
-                </button>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  {lastLead && (
+                    <a
+                      href={buildWhatsAppUrl(lastLead)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hf-btn-gold"
+                      data-testid="lead-success-whatsapp"
+                    >
+                      <MessageCircle size={16} strokeWidth={1.5} />
+                      Continue on WhatsApp
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setDone(false)}
+                    className="hf-btn-outline"
+                    data-testid="lead-send-another"
+                  >
+                    Send another
+                  </button>
+                </div>
+                <p className="mt-6 font-mono-label text-[color:rgba(244,239,230,0.5)]">
+                  Or call us directly at{" "}
+                  <a href={`tel:${SITE.phoneClean}`} className="text-ivory link-underline">
+                    {SITE.phone}
+                  </a>
+                </p>
               </motion.div>
             ) : (
               <form
