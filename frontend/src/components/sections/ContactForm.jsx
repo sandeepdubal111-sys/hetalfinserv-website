@@ -85,10 +85,10 @@ export default function ContactForm({ compact = false }) {
               >
                 <p className="font-mono-label text-[color:var(--hf-gold)]">— Received</p>
                 <h3
-                  className="font-display text-ivory mt-4"
-                  style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)", lineHeight: 1 }}
+                  className="font-display mt-4"
+                  style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)", lineHeight: 1, color: "#f4efe6" }}
                 >
-                  Thank you.<br />We'll be in touch shortly.
+                  Thank you.<br /><span style={{ color: "var(--hf-gold)" }} className="italic">We'll be in touch shortly.</span>
                 </h3>
                 <p className="mt-6 text-[color:rgba(244,239,230,0.75)] max-w-md">
                   Your enquiry has been logged. In the meantime, feel free to reach us
