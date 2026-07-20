@@ -39,19 +39,26 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Animated H-monogram intro loader
 
 ## Implemented (2026-07-20 — UI polish)
-- ✅ AMC logos now render via icon.horse (hi-res) with Google favicon + branded-initials fallback chain (shared `BrandLogo.jsx` component)
-- ✅ Regulators use elegant branded text tokens (AMFI blue, SEBI navy, IRDAI red, MahaRERA bronze, NISM green) — consistent premium look regardless of remote availability
+- ✅ AMC logos now render via `logo.dev` (real official brand logos, 256×256) with icon.horse + branded-initials fallback chain (shared `BrandLogo.jsx` component)
+- ✅ Regulators show authentic official logos (AMFI triangles, SEBI wordmark, IRDAI, MahaRERA — user-provided asset override, NISM) via logo.dev + optional `logoOverride` field
 - ✅ Navbar wordmark: "Hetal Finserv" (removed period)
 - ✅ Navbar tabs: larger display type + animated black rounded-pill highlight for active route (framer-motion layoutId spring transition)
 
+## Implemented (2026-07-20 — SIP/EMI Calculator)
+- ✅ New `Calculator.jsx` section — dual-mode (SIP / EMI) with segmented pill toggle
+- ✅ Editorial dark-mode layout with gold accents, custom range sliders (`hf-range`)
+- ✅ Real-time calculations: SIP future value, invested, gains · EMI monthly, interest, total
+- ✅ INR formatting with Cr/L suffixes
+- ✅ CTA "Send this to an advisor" → routes to `/contact` and **pre-fills lead form** service + message via React Router `state`
+- ✅ Placed on both HomePage (before Leadership) and ServicesPage (after AMC marquee)
+- ✅ `ContactForm` reads `location.state` on mount to pre-populate fields
+
 ## Prioritized backlog (P1/P2)
-- P1 EMI / SIP calculator widget to increase lead-capture intent
 - P1 Admin dashboard to view/manage leads
 - P2 Email notification on new lead (Resend integration)
 - P2 Blog / knowledge center for SEO
 - P2 AI chatbot for lead qualification
-- P2 Multi-language support
+- P2 Multi-language support (English + Marathi)
 
 ## Next tasks
-- P1 EMI / SIP calculator
 - P1 Admin dashboard for leads

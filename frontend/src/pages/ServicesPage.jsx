@@ -5,6 +5,7 @@ import { MaskLine } from "@/components/MaskedReveal";
 import { ArrowUpRight } from "lucide-react";
 import { SERVICES } from "@/lib/data";
 import AMCPartners from "@/components/sections/AMCPartners";
+import Calculator from "@/components/sections/Calculator";
 import ContactForm from "@/components/sections/ContactForm";
 
 export default function ServicesPage() {
@@ -128,6 +129,7 @@ export default function ServicesPage() {
       })}
 
       <AMCPartners />
+      <Calculator />
       <ContactForm />
     </main>
   );

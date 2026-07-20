@@ -3,16 +3,14 @@ import BrandLogo from "@/components/BrandLogo";
 
 function LogoChip({ item, variant = "light" }) {
   const dark = variant === "dark";
-  // Deterministic soft-brand color per AMC for the text-token fallback.
-  // Uses the obsidian palette so it always looks premium if remote logo fails.
-  const brandColor = "#0E0F0C";
   return (
     <div className="flex items-center gap-4 shrink-0">
       <BrandLogo
         domain={item.domain}
         name={item.name}
-        brandColor={brandColor}
-        size={48}
+        brandColor="#0E0F0C"
+        size={64}
+        shape="rounded"
       />
       <span
         className={dark ? "font-display italic" : "font-display"}

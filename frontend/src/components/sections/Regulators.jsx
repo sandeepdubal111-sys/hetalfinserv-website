@@ -1,6 +1,7 @@
 import { REGULATORS } from "@/lib/data";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Regulators() {
   return (
@@ -55,30 +56,15 @@ export default function Regulators() {
                 aria-label={`Verify ${r.name} registration`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <span
-                    className="rounded-full flex items-center justify-center shrink-0 font-display"
-                    style={{
-                      height: 64,
-                      width: 64,
-                      background: r.brandColor,
-                      color: "#fff",
-                      letterSpacing: "-0.005em",
-                      boxShadow:
-                        "inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 20px -12px rgba(14,15,12,0.45)",
-                    }}
-                    aria-label={`${r.name} mark`}
-                    data-testid={`regulator-mark-${r.key}`}
-                  >
-                    <span
-                      style={{
-                        fontSize: r.name.length >= 7 ? 12 : r.name.length >= 5 ? 15 : 20,
-                        lineHeight: 1,
-                        fontWeight: 500,
-                      }}
-                    >
-                      {r.name}
-                    </span>
-                  </span>
+                  <BrandLogo
+                    domain={r.domain}
+                    name={r.name}
+                    shortLabel={r.name}
+                    brandColor={r.brandColor}
+                    logoOverride={r.logoOverride}
+                    size={80}
+                    shape="rounded"
+                  />
                   <ArrowUpRight
                     size={16}
                     strokeWidth={1.5}

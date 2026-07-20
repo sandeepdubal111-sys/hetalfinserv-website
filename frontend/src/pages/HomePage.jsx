@@ -6,6 +6,7 @@ import Manifesto from "@/components/sections/Manifesto";
 import Services from "@/components/sections/Services";
 import Stats from "@/components/sections/Stats";
 import AMCPartners from "@/components/sections/AMCPartners";
+import Calculator from "@/components/sections/Calculator";
 import Leadership from "@/components/sections/Leadership";
 import Testimonials from "@/components/sections/Testimonials";
 import FAQ from "@/components/sections/FAQ";
@@ -24,6 +25,7 @@ export default function HomePage() {
         words={["Independent", "Fiduciary-minded", "Boutique", "Personal", "Transparent", "Certified"]}
       />
       <AMCPartners />
+      <Calculator />
       <Leadership />
       <Testimonials />
       <FAQ />

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { createLead } from "@/lib/api";
@@ -25,10 +26,23 @@ function buildWhatsAppUrl(lead) {
 }
 
 export default function ContactForm({ compact = false }) {
+  const location = useLocation();
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [lastLead, setLastLead] = useState(null);
+
+  // Prefill from router state (e.g. from Calculator or "Discuss this practice")
+  useEffect(() => {
+    const s = location.state;
+    if (s && (s.service || s.message)) {
+      setForm((f) => ({
+        ...f,
+        service: s.service || f.service,
+        message: s.message || f.message,
+      }));
+    }
+  }, [location.state]);
 
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 

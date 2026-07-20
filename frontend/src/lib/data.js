@@ -91,6 +91,8 @@ export const REGULATORS = [
     full: "Maharashtra Real Estate Regulatory Authority",
     domain: "maharera.maharashtra.gov.in",
     brandColor: "#8A5A00",
+    logoOverride:
+      "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/vlzmrv4i_images.png",
     verifyUrl:
       "https://maharera.maharashtra.gov.in/en/agents-search-result",
     regNo: "A52100043460",
