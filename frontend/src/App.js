@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Lenis from "lenis";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import GrainOverlay from "@/components/GrainOverlay";
+import IntroLoader from "@/components/IntroLoader";
 import HomePage from "@/pages/HomePage";
 import ServicesPage from "@/pages/ServicesPage";
 import AboutPage from "@/pages/AboutPage";
@@ -51,8 +52,25 @@ function ScrollToTopOnRoute() {
 
 function Shell() {
   useLenis();
+  const [introDone, setIntroDone] = useState(() => {
+    if (typeof window === "undefined") return true;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+    try {
+      return !!sessionStorage.getItem("hf-intro-played-v1");
+    } catch {
+      return false;
+    }
+  });
+
+  // Expose to descendants (Hero uses this to know when to start its reveal)
+  useEffect(() => {
+    window.__hfIntroDone = introDone;
+    window.dispatchEvent(new CustomEvent("hf:intro-done", { detail: { done: introDone } }));
+  }, [introDone]);
+
   return (
     <>
+      <IntroLoader onDone={() => setIntroDone(true)} />
       <ScrollToTopOnRoute />
       <GrainOverlay />
       <Navbar />
@@ -69,9 +87,9 @@ function Shell() {
         position="bottom-center"
         toastOptions={{
           style: {
-            background: "#0e0f0c",
-            color: "#f4efe6",
-            border: "1px solid rgba(244,239,230,0.15)",
+            background: "#0d0f0b",
+            color: "#fdf9ee",
+            border: "1px solid rgba(253,249,238,0.2)",
             borderRadius: 0,
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 12,

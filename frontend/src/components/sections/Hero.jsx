@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { MaskLine } from "@/components/MaskedReveal";
@@ -15,6 +15,22 @@ export default function Hero() {
   const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
   const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
   const textY = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
+
+  // Wait for the intro loader to exit before we start the hero reveal
+  const [ready, setReady] = useState(() =>
+    typeof window !== "undefined" ? !!window.__hfIntroDone : true
+  );
+  useEffect(() => {
+    if (ready) return;
+    const handler = (e) => e?.detail?.done && setReady(true);
+    window.addEventListener("hf:intro-done", handler);
+    // Safety net — if intro never signals, reveal after 2.6s
+    const fallback = setTimeout(() => setReady(true), 2600);
+    return () => {
+      window.removeEventListener("hf:intro-done", handler);
+      clearTimeout(fallback);
+    };
+  }, [ready]);
 
   useEffect(() => {
     document.body.style.overflowX = "hidden";
@@ -50,7 +66,10 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="relative max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6 h-full min-h-[calc(100svh-6rem)] pb-16 pt-8 md:pt-12">
+      <div
+        key={ready ? "hero-on" : "hero-off"}
+        className="relative max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6 h-full min-h-[calc(100svh-6rem)] pb-16 pt-8 md:pt-12"
+      >
         {/* Left copy */}
         <motion.div
           style={{ y: textY }}
