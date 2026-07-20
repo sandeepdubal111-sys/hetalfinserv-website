@@ -16,7 +16,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 
-from blog_data import BLOG_POSTS, latest_post, get_post
+from blog_seed import BLOG_SEED
 
 
 ROOT_DIR = Path(__file__).parent
@@ -474,7 +474,12 @@ async def _send_digest_email(to_email: str, post: dict) -> bool:
 async def send_blog_digest(slug: Optional[str] = None, force: bool = False) -> dict:
     """Send the digest for a given slug (or the latest post if slug is None).
     Skips if already sent unless force=True."""
-    post = get_post(slug) if slug else latest_post()
+    if slug:
+        post = await db.blog_posts.find_one({"slug": slug, "published": {"$ne": False}}, {"_id": 0})
+    else:
+        post = await db.blog_posts.find_one(
+            {"published": {"$ne": False}}, {"_id": 0}, sort=[("date", -1)]
+        )
     if not post:
         return {"ok": False, "error": "post_not_found", "slug": slug}
 
@@ -589,6 +594,141 @@ async def _ensure_indexes():
         logger.info("admin_sessions TTL index ensured (expireAfterSeconds=0)")
     except Exception as e:
         logger.warning(f"Failed to ensure admin_sessions TTL index: {e}")
+
+
+# ---------- Blog CRUD (DB-backed) ----------
+class BlogBlock(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    type: str  # "p" | "h2" | "quote" | "list"
+    text: Optional[str] = None
+    items: Optional[List[str]] = None
+
+
+class BlogPostBase(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    slug: str = Field(..., min_length=3, max_length=120, pattern=r"^[a-z0-9-]+$")
+    title: str = Field(..., min_length=6, max_length=200)
+    excerpt: str = Field(..., min_length=10, max_length=600)
+    category: str = Field(..., min_length=2, max_length=40)
+    date: str = Field(..., min_length=10, max_length=10)  # YYYY-MM-DD
+    read_minutes: int = Field(default=5, ge=1, le=60)
+    cover: str = Field(..., min_length=8, max_length=800)
+    body: List[BlogBlock] = Field(default_factory=list)
+    published: bool = True
+
+
+class BlogPostUpdate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    title: Optional[str] = None
+    excerpt: Optional[str] = None
+    category: Optional[str] = None
+    date: Optional[str] = None
+    read_minutes: Optional[int] = None
+    cover: Optional[str] = None
+    body: Optional[List[BlogBlock]] = None
+    published: Optional[bool] = None
+
+
+def _blog_to_public(doc: dict) -> dict:
+    d = {k: v for k, v in doc.items() if k not in {"_id"}}
+    # Emit `readMinutes` too for the older frontend field name (kept for compat during migration)
+    if "read_minutes" in d and "readMinutes" not in d:
+        d["readMinutes"] = d["read_minutes"]
+    return d
+
+
+@api_router.get("/blog")
+async def list_blog_posts(category: Optional[str] = None):
+    q: dict = {"published": {"$ne": False}}
+    if category:
+        q["category"] = category
+    rows = await db.blog_posts.find(q, {"_id": 0}).sort("date", -1).to_list(200)
+    return [_blog_to_public(r) for r in rows]
+
+
+@api_router.get("/blog/{slug}")
+async def get_blog_post(slug: str):
+    doc = await db.blog_posts.find_one({"slug": slug, "published": {"$ne": False}}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return _blog_to_public(doc)
+
+
+@api_router.get("/blog/{slug}/related")
+async def get_related_posts(slug: str, limit: int = 3):
+    cur = await db.blog_posts.find_one({"slug": slug}, {"_id": 0, "category": 1})
+    if not cur:
+        # Fall back to newest N
+        rows = await db.blog_posts.find(
+            {"published": {"$ne": False}}, {"_id": 0}
+        ).sort("date", -1).to_list(limit)
+        return [_blog_to_public(r) for r in rows]
+    # Same-category first, then others, excluding current slug
+    same = await db.blog_posts.find(
+        {"category": cur["category"], "slug": {"$ne": slug}, "published": {"$ne": False}},
+        {"_id": 0},
+    ).sort("date", -1).to_list(limit)
+    if len(same) >= limit:
+        return [_blog_to_public(r) for r in same[:limit]]
+    others = await db.blog_posts.find(
+        {"category": {"$ne": cur["category"]}, "slug": {"$ne": slug}, "published": {"$ne": False}},
+        {"_id": 0},
+    ).sort("date", -1).to_list(limit - len(same))
+    return [_blog_to_public(r) for r in (same + others)]
+
+
+@api_router.post("/admin/blog", status_code=201)
+async def admin_create_blog(payload: BlogPostBase, _: dict = Depends(require_admin)):
+    doc = payload.model_dump()
+    if await db.blog_posts.find_one({"slug": doc["slug"]}):
+        raise HTTPException(status_code=409, detail="Slug already exists")
+    doc["id"] = str(uuid.uuid4())
+    doc["created_at"] = datetime.now(timezone.utc)
+    await db.blog_posts.insert_one(doc)
+    return _blog_to_public({k: v for k, v in doc.items() if k != "_id"})
+
+
+@api_router.put("/admin/blog/{slug}")
+async def admin_update_blog(slug: str, payload: BlogPostUpdate, _: dict = Depends(require_admin)):
+    updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    # Body needs to be re-serialized from BlogBlock objects (already dicts via model_dump)
+    res = await db.blog_posts.update_one({"slug": slug}, {"$set": updates})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    doc = await db.blog_posts.find_one({"slug": slug}, {"_id": 0})
+    return _blog_to_public(doc)
+
+
+@api_router.delete("/admin/blog/{slug}")
+async def admin_delete_blog(slug: str, _: dict = Depends(require_admin)):
+    res = await db.blog_posts.delete_one({"slug": slug})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"ok": True}
+
+
+@app.on_event("startup")
+async def _seed_blog_posts():
+    """One-time seed: insert BLOG_SEED only if the collection is empty. Ensures a unique index on slug."""
+    try:
+        await db.blog_posts.create_index("slug", unique=True)
+        count = await db.blog_posts.count_documents({})
+        if count == 0:
+            docs = []
+            now = datetime.now(timezone.utc)
+            for post in BLOG_SEED:
+                d = dict(post)
+                d["id"] = str(uuid.uuid4())
+                d["published"] = True
+                d["created_at"] = now
+                docs.append(d)
+            if docs:
+                await db.blog_posts.insert_many(docs)
+                logger.info(f"Seeded {len(docs)} blog posts into `blog_posts` collection")
+    except Exception as e:
+        logger.warning(f"Blog seed step failed: {e}")
 
 
 @app.on_event("startup")

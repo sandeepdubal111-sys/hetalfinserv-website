@@ -1,8 +1,8 @@
-import { useMemo, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowLeft } from "lucide-react";
-import { getPost, relatedPosts, formatDate, BLOG_CATEGORIES } from "@/lib/blog";
+import { fetchPost, fetchRelated, formatDate, BLOG_CATEGORIES } from "@/lib/blog";
 import { SITE } from "@/lib/data";
 
 function Block({ block }) {
@@ -57,15 +57,44 @@ function Block({ block }) {
 export default function BlogPostPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const post = useMemo(() => getPost(slug), [slug]);
+  const [post, setPost] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [loading, setLoading] = useState(true);
   const cat = BLOG_CATEGORIES.find((c) => c.key === post?.category);
-  const related = useMemo(() => (post ? relatedPosts(post.slug, 3) : []), [post]);
 
   useEffect(() => {
+    let cancelled = false;
     window.scrollTo({ top: 0, behavior: "instant" });
-    if (!post) navigate("/blog", { replace: true });
-  }, [post, navigate]);
+    setLoading(true);
+    fetchPost(slug)
+      .then(async (data) => {
+        if (cancelled) return;
+        setPost(data);
+        try {
+          const r = await fetchRelated(slug, 3);
+          if (!cancelled) setRelated(r);
+        } catch {
+          if (!cancelled) setRelated([]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) navigate("/blog", { replace: true });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [slug, navigate]);
 
+  if (loading) {
+    return (
+      <main className="bg-ivory pt-40 md:pt-52 pb-24">
+        <p className="max-w-[900px] mx-auto px-6 md:px-10 font-mono-label text-mute" data-testid="post-loading">
+          — Fetching the piece…
+        </p>
+      </main>
+    );
+  }
   if (!post) return null;
 
   return (

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-import { BLOG_POSTS, BLOG_CATEGORIES, formatDate } from "@/lib/blog";
-import { useState } from "react";
+import { fetchPosts, BLOG_CATEGORIES, formatDate } from "@/lib/blog";
+import { useEffect, useState } from "react";
 import { MaskLine } from "@/components/MaskedReveal";
 
 const catToneColor = {
@@ -35,9 +35,21 @@ function CategoryPill({ cat, active, onClick }) {
 
 export default function BlogPage() {
   const [category, setCategory] = useState(null);
-  const posts = category
-    ? BLOG_POSTS.filter((p) => p.category === category)
-    : BLOG_POSTS;
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr("");
+    fetchPosts(category)
+      .then((data) => { if (!cancelled) setPosts(data); })
+      .catch(() => { if (!cancelled) setErr("Couldn't load the knowledge center right now."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [category]);
+
   const [featured, ...rest] = posts;
 
   return (
@@ -75,6 +87,16 @@ export default function BlogPage() {
             />
           ))}
         </div>
+
+        {loading && (
+          <p className="mt-20 font-mono-label text-mute" data-testid="blog-loading">— Loading pieces from the desk…</p>
+        )}
+        {err && (
+          <p className="mt-20 font-mono-label" style={{ color: "var(--hf-coral)" }} data-testid="blog-error">{err}</p>
+        )}
+        {!loading && !err && posts.length === 0 && (
+          <p className="mt-20 font-mono-label text-mute" data-testid="blog-empty">— Nothing here yet in this category.</p>
+        )}
 
         {/* Featured post */}
         {featured && (
