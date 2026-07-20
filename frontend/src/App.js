@@ -1,56 +1,94 @@
 import { useEffect } from "react";
+import Lenis from "lenis";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
+import GrainOverlay from "@/components/GrainOverlay";
+import HomePage from "@/pages/HomePage";
+import ServicesPage from "@/pages/ServicesPage";
+import AboutPage from "@/pages/AboutPage";
+import ContactPage from "@/pages/ContactPage";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
+// Lenis smooth scrolling — respects reduced-motion
+function useLenis() {
   useEffect(() => {
-    helloWorldApi();
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1.4,
+    });
+
+    let raf;
+    function frame(time) {
+      lenis.raf(time);
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      lenis.destroy();
+    };
   }, []);
+}
 
+function ScrollToTopOnRoute() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) return; // let page hashes handle themselves
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname, hash]);
+  return null;
+}
+
+function Shell() {
+  useLenis();
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <>
+      <ScrollToTopOnRoute />
+      <GrainOverlay />
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="*" element={<HomePage />} />
+      </Routes>
+      <Footer />
+      <WhatsAppFloat />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          style: {
+            background: "#0e0f0c",
+            color: "#f4efe6",
+            border: "1px solid rgba(244,239,230,0.15)",
+            borderRadius: 0,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 12,
+            letterSpacing: "0.06em",
+          },
+        }}
+      />
+    </>
   );
-};
+}
 
-function App() {
+export default function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <Shell />
       </BrowserRouter>
     </div>
   );
 }
-
-export default App;
