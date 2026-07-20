@@ -370,6 +370,13 @@ export default function Calculator() {
             Send this to an advisor
             <ArrowUpRight size={16} strokeWidth={1.5} />
           </Link>
+          <Link
+            to="/calculators"
+            className="link-underline font-mono-label text-on-dark"
+            data-testid="calculator-see-all"
+          >
+            See all 15 calculators →
+          </Link>
           <p className="font-mono-label text-on-dark-mute max-w-md">
             Your numbers pre-fill the enquiry form — one senior advisor replies within a
             working day.

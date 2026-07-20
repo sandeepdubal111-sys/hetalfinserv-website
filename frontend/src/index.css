@@ -409,6 +409,16 @@ textarea.hf-input {
   * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
 }
 
+
+/* ── Utility: hidden scrollbar ─────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ── Range slider (Calculator) ─────────────────────────────── */
 .hf-range {
   -webkit-appearance: none;

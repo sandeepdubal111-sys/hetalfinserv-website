@@ -9,6 +9,9 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
 
+  // Pages with a dark hero — navbar needs inverted (ivory) text at top
+  const darkHero = pathname.startsWith("/calculators");
+
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 40);
     on();
@@ -19,6 +22,12 @@ export default function Navbar() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Text color tokens — switch to ivory over dark hero when not scrolled
+  const brandTextClass = scrolled || !darkHero ? "text-obsidian" : "text-[color:var(--hf-on-dark-primary)]";
+  const inactiveTabClass = scrolled || !darkHero ? "text-obsidian" : "text-[color:var(--hf-on-dark-primary)]";
+  const activePillBg = scrolled || !darkHero ? "var(--hf-obsidian)" : "var(--hf-gold)";
+  const activePillText = scrolled || !darkHero ? "text-white" : "text-obsidian";
 
   return (
     <>

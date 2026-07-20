@@ -111,6 +111,7 @@ export const REGULATORS = [
 export const NAV = [
   { label: "Home", to: "/" },
   { label: "Services", to: "/services" },
+  { label: "Calculators", to: "/calculators" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];
