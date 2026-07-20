@@ -1,0 +1,42 @@
+{
+  "summary": "PRE-LAUNCH SMOKE TEST — GREEN LIGHT with 1 minor test-only assertion issue (not a code regression). Ran the full 56-test pytest regression suite: 55/56 PASS. The single failure (TestBlogAdmin.test_digest_after_deleting_newest_picks_next_newest) is the same flaky-upstream pattern already documented for test_send_and_idempotent_and_force — Emergent email upstream rejected all 28 test-email recipients so digest returned ok:false, sent:0, attempted:28. The BUSINESS-LOGIC assertion in that test (data.slug != deleted_slug) DID PASS, i.e. the digest correctly picked '5-signals-your-mutual-fund-sends-you' instead of the deleted future-dated scratch post. The test's `assert data.get('ok') is True` is the problematic line — it should adopt the same pytest.skip-on-zero-sent guard that its sibling test uses. Everything else is clean.\n\nWrote an additional smoke script /app/test_reports/smoke_admin_flow.py that exercises the full pre-launch checklist end-to-end via HTTP (login → admin CRUD lifecycle → publish → unpublish → delete → audit trail → bulk publish/unpublish/delete → per-slug audit rows → 8-post public feed shape → specific 13-block post → 404 → lead validation → contact/callback junk rejection). All 100+ assertions passed and all scratch data cleaned up.\n\nFrontend Playwright smoke (Chromium 1920x1080): (1) all 6 public routes (/, /about, /services, /contact, /calculators, /blog) returned 200 and rendered navbar+footer+H1/H2 — actual headings captured: 'One trusted desk. For every financial decision.' / 'Services, designed for long horizons.' / 'Let's meet. Then plan.' / 'The full calculator suite.' / 'Notes on money, plainly written.' Zero JS console errors on any page. (2) Chat widget FAB [data-testid=chat-widget-toggle] present bottom-right of homepage; clicking it opens [chat-widget-panel] with [chat-input] + [chat-send]. Direct API POST /api/chat with session context returned coherent SIP explanation in ~4.6s then a 1-line follow-up in ~8s (well under 15s target). (3) Calculators UI: navigated to /calculators, clicked [calc-nav-sip], the SIP calc rendered with all 3 [calc-input-*] sliders and [calc-result] tile. Adjusted sliders to Monthly=10000, Years=15 (default), Rate=12 — [calc-result] rendered '₹50.46 L Projected corpus' + 'You invest ₹18.00 L' + 'Wealth gained ₹32.46 L' with live animation. Clicked [calc-cta-pdf] → browser download event fired with filename 'sip-hetal-finserv-2026-07-20.pdf'. Zero JS errors. (4) Lead form (Contact page): filled all fields and submitted → intercepted POST /api/leads returning 201 with lead id echoed, success panel [lead-success-panel] rendered showing 'Thank you. We'll be in touch shortly.' + WhatsApp fallback CTA + 'Send another' button. Toast 'Received. We'll be in touch shortly.' also appeared bottom-left. Zero console errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/admin/blog-digest/send",
+        "issue": "test_digest_after_deleting_newest_picks_next_newest asserts `ok is True` but Emergent email upstream rejects all 28 test-email recipients (sent=0/attempted=28). Same pattern that TestBlogDigest.test_send_and_idempotent_and_force handles gracefully via pytest.skip. The digest business logic itself is correct — it picks a different slug than the deleted one — so this is a test-only flake, not a code regression. NOT A DEPLOY BLOCKER."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/smoke_admin_flow.py"
+  ],
+  "action_items": [
+    "OPTIONAL / NON-BLOCKING: Add the same `if sent == 0: pytest.skip(...)` guard to TestBlogAdmin.test_digest_after_deleting_newest_picks_next_newest (backend_test.py:679) that test_send_and_idempotent_and_force already uses at line 340-344 — this will make the regression suite 56/56 green regardless of upstream email provider mood.",
+    "OPTIONAL / POST-LAUNCH: Consider a lightweight cleanup — 2 leads with SMOKE / SMOKE_TEST prefixes were created during this smoke test (ids cb811bd0-cc91-4b17-9aea-3649d5a7c348 and f5240fab-6881-4af6-ab03-0ae0e7cfb5eb). There is no lead-delete endpoint by design; either drop them from Mongo directly or add a DELETE /api/admin/leads/{id} if the admin panel needs it. NOT A DEPLOY BLOCKER."
+  ],
+  "critical_code_review_comments": [
+    "backend_test.py:679 — the assertion `assert data.get('ok') is True` is fragile against the Emergent email upstream. The whole suite around blog-digest already handles this by skipping on sent==0 (line 340-344). Replicate that guard here for a reliable 56/56 green run.",
+    "server.py POST /api/leads — NO admin delete endpoint for leads. Fine as a design choice, but during testing we accumulated SMOKE_TEST leads that can't be cleaned via the API. Consider adding DELETE /api/admin/leads/{id} guarded by X-Admin-Token if lead cleanup ever becomes a real need.",
+    "Playwright observation on CalcRunner sliders: setting a range input via `el.value = v; dispatchEvent('input')` does NOT propagate into React state — the 'years' slider stayed at its default 15 despite the script setting 10. This is a React controlled-input footgun, not an app bug — user interaction via the actual slider handle works fine. Just a note for future automation."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "98.2% (55/56 pytest — 1 flaky-upstream test, business assertion still passes) + 100% on /app/test_reports/smoke_admin_flow.py (full CRUD + bulk + audit lifecycle)",
+    "frontend": "100% — all 6 routes load with navbar+footer+heading, chat widget FAB+panel present, SIP calculator computes + PDF downloads, lead form UI→API integration returns 201 with success panel, zero JS console errors across the entire run"
+  },
+  "test_credentials": "Admin password Hetal@110818 (from /app/memory/test_credentials.md — verified). Login returns 43-char opaque X-Admin-Token, 8h TTL. Raw password rejected as token.",
+  "seed_data_creation": "During smoke tests: 2 leads (SMOKE_TEST Deploy Check, SMOKE UI Test) — cannot be deleted via API (no DELETE endpoint on /api/leads). Blog scratch slug 'launch-smoke-test' and 2 bulk slugs 'launch-smoke-bulk-a/b-<hex>' — ALL cleaned up in finally blocks. No leftover blog posts. Base blog seed unchanged at 8 posts.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "This was a pre-deploy smoke test — not a feature test. All flows already covered by iteration_1 through iteration_7 remain intact. The one flaky test (test_digest_after_deleting_newest_picks_next_newest at backend_test.py:679) is a 5-second fix if E1 wants a clean 56/56 — just clone the pytest.skip guard from lines 340-344. The system is GREEN for publish. Frontend selectors used in this iteration: [chat-widget-toggle], [chat-widget-panel], [chat-input], [chat-send], [calc-nav-<slug>], [calc-<slug>], [calc-input-<key>], [calc-result], [calc-cta-pdf], [lead-form], [lead-input-name|phone|email|service|message], [lead-submit], [lead-success-panel]. Adjust React controlled sliders via the actual slider drag or `fill` on a number input — the raw `el.value = X` + dispatchEvent('input') trick does not always propagate.",
+  "rca of the issue": "The single pytest failure (test_digest_after_deleting_newest_picks_next_newest) has nothing to do with product code. Root cause: the test asserts `ok is True` on the digest send-response, but the Emergent email provider rejects all 28 recipient emails (they are @example.com test addresses) so the digest returns ok:false, sent:0, attempted:28. This is expected behaviour in a test environment. The digest logic itself is fully correct — it picks a valid non-deleted slug ('5-signals-your-mutual-fund-sends-you' instead of the deleted future-dated scratch post) which is the actual thing the test is meant to verify. Mitigation: add `if data.get('sent', 0) == 0: pytest.skip('upstream rejected all recipients')` immediately before the `ok is True` assertion, mirroring what test_send_and_idempotent_and_force already does. No production code change is needed and this failure will NOT surface for real users."
+}
