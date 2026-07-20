@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Download } from "lucide-react";
+import { generateCalculatorPDF } from "@/lib/calcPDF";
 
 /**
  * Schema-driven calculator engine.
@@ -157,7 +158,7 @@ export default function CalcRunner({ config, hideHeader = false }) {
       </div>
 
       {/* CTA */}
-      <div className="mt-12 flex flex-wrap items-center gap-6">
+      <div className="mt-12 flex flex-wrap items-center gap-4">
         <Link
           to="/contact"
           state={leadPayload}
@@ -167,6 +168,15 @@ export default function CalcRunner({ config, hideHeader = false }) {
           Send this to an advisor
           <ArrowUpRight size={16} strokeWidth={1.5} />
         </Link>
+        <button
+          type="button"
+          onClick={() => generateCalculatorPDF({ config, values, result })}
+          className="hf-btn-outline"
+          data-testid="calc-cta-pdf"
+        >
+          Download PDF
+          <Download size={14} strokeWidth={1.6} />
+        </button>
         <p className="font-mono-label text-on-dark-mute max-w-md">
           Your numbers pre-fill the enquiry form — a senior advisor replies within one working day.
         </p>

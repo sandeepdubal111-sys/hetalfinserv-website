@@ -60,12 +60,18 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ LinkedIn added to Footer socials strip + "Connect on LinkedIn" CTA on Sandeep's leadership card
 - ✅ Footer wordmark: "Hetal Finserv" (removed period)
 
+## Implemented (2026-07-20 — Compliance footer + PDF + Email)
+- ✅ Footer compliance block matches hetalfinserv.com: Risk Factors paragraph, ARN registration line, 8-link legal strip (Important Links, Disclaimer, Disclosure, Privacy Policy, SID/SAI/KIM, Code of Conduct, SEBI Circulars, AMFI Risk Factors) — all pointing to exact original URLs; Image credit line
+- ✅ `/legal` internal page with Disclaimer, Disclosure, Privacy Policy, Risk Factors (available as fallback)
+- ✅ PDF export on every calculator via `calcPDF.js` (jsPDF) — branded header, gold hero result, breakdown table, coral advisor CTA strip, compliance footnote
+- ✅ Resend email notification (Emergent-managed) — every new lead fires an admin email to `LEAD_NOTIFY_TO` (info@hetalfinserv.com) with a fully branded HTML template; asyncio fire-and-forget so it never blocks the API
+
 ## Prioritized backlog (P1/P2)
 - P1 Admin dashboard to view/manage leads
-- P2 Email notification on new lead (Resend integration)
-- P2 Blog / knowledge center for SEO
+- P1 Blog / SEO knowledge center (large scope)
 - P2 AI chatbot for lead qualification
-- P2 Multi-language support (English + Marathi)
+- P2 Marathi language toggle (i18n)
+- P2 Shareable calculator URL params
 
 ## Next tasks
-- P1 Admin dashboard for leads
+- Confirm priority for Blog / Chatbot / Marathi

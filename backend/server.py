@@ -5,6 +5,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import re
+import asyncio
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from typing import List, Optional
@@ -19,6 +21,14 @@ load_dotenv(ROOT_DIR / ".env")
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
+
+# Emergent-managed email integration
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
+EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Hetal Finserv")
+LEAD_NOTIFY_TO = os.environ.get("LEAD_NOTIFY_TO", "info@hetalfinserv.com")
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Hetal Finserv API")
 api_router = APIRouter(prefix="/api")
@@ -104,10 +114,89 @@ def _serialize(doc: dict) -> dict:
     return d
 
 
+def _lead_email_html(lead: "Lead") -> str:
+    rows = [
+        ("Name", lead.name),
+        ("Phone", lead.phone),
+        ("Email", lead.email or "—"),
+        ("Service", lead.service or "—"),
+        ("Source", lead.source or "website"),
+        ("Received", lead.created_at.strftime("%d %b %Y · %H:%M IST")),
+    ]
+    detail_rows = "".join(
+        f'<tr><td style="padding:8px 14px;color:#666;font-size:13px;font-family:Arial,sans-serif;width:120px;">{k}</td>'
+        f'<td style="padding:8px 14px;color:#0E0F0C;font-size:14px;font-family:Arial,sans-serif;font-weight:600;">{v}</td></tr>'
+        for k, v in rows
+    )
+    msg_block = (
+        f'<tr><td colspan="2" style="padding:14px;background:#FDF9EE;border-left:3px solid #C9A227;'
+        f'font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#0E0F0C;white-space:pre-wrap;">'
+        f"{lead.message}</td></tr>"
+        if lead.message
+        else ""
+    )
+    return f"""
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f2;padding:32px 0;">
+      <tr><td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #eee;">
+          <tr><td style="background:#0E0F0C;padding:24px 28px;">
+            <div style="font-family:'Times New Roman',serif;color:#FDF9EE;font-size:22px;">Hetal Finserv</div>
+            <div style="font-family:'Courier New',monospace;color:#C9A227;font-size:10px;margin-top:4px;letter-spacing:0.16em;">— NEW LEAD FROM THE WEBSITE</div>
+          </td></tr>
+          <tr><td style="padding:24px 28px;">
+            <p style="margin:0 0 18px 0;font-family:Arial,sans-serif;font-size:15px;color:#0E0F0C;line-height:1.6;">
+              A new enquiry has arrived from hetalfinserv.com. Details below — please respond within one working day.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eee;border-bottom:1px solid #eee;">
+              {detail_rows}
+            </table>
+            {("<div style='height:14px;'></div><table width='100%' cellpadding='0' cellspacing='0'>" + msg_block + "</table>") if msg_block else ""}
+          </td></tr>
+          <tr><td style="padding:18px 28px;background:#FDF9EE;border-top:1px solid #eee;">
+            <div style="font-family:'Courier New',monospace;font-size:10px;color:#666;letter-spacing:0.14em;">
+              LEAD ID · {lead.id}
+            </div>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+    """
+
+
+async def _notify_lead(lead: "Lead") -> None:
+    """Fire-and-forget email to the admin inbox. Never blocks or breaks the API."""
+    if not EMAIL_KEY:
+        logger.info("EMERGENT_EMAIL_KEY not set — skipping lead email")
+        return
+    payload = {
+        "to": [LEAD_NOTIFY_TO],
+        "subject": f"New lead · {lead.name} · {lead.service or 'general'}",
+        "html": _lead_email_html(lead),
+        "from_name": EMAIL_FROM_NAME,
+    }
+    if lead.email:
+        payload["contact_email"] = lead.email
+    try:
+        async with httpx.AsyncClient(timeout=15) as hc:
+            resp = await hc.post(
+                f"{EMAIL_BASE_URL}/api/v1/email/send",
+                headers={"X-Email-Key": EMAIL_KEY},
+                json=payload,
+            )
+            resp.raise_for_status()
+            logger.info(f"Lead email sent for {lead.id}: {resp.json().get('id')}")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Lead email failed {e.response.status_code}: {e.response.text}")
+    except Exception as e:
+        logger.error(f"Lead email error: {e}")
+
+
 @api_router.post("/leads", response_model=Lead, status_code=status.HTTP_201_CREATED)
 async def create_lead(payload: LeadCreate):
     lead = Lead(**payload.model_dump())
     await db.leads.insert_one(_serialize(lead.model_dump()))
+    # Fire-and-forget notification — never fails the request
+    asyncio.create_task(_notify_lead(lead))
     return lead
 
 

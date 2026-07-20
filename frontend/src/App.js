@@ -13,6 +13,7 @@ import ServicesPage from "@/pages/ServicesPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import CalculatorsPage from "@/pages/CalculatorsPage";
+import LegalPage from "@/pages/LegalPage";
 
 // Lenis smooth scrolling — respects reduced-motion
 function useLenis() {
@@ -82,6 +83,7 @@ function Shell() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/calculators" element={<CalculatorsPage />} />
         <Route path="/calculators/:slug" element={<CalculatorsPage />} />
+        <Route path="/legal" element={<LegalPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
       <Footer />

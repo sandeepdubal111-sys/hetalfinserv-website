@@ -246,6 +246,79 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* Compliance & Risk disclosure — mirrors hetalfinserv.com */}
+      <div className="border-t border-hair-light" data-testid="footer-compliance">
+        <div className="max-w-[1300px] mx-auto px-6 md:px-10 py-12 md:py-16 text-center">
+          <p
+            className="text-[0.86rem] md:text-[0.92rem] leading-[1.9]"
+            style={{ color: "rgba(253,249,238,0.72)" }}
+          >
+            <span className="font-display" style={{ color: "var(--hf-gold)" }}>
+              Risk Factors
+            </span>{" "}
+            – Investments in Mutual Funds are subject to Market Risks. Read all scheme
+            related documents carefully before investing. Mutual Fund Schemes do not assure
+            or guarantee any returns. Past performances of any Mutual Fund Scheme may or
+            may not be sustained in future. There is no guarantee that the investment
+            objective of any suggested scheme shall be achieved. All existing and
+            prospective investors are advised to check and evaluate the Exit loads and
+            other cost structure (TER) applicable at the time of making the investment
+            before finalizing on any investment decision for Mutual Funds schemes. We deal
+            in Regular Plans only for Mutual Fund Schemes and earn a Trailing Commission on
+            client investments. Disclosure For Commission earnings is made to clients at
+            the time of investments.
+          </p>
+
+          <p
+            className="mt-8 font-mono-label"
+            style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
+          >
+            AMFI Registered Mutual Fund Distributor · ARN-254254 · Date of initial
+            registration — 03-Oct-2022 · Current validity of ARN — 02-Oct-2028
+          </p>
+
+          <ul
+            className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 font-mono-label"
+            data-testid="footer-legal-links"
+            style={{ fontSize: "0.72rem" }}
+          >
+            {[
+              { label: "Important Links", href: "https://hetalfinserv.com/home/importantlinks" },
+              { label: "Disclaimer", href: "https://hetalfinserv.com/home/disclaimer" },
+              { label: "Disclosure", href: "https://hetalfinserv.com/home/disclosure" },
+              { label: "Privacy Policy", href: "https://hetalfinserv.com/home/privacypolicy" },
+              { label: "SID/SAI/KIM", href: "https://www.sebi.gov.in/filings/mutual-funds.html" },
+              { label: "Code of Conduct", href: "https://hetalfinserv.com/content/codeof_conduct.pdf" },
+              { label: "SEBI Circulars", href: "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0" },
+              { label: "AMFI Risk Factors", href: "https://www.amfiindia.com/investor-corner/knowledge-center/risks-in-mutual-funds.html" },
+            ].map((l, i, arr) => (
+              <li key={l.label} className="flex items-center gap-6">
+                <a
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-[color:var(--hf-gold)]"
+                  style={{ color: "var(--hf-coral)" }}
+                  data-testid={`legal-link-${l.label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                >
+                  {l.label}
+                </a>
+                {i < arr.length - 1 && (
+                  <span aria-hidden="true" style={{ color: "rgba(253,249,238,0.28)" }}>|</span>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <p
+            className="mt-8 font-mono-label"
+            style={{ color: "rgba(253,249,238,0.45)", fontSize: "0.7rem" }}
+          >
+            Image by Freepik · Icon by Flaticon
+          </p>
+        </div>
+      </div>
+
       <div className="border-t border-hair-light">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <p className="font-mono-label" style={{ color: "rgba(253,249,238,0.55)" }}>
