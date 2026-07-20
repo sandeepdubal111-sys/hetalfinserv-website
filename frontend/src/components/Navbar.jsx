@@ -33,33 +33,28 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
-        <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-20 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-16 md:h-[76px] flex items-center justify-between gap-6">
           <Link
             to="/"
             data-testid="brand-logo-link"
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-2.5 shrink-0 group"
             aria-label="Hetal Finserv — Home"
           >
             <img
               src={SITE.logo}
               alt="Hetal Finserv Pvt Ltd logo"
-              className="h-11 w-11 md:h-12 md:w-12 rounded-full object-cover shrink-0 shadow-[0_2px_8px_rgba(14,15,12,0.15)]"
-              width="48"
-              height="48"
+              className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover shrink-0"
+              width="40"
+              height="40"
             />
-            <div className="flex flex-col leading-none">
-              <span className="font-display text-[1.4rem] md:text-[1.55rem] leading-none text-obsidian">
-                Hetal<span className="text-gold">.</span> Finserv
-              </span>
-              <span className="font-mono-label text-[0.55rem] text-mute mt-1.5 hidden sm:inline">
-                PVT LTD · MAKE YOUR MONEY GROW
-              </span>
-            </div>
+            <span className="font-display text-[1.25rem] md:text-[1.4rem] leading-none text-obsidian">
+              Hetal<span className="text-gold">.</span> Finserv
+            </span>
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop nav — larger, tracked, with clear active state */}
           <nav
-            className="hidden md:flex items-center gap-10"
+            className="hidden md:flex items-center gap-1"
             aria-label="Primary"
             data-testid="primary-nav"
           >
@@ -68,18 +63,39 @@ export default function Navbar() {
                 key={item.to}
                 to={item.to}
                 data-testid={`nav-link-${item.label.toLowerCase()}`}
+                end={item.to === "/"}
                 className={({ isActive }) =>
-                  `font-mono-label text-[0.68rem] link-underline transition-colors ${
-                    isActive ? "text-gold" : "text-obsidian"
+                  `relative px-4 lg:px-5 py-2.5 transition-colors duration-300 nav-tab ${
+                    isActive ? "nav-tab-active" : "text-obsidian"
                   }`
                 }
               >
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className="font-mono-label"
+                      style={{
+                        fontSize: "0.72rem",
+                        letterSpacing: "0.24em",
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active-dot"
+                        className="absolute left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full"
+                        style={{ background: "var(--hf-coral)", bottom: "-2px" }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               to="/contact"
               data-testid="nav-book-consultation-cta"

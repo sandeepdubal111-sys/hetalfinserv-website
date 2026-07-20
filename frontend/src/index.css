@@ -344,6 +344,21 @@ textarea.hf-input {
   transform-origin: left center;
 }
 
+/* Nav tabs */
+.nav-tab {
+  color: var(--hf-obsidian);
+  opacity: 0.65;
+  transition: opacity 260ms ease, color 260ms ease;
+}
+.nav-tab:hover {
+  opacity: 1;
+}
+.nav-tab-active {
+  color: var(--hf-obsidian);
+  opacity: 1;
+  font-weight: 600;
+}
+
 /* Cursor gold blinker for hero */
 .hf-caret {
   display: inline-block;

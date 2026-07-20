@@ -53,6 +53,53 @@ export const REGISTRATIONS = [
 
 export const REG_AUTHORITIES = ["AMFI", "NISM", "MahaRERA", "SEBI", "IRDA"];
 
+// Regulator authorities — used in the Regulators grid + Verify Us modal
+export const REGULATORS = [
+  {
+    key: "amfi",
+    name: "AMFI",
+    full: "Association of Mutual Funds in India",
+    domain: "amfiindia.com",
+    verifyUrl:
+      "https://www.amfiindia.com/locator/search-by-arn?arncode=254254",
+    regNo: "ARN-254254",
+  },
+  {
+    key: "sebi",
+    name: "SEBI",
+    full: "Securities & Exchange Board of India",
+    domain: "sebi.gov.in",
+    verifyUrl: "https://www.sebi.gov.in/",
+    regNo: "SEBI-regulated distributor",
+  },
+  {
+    key: "irdai",
+    name: "IRDAI",
+    full: "Insurance Regulatory & Development Authority of India",
+    domain: "irdai.gov.in",
+    verifyUrl:
+      "https://www.irdai.gov.in/con_intermediaries/List-of-Insurance-Brokers.aspx",
+    regNo: "Broker Reg. 00115138383 · Certified BQP",
+  },
+  {
+    key: "maharera",
+    name: "MahaRERA",
+    full: "Maharashtra Real Estate Regulatory Authority",
+    domain: "maharera.maharashtra.gov.in",
+    verifyUrl:
+      "https://maharera.maharashtra.gov.in/en/agents-search-result",
+    regNo: "A52100043460",
+  },
+  {
+    key: "nism",
+    name: "NISM",
+    full: "National Institute of Securities Markets",
+    domain: "nism.ac.in",
+    verifyUrl: "https://www.nism.ac.in/",
+    regNo: "Certified Financial Goal Planner",
+  },
+];
+
 export const NAV = [
   { label: "Home", to: "/" },
   { label: "Services", to: "/services" },
@@ -169,32 +216,33 @@ export const STATS = [
   { value: "4.9", label: "Client rating · 200+ reviews" },
 ];
 
+// AMC partners — with brand domain for logo lookup via public logo service (Clearbit)
 export const AMCS = [
-  "SBI Mutual Fund",
-  "HDFC Mutual Fund",
-  "ICICI Prudential MF",
-  "Axis Mutual Fund",
-  "Mirae Asset MF",
-  "Nippon India MF",
-  "Kotak Mahindra MF",
-  "DSP Mutual Fund",
-  "Franklin Templeton",
-  "Tata Mutual Fund",
-  "Motilal Oswal MF",
-  "PGIM India MF",
-  "Aditya Birla Sun Life MF",
-  "Edelweiss MF",
-  "WhiteOak Capital MF",
-  "Canara Robeco MF",
-  "UTI Mutual Fund",
-  "Bandhan MF",
-  "Quant Mutual Fund",
-  "Invesco India MF",
-  "Navi MF",
-  "360 ONE MF",
-  "Helios MF",
-  "Groww MF",
-  "ITI Mutual Fund",
+  { name: "SBI Mutual Fund", domain: "sbimf.com" },
+  { name: "HDFC Mutual Fund", domain: "hdfcfund.com" },
+  { name: "ICICI Prudential MF", domain: "icicipruamc.com" },
+  { name: "Axis Mutual Fund", domain: "axismf.com" },
+  { name: "Mirae Asset MF", domain: "miraeassetmf.co.in" },
+  { name: "Nippon India MF", domain: "nipponindiaim.com" },
+  { name: "Kotak Mahindra MF", domain: "kotakmf.com" },
+  { name: "DSP Mutual Fund", domain: "dspim.com" },
+  { name: "Franklin Templeton", domain: "franklintempletonindia.com" },
+  { name: "Tata Mutual Fund", domain: "tatamutualfund.com" },
+  { name: "Motilal Oswal MF", domain: "motilaloswalmf.com" },
+  { name: "PGIM India MF", domain: "pgimindiamf.com" },
+  { name: "Aditya Birla Sun Life MF", domain: "adityabirlacapital.com" },
+  { name: "Edelweiss MF", domain: "edelweissmf.com" },
+  { name: "WhiteOak Capital MF", domain: "whiteoakamc.com" },
+  { name: "Canara Robeco MF", domain: "canararobeco.com" },
+  { name: "UTI Mutual Fund", domain: "utimf.com" },
+  { name: "Bandhan MF", domain: "bandhanmutual.com" },
+  { name: "Quant Mutual Fund", domain: "quantmutual.com" },
+  { name: "Invesco India MF", domain: "invescomutualfund.com" },
+  { name: "Navi MF", domain: "navimutualfund.com" },
+  { name: "360 ONE MF", domain: "360.one" },
+  { name: "Helios MF", domain: "helioscapital.in" },
+  { name: "Groww MF", domain: "groww.in" },
+  { name: "ITI Mutual Fund", domain: "itimf.com" },
 ];
 
 export const LEADERSHIP = [

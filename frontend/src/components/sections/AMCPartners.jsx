@@ -1,8 +1,62 @@
-import { AMCS } from "@/lib/data";
+import { AMCS, SITE } from "@/lib/data";
+import { useState } from "react";
+
+// Prefer Google's public favicon service — reliable across CORS + returns up to 128px logos.
+function logoUrl(domain, size = 128) {
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+}
+
+function LogoChip({ item, variant = "light" }) {
+  const [broken, setBroken] = useState(false);
+  const dark = variant === "dark";
+  return (
+    <div className="flex items-center gap-4 shrink-0">
+      <span
+        className="h-11 w-11 md:h-12 md:w-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+        style={{
+          background: dark ? "rgba(253,249,238,0.94)" : "#ffffff",
+          border: "1px solid rgba(14,15,12,0.12)",
+          boxShadow: "0 4px 12px -4px rgba(14,15,12,0.15)",
+        }}
+      >
+        {broken ? (
+          <span
+            className="font-mono-label"
+            style={{ color: "var(--hf-obsidian)", fontSize: "0.65rem" }}
+          >
+            {item.name
+              .split(" ")
+              .map((w) => w[0])
+              .join("")
+              .slice(0, 3)}
+          </span>
+        ) : (
+          <img
+            src={logoUrl(item.domain, 128)}
+            alt={`${item.name} logo`}
+            className="h-8 w-8 md:h-9 md:w-9 object-contain"
+            loading="lazy"
+            onError={() => setBroken(true)}
+          />
+        )}
+      </span>
+      <span
+        className={dark ? "font-display italic" : "font-display"}
+        style={{
+          fontSize: "clamp(1.3rem, 2.4vw, 2.2rem)",
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+          color: dark ? "var(--hf-on-dark-primary)" : "var(--hf-obsidian)",
+        }}
+      >
+        {item.name}
+      </span>
+    </div>
+  );
+}
 
 /**
- * AMC partners marquee — high contrast, dual-row, alternating direction.
- * Text is rendered dark on cream, with a gold diamond separator between names.
+ * AMC partners marquee — real brand logos + names, dual-row alternating direction.
  */
 export default function AMCPartners() {
   const half = Math.ceil(AMCS.length / 2);
@@ -34,27 +88,21 @@ export default function AMCPartners() {
         </div>
       </div>
 
-      {/* Row 1 — left direction */}
+      {/* Row 1 — left */}
       <div className="relative">
         <div className="marquee-track marquee-track-fast">
           {Array.from({ length: 2 }).map((_, dup) => (
             <div
               key={dup}
-              className="flex items-center gap-12 md:gap-16 pr-12 md:pr-16"
+              className="flex items-center gap-10 md:gap-14 pr-10 md:pr-14"
               aria-hidden={dup === 1}
             >
-              {row1.map((name, i) => (
-                <div key={`r1-${dup}-${i}`} className="flex items-center gap-6 shrink-0">
-                  <span
-                    className="font-display text-obsidian"
-                    style={{
-                      fontSize: "clamp(1.4rem, 2.6vw, 2.4rem)",
-                      lineHeight: 1,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {name}
-                  </span>
+              {row1.map((item, i) => (
+                <div
+                  key={`r1-${dup}-${i}`}
+                  className="flex items-center gap-8 shrink-0"
+                >
+                  <LogoChip item={item} />
                   <span
                     className="inline-block h-2 w-2 rotate-45 shrink-0"
                     style={{ background: "var(--hf-gold)" }}
@@ -66,8 +114,8 @@ export default function AMCPartners() {
         </div>
       </div>
 
-      {/* Row 2 — reversed direction */}
-      <div className="relative mt-6 md:mt-8">
+      {/* Row 2 — reversed */}
+      <div className="relative mt-8 md:mt-10">
         <div
           className="marquee-track marquee-track-fast"
           style={{ animationDirection: "reverse" }}
@@ -75,22 +123,15 @@ export default function AMCPartners() {
           {Array.from({ length: 2 }).map((_, dup) => (
             <div
               key={dup}
-              className="flex items-center gap-12 md:gap-16 pr-12 md:pr-16"
+              className="flex items-center gap-10 md:gap-14 pr-10 md:pr-14"
               aria-hidden={dup === 1}
             >
-              {row2.map((name, i) => (
-                <div key={`r2-${dup}-${i}`} className="flex items-center gap-6 shrink-0">
-                  <span
-                    className="font-display italic"
-                    style={{
-                      fontSize: "clamp(1.4rem, 2.6vw, 2.4rem)",
-                      lineHeight: 1,
-                      whiteSpace: "nowrap",
-                      color: "var(--hf-emerald)",
-                    }}
-                  >
-                    {name}
-                  </span>
+              {row2.map((item, i) => (
+                <div
+                  key={`r2-${dup}-${i}`}
+                  className="flex items-center gap-8 shrink-0"
+                >
+                  <LogoChip item={item} />
                   <span
                     className="inline-block h-2 w-2 rotate-45 shrink-0"
                     style={{ background: "var(--hf-coral)" }}

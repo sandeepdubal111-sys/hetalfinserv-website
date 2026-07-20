@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
 import { SITE, NAV, SERVICES } from "@/lib/data";
+import VerifyUsButton from "@/components/VerifyUsButton";
 
 const socials = [
   {
@@ -66,9 +67,12 @@ export default function Footer() {
       {/* Social handles — professional pill row */}
       <div className="border-b border-hair-light">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <p className="font-mono-label" style={{ color: "var(--hf-gold-soft)" }}>
-            — Follow the practice
-          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <p className="font-mono-label" style={{ color: "var(--hf-gold-soft)" }}>
+              — Follow the practice
+            </p>
+            <VerifyUsButton />
+          </div>
           <div className="flex flex-wrap items-center gap-4" data-testid="footer-socials">
             {socials.map((s) => (
               <a

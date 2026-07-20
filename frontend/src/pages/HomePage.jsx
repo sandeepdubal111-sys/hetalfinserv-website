@@ -1,5 +1,6 @@
 import Hero from "@/components/sections/Hero";
 import Registrations from "@/components/sections/Registrations";
+import Regulators from "@/components/sections/Regulators";
 import EditorialMarquee from "@/components/sections/EditorialMarquee";
 import Manifesto from "@/components/sections/Manifesto";
 import Services from "@/components/sections/Services";
@@ -18,6 +19,7 @@ export default function HomePage() {
       <Manifesto />
       <Services />
       <Stats />
+      <Regulators />
       <EditorialMarquee
         words={["Independent", "Fiduciary-minded", "Boutique", "Personal", "Transparent", "Certified"]}
       />
