@@ -127,10 +127,19 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Removed the boundary re-map in `BlogTab.jsx` (edit-click no longer needs `{ ...p, read_minutes: p.readMinutes }`); `_blog_to_public` back to a one-liner.
 - ✅ 38/38 pytest still green; Playwright verified editor pre-fills `readMinutes=6` for the seed post.
 
+## Implemented (2026-07-20 — Blog audit log)
+- ✅ New `blog_audit` collection. Every admin CRUD writes an append-only row: `{id, action, slug, title, actor, changed_fields, ts}`.
+- ✅ `actor` = first 8 hex of SHA256(session_token) — distinguishes two people who share the admin password without ever storing the token itself.
+- ✅ Action labels: `created` / `updated` / `published` / `unpublished` / `deleted`. The publish/unpublish label fires whenever the `published` value **flipped** vs the pre-update DB state — so toggling publish from the full-document PostEditor still logs as `published`, not `updated` (the reviewer's UX bug from the previous iteration).
+- ✅ `GET /api/admin/blog/audit?slug=<opt>&limit=<n>` — admin-auth, sort desc, default 100, hard-cap 500.
+- ✅ Frontend: new **History** button in the Blog tab header opens a slide-over `HistoryDrawer` — color-coded action pills, timestamp, title, slug, `by <8-hex>` label, `changed_fields` chips. Now has a Refresh button; rows carry `data-action` and `data-slug` attrs for easy targeting.
+- ✅ Suite is now **47/47 pytest** (+9 in TestBlogAudit — includes a strict "token never leaks" assertion). Playwright verified drawer open/close/backdrop + 4-row scratch-post lifecycle.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
+- P2 Custom confirm modal instead of `window.confirm`; unsaved-changes guard on editor backdrop click
+- P2 Admin polish: pagination cursor (`?before=<ts>`) for the audit endpoint; quick publish/unpublish toggle button per row (no editor open needed)
 - P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
 - P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
-- P2 Admin polish: custom confirm modal instead of `window.confirm`, unsaved-changes guard on editor backdrop click, pagination for admin blog list (500-cap)
-- P2 Audit log for admin blog CRUD (`blog_audit` collection + History pane in Blog tab)
+- P2 Code-split the `/admin` bundle via `React.lazy` so it doesn't ship on marketing pages

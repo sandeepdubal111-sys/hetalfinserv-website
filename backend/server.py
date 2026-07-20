@@ -722,12 +722,19 @@ async def admin_update_blog(slug: str, payload: BlogPostUpdate, session: dict = 
     updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
+    # Capture current published state BEFORE the write, so we can detect a toggle even when
+    # the caller sends the full document (as the PostEditor slide-over does).
+    existing = await db.blog_posts.find_one({"slug": slug}, {"_id": 0, "published": 1})
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    prev_published = existing.get("published", True)
     res = await db.blog_posts.update_one({"slug": slug}, {"$set": updates})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
     doc = await db.blog_posts.find_one({"slug": slug}, {"_id": 0})
-    # Distinguish "published"/"unpublished" from a regular "updated" for cleaner history reads.
-    if "published" in updates and set(updates.keys()) == {"published"}:
+    # Classify the action: if the `published` value FLIPPED, that's the primary signal — even if
+    # other fields also changed in the same request. Otherwise it's a regular "updated".
+    if "published" in updates and bool(updates["published"]) != bool(prev_published):
         action = "published" if updates["published"] else "unpublished"
     else:
         action = "updated"

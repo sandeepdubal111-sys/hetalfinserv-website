@@ -516,22 +516,24 @@ function HistoryDrawer({ token, onClose }) {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    async function run() {
-      try {
-        const res = await axios.get(`${API}/api/admin/blog/audit?limit=200`, {
-          headers: { "X-Admin-Token": token },
-        });
-        if (!cancelled) setRows(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
-        if (!cancelled) setErr("Couldn't load history.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+  const load = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await axios.get(`${API}/api/admin/blog/audit?limit=200`, {
+        headers: { "X-Admin-Token": token },
+      });
+      setRows(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setErr("Couldn't load history.");
+    } finally {
+      setLoading(false);
     }
-    run();
-    return () => { cancelled = true; };
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -553,13 +555,23 @@ function HistoryDrawer({ token, onClose }) {
               Recent activity
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 border border-hair text-obsidian"
-            data-testid="blog-history-close"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={load}
+              className="p-2 border border-hair text-obsidian"
+              data-testid="blog-history-refresh"
+              title="Refresh"
+            >
+              <RefreshCw size={14} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 border border-hair text-obsidian"
+              data-testid="blog-history-close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="p-6">
@@ -578,6 +590,8 @@ function HistoryDrawer({ token, onClose }) {
                   key={r.id}
                   className="border border-hair p-4 bg-white"
                   data-testid={`blog-history-row-${r.id}`}
+                  data-action={r.action}
+                  data-slug={r.slug}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
