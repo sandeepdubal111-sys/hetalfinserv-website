@@ -4,6 +4,11 @@ import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import axios from "axios";
 
 const API = process.env.REACT_APP_BACKEND_URL;
+const WHATSAPP_NUMBER = "918767095307";
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Hi Hetal Finserv — I have a question about your services."
+)}`;
+const CHAT_TIMEOUT_MS = 20000;
 
 function genSession() {
   const existing = localStorage.getItem("hf-chat-session");
@@ -18,6 +23,9 @@ const OPENING = {
   text:
     "Hi! I'm the Hetal Finserv assistant. Ask me about SIPs, insurance, loans, taxes, our founders — anything. I'll also arrange a call with Sandeep if you'd like.",
 };
+
+const FALLBACK_TEXT =
+  "Our assistant is taking a moment. Would you like to continue on WhatsApp — you'll usually hear back within minutes.";
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -45,15 +53,20 @@ export default function ChatWidget() {
     setInput("");
     setSending(true);
     try {
-      const res = await axios.post(`${API}/api/chat`, { session_id: session, text });
+      const res = await axios.post(
+        `${API}/api/chat`,
+        { session_id: session, text },
+        { timeout: CHAT_TIMEOUT_MS }
+      );
       setMessages((m) => [...m, { role: "assistant", text: res.data.reply }]);
     } catch (e) {
+      const timedOut = e?.code === "ECONNABORTED" || /timeout/i.test(e?.message || "");
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
-          text:
-            "I'm having trouble reaching the server. Please try again in a moment, or call +91 87670 95307.",
+          text: timedOut ? FALLBACK_TEXT : FALLBACK_TEXT,
+          fallback: true,
         },
       ]);
     } finally {
@@ -153,6 +166,26 @@ export default function ChatWidget() {
                     }}
                   >
                     {m.text}
+                    {m.fallback && (
+                      <a
+                        href={WHATSAPP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="chat-whatsapp-fallback"
+                        className="mt-3 inline-flex items-center gap-2 font-mono-label"
+                        style={{
+                          fontSize: "0.66rem",
+                          color: "#0E0F0C",
+                          background: "#25D366",
+                          padding: "8px 14px",
+                          letterSpacing: "0.08em",
+                          textDecoration: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        CONTINUE ON WHATSAPP →
+                      </a>
+                    )}
                   </div>
                 </motion.div>
               ))}

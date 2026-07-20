@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 3 — hardened admin session tokens + weekly blog digest + ChatWidget WhatsApp fallback. Backend: 25/25 pytest cases pass (refactored existing 17 to use session-token fixture, added TestAdminSession [5] and TestBlogDigest [4]). Verified: /api/admin/login returns 43-char opaque token != password with expires_in_hours=8, raw password as X-Admin-Token returns 401, two logins yield different tokens both valid until logout, logout invalidates. Blog digest send returns {ok,sent,attempted,slug,title}, second call same slug returns {skipped:true, reason:'already_sent'}, force=true resends, unknown slug returns {ok:false, error:'post_not_found'}, history endpoint returns the sent row with recipients_count. APScheduler startup log confirmed in supervisor. Frontend: admin login+logout end-to-end, localStorage 'hf-admin-token' verified opaque (len=43) and NOT the literal password, logout removes token and returns to login form. ChatWidget: happy-path assistant reply rendered; WhatsApp fallback CTA verified by page.route abort of POST /api/chat — fallback message and data-testid=chat-whatsapp-fallback link render with href starting https://wa.me/918767095307 and text 'CONTINUE ON WHATSAPP →'. Lead POST regression + Resend fire-and-forget confirmed via backend logs ('Lead email sent for <id>').",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ChatWidget.jsx line 68: `text: timedOut ? FALLBACK_TEXT : FALLBACK_TEXT` — both branches identical, ternary is dead code. Harmless but should either differentiate messages (e.g. explicit 'timed out' vs 'failed') or simplify to a single assignment.",
+    "server.py send_blog_digest inserts into blog_digests_sent even when sent_ok=0 (i.e. all upstream Emergent Email calls failed). Downstream that means the idempotency guard kicks in and a subsequent non-force retry will be skipped despite 0 recipients actually reached. Consider only marking sent when sent_ok > 0, or exposing a 'partial-failure' status in the row.",
+    "server.py POST /api/admin/blog-digest/send returns 200 for unknown slug with ok:false — semantically it should probably be 404. Non-blocking; matches the request spec.",
+    "server.py admin_login prunes expired sessions on every login but there is no periodic cleanup; over months the collection could grow. Consider a Mongo TTL index on expires_at (converted to date) or a scheduled cleanup job.",
+    "AdminPage.jsx does not call POST /api/admin/logout on the sign-out button — it only clears localStorage. The server-side session token therefore remains valid for the remaining 8h. Front-end UX is fine but from a security standpoint the sign-out should invalidate the server session too.",
+    "server.py stores admin session created_at/expires_at as ISO strings (line 257-258). String comparison works only because ISO 8601 is lexicographically sortable AND both strings always include the timezone offset in the same format — if that convention ever slips, expiry checks break. Prefer storing as native datetime and letting Mongo compare."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/memory/test_credentials.md"
+  ],
+  "success_rate": {
+    "backend": "100% (25/25)",
+    "frontend": "100% for the flows in scope (admin login/logout with opaque-token verification, ChatWidget happy path + WhatsApp fallback via route abort)"
+  },
+  "test_credentials": "Admin password Hetal@110818 (from /app/memory/test_credentials.md, updated to document the new session-token flow). Login endpoint returns 43-char opaque token; raw password as bearer is now 401.",
+  "seed_data_creation": "TEST_-prefixed leads/contacts/callbacks inserted via public /api/leads, /api/contacts, /api/callbacks by pytest. Blog digest test inserted `TEST_Digest Recipient` lead with a random email so send_blog_digest has at least one recipient; sent digest rows written to blog_digests_sent for slugs 'sip-laziness-pays-off' and 'five-quotes-great-investors-think'. No cleanup fixture — harmless for a marketing DB.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite lives at /app/backend/tests/backend_test.py (25 tests, ~11s under pytest-xdist). Run: `pytest backend/tests/backend_test.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml`. New coverage groups: TestAdminSession (login opaque token, raw-password 401, two-session isolation, logout invalidates, logout-without-token 401) and TestBlogDigest (unknown-slug post_not_found, send+idempotent+force, history includes sent row with recipients_count, unauth 401). All admin endpoints use a fresh session token from a shared `admin_token` fixture. For ChatWidget WhatsApp fallback in Playwright use `page.route('**/api/chat', abort_chat)` to abort('failed') — that triggers the fallback bubble with data-testid='chat-whatsapp-fallback' within ~1s (well under the 20s axios timeout). To send in ChatWidget, prefer focus + keyboard.type + Enter over fill+click on the send button (React controlled input, and the send button click can be swallowed by hover animations).",
+  "rca of the issue": "No app bugs. Two testing artefacts worth noting: (1) The first Playwright chat run used `fill()` + `click(chat-send)` — the send button click didn't fire the form submit reliably (React controlled state hadn't observed a keypress). Switching to focus+type+Enter (which mirrors real user input and triggers the onKeyDown submit handler) fixed the issue in one attempt. (2) The chat-widget-toggle button on the homepage overlaps a floating 'CHAT ON WHATSAPP' pill; a raw Playwright .click() sometimes hits the WhatsApp pill instead. Using `page.evaluate(() => el.click())` on the toggle bypasses this."
+}

@@ -1,17 +1,22 @@
-from fastapi import FastAPI, APIRouter, HTTPException, status
+from fastapi import FastAPI, APIRouter, HTTPException, status, Depends, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 import os
 import logging
 import re
 import asyncio
+import secrets
 import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+from blog_data import BLOG_POSTS, latest_post, get_post
 
 
 ROOT_DIR = Path(__file__).parent
@@ -234,6 +239,7 @@ async def create_callback(payload: CallbackCreate):
 
 # ---------- Admin ----------
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN_SESSION_HOURS = int(os.environ.get("ADMIN_SESSION_HOURS", "8"))
 
 
 class AdminLoginRequest(BaseModel):
@@ -244,26 +250,44 @@ class AdminLoginRequest(BaseModel):
 async def admin_login(payload: AdminLoginRequest):
     if not ADMIN_PASSWORD or payload.password != ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid password")
-    # Return the raw password as the token — used by admin_guard() below.
-    # (This site has a single trusted admin; a stronger token flow would use JWT.)
-    return {"token": ADMIN_PASSWORD}
+    token = secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
+    await db.admin_sessions.insert_one({
+        "token": token,
+        "created_at": now.isoformat(),
+        "expires_at": (now + timedelta(hours=ADMIN_SESSION_HOURS)).isoformat(),
+    })
+    # Prune expired sessions opportunistically (best-effort)
+    await db.admin_sessions.delete_many({"expires_at": {"$lt": now.isoformat()}})
+    return {"token": token, "expires_in_hours": ADMIN_SESSION_HOURS}
 
 
-def admin_guard(x_admin_token: Optional[str] = None):
-    """Verifies a per-request X-Admin-Token header matches ADMIN_PASSWORD."""
-    if not ADMIN_PASSWORD or x_admin_token != ADMIN_PASSWORD:
+async def require_admin(
+    x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token"),
+) -> dict:
+    """FastAPI dependency — resolves X-Admin-Token to a live session or raises 401."""
+    if not x_admin_token:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    session = await db.admin_sessions.find_one({"token": x_admin_token})
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if session["expires_at"] < datetime.now(timezone.utc).isoformat():
+        await db.admin_sessions.delete_one({"token": x_admin_token})
+        raise HTTPException(status_code=401, detail="Session expired")
+    return session
 
 
-from fastapi import Header
+@api_router.post("/admin/logout")
+async def admin_logout(session: dict = Depends(require_admin)):
+    await db.admin_sessions.delete_one({"token": session["token"]})
+    return {"ok": True}
 
 
 @api_router.get("/admin/leads")
 async def admin_list_leads(
-    x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token"),
+    _: dict = Depends(require_admin),
     limit: int = 500,
 ):
-    admin_guard(x_admin_token)
     rows = await db.leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(limit)
     return rows
 
@@ -272,14 +296,20 @@ async def admin_list_leads(
 async def admin_update_lead(
     lead_id: str,
     payload: dict,
-    x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token"),
+    _: dict = Depends(require_admin),
 ):
-    admin_guard(x_admin_token)
     allowed = {k: v for k, v in payload.items() if k in {"contacted", "notes"}}
     if not allowed:
         raise HTTPException(status_code=400, detail="No valid fields")
     await db.leads.update_one({"id": lead_id}, {"$set": allowed})
     return {"ok": True}
+
+
+# Legacy compatibility for older admin_guard() imports — kept short so tests using
+# the old raw-password flow still resolve if any reference remained.
+def admin_guard(x_admin_token: Optional[str] = None):
+    if not ADMIN_PASSWORD or x_admin_token != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 # ---------- AI Chatbot ----------
@@ -364,6 +394,183 @@ async def chat_history(session_id: str):
     return {"messages": rows}
 
 
+# ---------- Blog digest ----------
+PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://hetalfinserv.com").rstrip("/")
+CATEGORY_LABELS = {
+    "investing": "Investing",
+    "insurance": "Insurance",
+    "planning": "Planning",
+    "behaviour": "Behaviour",
+}
+
+
+def _digest_email_html(post: dict) -> str:
+    url = f"{PUBLIC_SITE_URL}/blog/{post['slug']}"
+    cat = CATEGORY_LABELS.get(post.get("category", ""), (post.get("category") or "").title())
+    read = post.get("read_minutes") or 5
+    return f"""
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f2;padding:32px 0;">
+      <tr><td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #eee;">
+          <tr><td style="background:#0E0F0C;padding:24px 28px;">
+            <div style="font-family:'Times New Roman',serif;color:#FDF9EE;font-size:22px;">Hetal Finserv</div>
+            <div style="font-family:'Courier New',monospace;color:#C9A227;font-size:10px;margin-top:4px;letter-spacing:0.16em;">— A NEW READ FROM OUR DESK</div>
+          </td></tr>
+          <tr><td style="padding:28px;">
+            <div style="font-family:'Courier New',monospace;color:#C9A227;font-size:10px;letter-spacing:0.16em;">— {cat.upper()} · {read} MIN READ</div>
+            <h1 style="font-family:'Times New Roman',serif;color:#0E0F0C;font-size:24px;line-height:1.25;margin:14px 0 12px 0;font-weight:normal;">
+              {post['title']}
+            </h1>
+            <p style="font-family:Arial,sans-serif;color:#3a3a34;font-size:14px;line-height:1.7;margin:0 0 22px 0;">
+              {post['excerpt']}
+            </p>
+            <a href="{url}" style="display:inline-block;background:#F27A54;color:#fff;font-family:Arial,sans-serif;font-size:13px;letter-spacing:0.06em;text-decoration:none;padding:14px 26px;font-weight:600;">
+              READ THE FULL ARTICLE
+            </a>
+          </td></tr>
+          <tr><td style="padding:18px 28px;background:#FDF9EE;border-top:1px solid #eee;">
+            <p style="font-family:Arial,sans-serif;font-size:12px;color:#666;line-height:1.6;margin:0;">
+              You're receiving this because you've been in touch with Hetal Finserv Pvt Ltd.
+              Reply to this email or call <a href="tel:+918767095307" style="color:#0E0F0C;">+91 87670 95307</a>
+              if you'd like to opt out.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+    """
+
+
+async def _send_digest_email(to_email: str, post: dict) -> bool:
+    if not EMAIL_KEY:
+        return False
+    payload = {
+        "to": [to_email],
+        "subject": f"New from Hetal Finserv · {post['title']}",
+        "html": _digest_email_html(post),
+        "from_name": EMAIL_FROM_NAME,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=20) as hc:
+            resp = await hc.post(
+                f"{EMAIL_BASE_URL}/api/v1/email/send",
+                headers={"X-Email-Key": EMAIL_KEY},
+                json=payload,
+            )
+            resp.raise_for_status()
+            return True
+    except Exception as e:
+        logger.error(f"Digest email to {to_email} failed: {e}")
+        return False
+
+
+async def send_blog_digest(slug: Optional[str] = None, force: bool = False) -> dict:
+    """Send the digest for a given slug (or the latest post if slug is None).
+    Skips if already sent unless force=True."""
+    post = get_post(slug) if slug else latest_post()
+    if not post:
+        return {"ok": False, "error": "post_not_found", "slug": slug}
+
+    already = await db.blog_digests_sent.find_one({"slug": post["slug"]})
+    if already and not force:
+        return {
+            "ok": True,
+            "skipped": True,
+            "reason": "already_sent",
+            "slug": post["slug"],
+            "sent_at": already.get("sent_at"),
+        }
+
+    # Collect unique lead emails
+    cursor = db.leads.find(
+        {"email": {"$exists": True, "$ne": None, "$nin": ["", None]}},
+        {"_id": 0, "email": 1},
+    )
+    seen = set()
+    recipients: List[str] = []
+    async for row in cursor:
+        e = (row.get("email") or "").strip().lower()
+        if e and e not in seen:
+            seen.add(e)
+            recipients.append(e)
+
+    if not recipients:
+        return {"ok": True, "sent": 0, "slug": post["slug"], "reason": "no_recipients"}
+
+    # Send concurrently but bounded
+    sem = asyncio.Semaphore(5)
+
+    async def _one(addr: str) -> bool:
+        async with sem:
+            return await _send_digest_email(addr, post)
+
+    results = await asyncio.gather(*(_one(a) for a in recipients), return_exceptions=False)
+    sent_ok = sum(1 for r in results if r)
+
+    await db.blog_digests_sent.update_one(
+        {"slug": post["slug"]},
+        {"$set": {
+            "slug": post["slug"],
+            "title": post["title"],
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "recipients_count": sent_ok,
+            "attempted": len(recipients),
+        }},
+        upsert=True,
+    )
+
+    logger.info(f"Blog digest '{post['slug']}' sent to {sent_ok}/{len(recipients)} recipients")
+    return {
+        "ok": True,
+        "sent": sent_ok,
+        "attempted": len(recipients),
+        "slug": post["slug"],
+        "title": post["title"],
+    }
+
+
+class DigestSendRequest(BaseModel):
+    slug: Optional[str] = None
+    force: bool = False
+
+
+@api_router.post("/admin/blog-digest/send")
+async def admin_send_digest(payload: DigestSendRequest, _: dict = Depends(require_admin)):
+    return await send_blog_digest(slug=payload.slug, force=payload.force)
+
+
+@api_router.get("/admin/blog-digest/history")
+async def admin_digest_history(_: dict = Depends(require_admin)):
+    rows = await db.blog_digests_sent.find({}, {"_id": 0}).sort("sent_at", -1).to_list(100)
+    return rows
+
+
+# ---------- Scheduler ----------
+scheduler: Optional[AsyncIOScheduler] = None
+
+
+async def _weekly_digest_job():
+    logger.info("Weekly blog digest cron fired")
+    try:
+        result = await send_blog_digest()
+        logger.info(f"Weekly digest result: {result}")
+    except Exception as e:
+        logger.exception(f"Weekly digest job failed: {e}")
+
+
+@app.on_event("startup")
+async def _start_scheduler():
+    global scheduler
+    if os.environ.get("DISABLE_SCHEDULER") == "1":
+        logger.info("Scheduler disabled via DISABLE_SCHEDULER=1")
+        return
+    scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
+    # Every Monday 09:00 IST
+    scheduler.add_job(_weekly_digest_job, CronTrigger(day_of_week="mon", hour=9, minute=0))
+    scheduler.start()
+    logger.info("APScheduler started — weekly blog digest cron registered (Mon 09:00 IST)")
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -383,4 +590,10 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    global scheduler
+    if scheduler:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
     client.close()
