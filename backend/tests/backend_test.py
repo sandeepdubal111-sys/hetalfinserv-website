@@ -450,12 +450,12 @@ class TestBlogPublic:
         assert len(posts) >= 8, f"expected >=8 posts, got {len(posts)}"
 
         required = {"slug", "title", "excerpt", "category", "date",
-                    "read_minutes", "readMinutes", "cover", "body"}
+                    "readMinutes", "cover", "body"}
         for p in posts:
             missing = required - set(p.keys())
             assert not missing, f"post {p.get('slug')} missing keys: {missing}"
             assert isinstance(p["body"], list)
-            assert p["read_minutes"] == p["readMinutes"]
+            assert isinstance(p["readMinutes"], int)
 
         # sorted by date desc
         dates = [p["date"] for p in posts]

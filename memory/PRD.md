@@ -99,9 +99,21 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ Startup migration purges any legacy string-typed rows before creating the index (idempotent).
 - ✅ `require_admin` retains a backward-compat parser (ISO string → datetime) as a safety net.
 
+## Implemented (2026-07-20 — Blog moved to MongoDB)
+- ✅ New `blog_posts` collection (unique index on `slug`), seeded once from `/app/backend/blog_seed.py` (8 posts with full body blocks).
+- ✅ Public endpoints: `GET /api/blog`, `GET /api/blog/:slug`, `GET /api/blog/:slug/related?limit=3` (excludes current, same-category first).
+- ✅ Admin CRUD: `POST /api/admin/blog` (201, 409 on dupe, 422 on invalid slug pattern), `PUT /api/admin/blog/:slug`, `DELETE /api/admin/blog/:slug` — all guarded by session token.
+- ✅ Frontend refactored: `BlogPage.jsx` + `BlogPostPage.jsx` now fetch via `axios`; loading/error/empty states + client-side 404 → redirect to /blog.
+- ✅ `send_blog_digest` reads latest post from DB, not from a Python mirror. Verified: create+delete a scratch newest-post → digest picks the actual next-newest.
+- ✅ `blog_data.py` deleted; only `blog_seed.py` remains and is one-time-only.
+- ✅ Public payload now emits `readMinutes` (camelCase) only — dropped the snake_case dupe.
+- ✅ `fetchPosts()` guards against non-array responses with `Array.isArray`.
+- ✅ Backend test suite grew 25 → 37 (added `TestBlogPublic` 5 + `TestBlogAdmin` 7); all 37 green. Frontend Playwright verified /blog and /blog/:slug flows including 404 redirect.
+
 ## Prioritized backlog (P1/P2)
 - P2 Marathi language toggle (i18n)
-- P2 Backend `/api/blog` collection so posts are DB-managed (currently mirrored in `blog_data.py`)
+- P2 Admin UI for blog CRUD (currently API-only — the endpoints exist, no dashboard screen yet)
+- P2 Digest email opt-out link (`/api/unsubscribe?token=...`)
+- P2 Chatbot auto-lead capture (regex-detect phone/name → silent POST /api/leads with source="chatbot")
 - P2 Shareable calculator URL params
-- P2 Chatbot auto-lead capture (regex-detect phone/name in user message, silent POST to /api/leads with source="chatbot")
-- P2 Digest email opt-out link (`/api/unsubscribe?token=...`) in the footer for cleaner list hygiene
+- P2 Blog list pagination (currently hard-capped at 200); "Back to All" CTA on empty category; user-facing "post not found" toast on 404 redirect

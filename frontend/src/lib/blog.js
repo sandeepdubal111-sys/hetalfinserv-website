@@ -13,7 +13,7 @@ export const BLOG_CATEGORIES = [
 export async function fetchPosts(category) {
   const url = category ? `${API}/api/blog?category=${encodeURIComponent(category)}` : `${API}/api/blog`;
   const res = await axios.get(url);
-  return res.data;
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 export async function fetchPost(slug) {

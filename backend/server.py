@@ -631,9 +631,9 @@ class BlogPostUpdate(BaseModel):
 
 def _blog_to_public(doc: dict) -> dict:
     d = {k: v for k, v in doc.items() if k not in {"_id"}}
-    # Emit `readMinutes` too for the older frontend field name (kept for compat during migration)
-    if "read_minutes" in d and "readMinutes" not in d:
-        d["readMinutes"] = d["read_minutes"]
+    # Frontend reads `readMinutes` (camelCase); drop the snake_case dupe from payload.
+    if "read_minutes" in d:
+        d["readMinutes"] = d.pop("read_minutes")
     return d
 
 
