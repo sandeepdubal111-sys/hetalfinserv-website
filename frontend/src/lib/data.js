@@ -113,6 +113,7 @@ export const NAV = [
   { label: "Home", to: "/" },
   { label: "Services", to: "/services" },
   { label: "Calculators", to: "/calculators" },
+  { label: "Blog", to: "/blog" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];

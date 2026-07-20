@@ -290,7 +290,7 @@ export default function Footer() {
               { label: "SID/SAI/KIM", href: "https://www.sebi.gov.in/filings/mutual-funds.html" },
               { label: "Code of Conduct", href: "https://hetalfinserv.com/content/codeof_conduct.pdf" },
               { label: "SEBI Circulars", href: "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0" },
-              { label: "AMFI Risk Factors", href: "https://www.amfiindia.com/investor-corner/knowledge-center/risks-in-mutual-funds.html" },
+              { label: "AMFI Risk Factors", href: "https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds" },
             ].map((l, i, arr) => (
               <li key={l.label} className="flex items-center gap-6">
                 <a

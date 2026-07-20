@@ -1,0 +1,220 @@
+// Blog / SEO knowledge center — hand-crafted original articles inspired by
+// the topics on hetalfinserv.com. Body is an array of blocks so each article
+// renders cleanly with the editorial layout.
+
+export const BLOG_CATEGORIES = [
+  { key: "investing", label: "Investing", tone: "gold" },
+  { key: "insurance", label: "Insurance", tone: "coral" },
+  { key: "planning", label: "Planning", tone: "emerald" },
+  { key: "behaviour", label: "Behaviour", tone: "obsidian" },
+];
+
+// Block types: { type: "p" | "h2" | "quote" | "list", text?, items? }
+export const BLOG_POSTS = [
+  {
+    slug: "5-signals-your-mutual-fund-sends-you",
+    title: "The 5 Signals Your Mutual Fund Sends You — And What They Mean",
+    excerpt:
+      "Your monthly SIP statement quietly whispers five things. Learn to read them like an advisor does, and you'll act with confidence instead of reacting to noise.",
+    category: "investing",
+    date: "2026-06-29",
+    readMinutes: 6,
+    cover:
+      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Most investors open their fund statement, glance at the total value, and close it. But every statement contains five signals — quiet indicators that reveal whether your portfolio is compounding on plan or drifting off course." },
+      { type: "h2", text: "1. NAV movement vs benchmark" },
+      { type: "p", text: "A fund that beats its benchmark by 2-3% annually over five years is doing its job. Underperformance across two full cycles is a signal to review — not necessarily switch, but review." },
+      { type: "h2", text: "2. Expense ratio drift" },
+      { type: "p", text: "Watch for silent expense ratio hikes. A 0.3% climb over three years compounds meaningfully. AMCs disclose changes; distributors like us surface them so you never miss." },
+      { type: "h2", text: "3. Portfolio churn (turnover ratio)" },
+      { type: "p", text: "High turnover means the fund manager is trading actively — which creates internal tax drag. For long-horizon SIPs, low-turnover funds usually compound better." },
+      { type: "h2", text: "4. Asset under management (AUM) inflection" },
+      { type: "p", text: "Small-cap funds slow down when they get too big. Track whether your fund is nearing categories where size becomes a headwind." },
+      { type: "h2", text: "5. Manager stability" },
+      { type: "p", text: "A change of fund manager is the single most overlooked signal. If your fund's ten-year track record was built by someone who left last quarter, you now own a different fund." },
+      { type: "quote", text: "The five signals aren't secrets. They're on every statement. The advantage is knowing where to look — and how to act without over-reacting." },
+      { type: "p", text: "Your Hetal Finserv advisor reviews each of these signals for you every quarter. If any one moves outside its acceptable range, we tell you exactly why and what to do." },
+    ],
+  },
+  {
+    slug: "psychology-of-later-health-insurance",
+    title: "The Psychology of 'Later' — Why Health Insurance Is Always Tomorrow's Decision",
+    excerpt:
+      "Health insurance suffers from a peculiar cognitive bias: it's the most important product you'll never feel motivated to buy today. Here's the fix.",
+    category: "insurance",
+    date: "2026-06-18",
+    readMinutes: 5,
+    cover:
+      "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Behavioural economists call it hyperbolic discounting — the tendency to value the certain present far more than the uncertain future. Nowhere is it more expensive than in health insurance." },
+      { type: "h2", text: "The gap only closes when a claim happens" },
+      { type: "p", text: "Every family we've served who bought cover after a diagnosis pays 3-5× the premium a healthy 30-year-old would have paid — if a policy is even available. The window is narrow, and it closes without warning." },
+      { type: "h2", text: "Two mental hacks that work" },
+      { type: "list", items: [
+        "Reframe the premium as a monthly income deductible. ₹1,500/mo is 0.5% of a ₹3L salary — cheaper than a coffee habit.",
+        "Set the purchase date on a birthday. Behavioural nudge: important dates are harder to postpone.",
+      ] },
+      { type: "p", text: "IRDAI regulations now demand faster claim settlements and clearer exclusions. If your policy is more than five years old, its wording may have quietly aged out of modern medical practice." },
+      { type: "quote", text: "Insurance is the only product where the best price is quoted to the person who needs it least." },
+      { type: "p", text: "At Hetal Finserv we hold IRDAI Broker Registration 00115138383 — which means we shop the market, not one insurer. The right cover for your family is usually there. The right time is always now." },
+    ],
+  },
+  {
+    slug: "charts-colours-cognitive-traps",
+    title: "Charts, Colours and Cognitive Traps: How Visuals Shape Investor Choices",
+    excerpt:
+      "That green arrow. That red candle. Colour is not neutral — it's the single strongest bias built into every trading app.",
+    category: "behaviour",
+    date: "2026-05-30",
+    readMinutes: 5,
+    cover:
+      "https://images.unsplash.com/photo-1642790551116-18e150f248e5?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Open any broker app. What draws your eye first — the number, or the colour of the arrow next to it? Behavioural finance research shows that colour registers 20% faster than the numeric change, and it shapes the decision that follows." },
+      { type: "h2", text: "The red-green bias" },
+      { type: "p", text: "Red isn't intrinsically bad. Green isn't intrinsically good. But your amygdala doesn't parse portfolio theory — it parses colour. A -1% day in red feels three times worse than a +1% day in green feels good. That asymmetry drives panic selling." },
+      { type: "h2", text: "How to build immunity" },
+      { type: "list", items: [
+        "Set a rule: no app-checking on days the market moves more than 1.5%. You'll add 0.7% p.a. to your long-term returns just by not reacting.",
+        "Convert percentages to years-of-goal-progress. A -3% day is a fortnight of compounding — not a catastrophe.",
+        "Use a monthly statement, not a live dashboard. The lower the sampling frequency, the calmer the investor.",
+      ] },
+      { type: "quote", text: "The bear market is not a market condition. It's a colour on a screen and a story in your head." },
+      { type: "p", text: "Working with an advisor who reviews the numbers on your behalf removes the emotional colour-code entirely. That distance is often worth more than the fee." },
+    ],
+  },
+  {
+    slug: "creator-economy-wealth-builds-slow",
+    title: "The Creator Economy Pays Fast, Wealth Builds Slow",
+    excerpt:
+      "You landed the brand deals. The bank balance is real. But if the SIPs aren't automated, the wealth won't outlast the algorithm.",
+    category: "planning",
+    date: "2026-05-19",
+    readMinutes: 5,
+    cover:
+      "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Creator-economy income is lumpy: three months of ₹6L brand deals followed by a quiet quarter. Traditional financial planning wasn't designed for this cash-flow shape — but the math still works if you set up the right auto-pilots." },
+      { type: "h2", text: "Three plumbing changes creators need" },
+      { type: "list", items: [
+        "Separate business and personal current accounts. Non-negotiable — creates clean tax visibility.",
+        "Route 30% of every brand payment to a tax bucket the day it lands. The government does not send reminders.",
+        "Set the SIP amount as a percentage of last-quarter income, not a fixed rupee number. High-income months move more into markets automatically.",
+      ] },
+      { type: "h2", text: "Why creators outperform employees — if they do this" },
+      { type: "p", text: "Employees typically save 20% and invest 15%. High-earning creators who set up automated plumbing save 40%+ effortlessly, because there's no lifestyle inflation baked into a monthly salary. Compound that for a decade and the outcomes are meaningfully different." },
+      { type: "quote", text: "Fast income + slow compounding is the quietest path to lasting wealth in India today." },
+      { type: "p", text: "We work with several creators, agency owners and solopreneurs — building goal-based portfolios that respect their income shape." },
+    ],
+  },
+  {
+    slug: "five-quotes-great-investors-think",
+    title: "Five Quotes That Reveal How Great Investors Actually Think",
+    excerpt:
+      "Not the famous quotes on Twitter. The quieter ones — from letters, interviews and boardrooms — that describe how discipline actually looks.",
+    category: "behaviour",
+    date: "2026-04-17",
+    readMinutes: 5,
+    cover:
+      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Every serious investor eventually collects quotes — not for LinkedIn posts, but as anchors when markets misbehave. Five that we return to often." },
+      { type: "quote", text: "The stock market is a device for transferring money from the impatient to the patient. — Warren Buffett" },
+      { type: "p", text: "Patience isn't a personality trait. It's a system: automated SIPs, a written investment policy, and someone else's phone number to call before you sell." },
+      { type: "quote", text: "In investing, what is comfortable is rarely profitable. — Robert Arnott" },
+      { type: "p", text: "The moments that later look like turning points — March 2020, October 2008 — were maximally uncomfortable to buy through. That's the point." },
+      { type: "quote", text: "Risk comes from not knowing what you're doing. — Warren Buffett" },
+      { type: "p", text: "Diversification is not about spreading; it's about admitting you can't predict which idea will win. Owning 8-12 well-chosen funds across categories is honest humility, expressed as portfolio construction." },
+      { type: "quote", text: "The four most dangerous words in investing are: 'This time it's different.' — Sir John Templeton" },
+      { type: "p", text: "It usually isn't." },
+    ],
+  },
+  {
+    slug: "corrections-dont-break-portfolios",
+    title: "Corrections Don't Break Portfolios — Reactions Do",
+    excerpt:
+      "The Nifty has corrected 10%+ every 18 months on average. The portfolios that get hurt are the ones whose owners try to time the recovery.",
+    category: "behaviour",
+    date: "2026-03-24",
+    readMinutes: 4,
+    cover:
+      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "In the last 30 years, the Nifty has seen a 10%+ correction roughly every 18 months. Yet the same index has compounded at ~12% CAGR over long stretches. The gap between the index return and the average investor's return is almost entirely explained by reaction — not by the correction itself." },
+      { type: "h2", text: "The maths of missed rebounds" },
+      { type: "p", text: "If you missed just the 10 best days in the market over 20 years, your compounded return would drop from ~12% to ~6%. Those 10 days almost always follow the worst days. The investor who sold during the fall missed exactly the recovery she was waiting to time." },
+      { type: "h2", text: "The two questions to ask your advisor during a correction" },
+      { type: "list", items: [
+        "Has anything in the fundamental thesis of what I own actually changed? (Usually the answer is no.)",
+        "Am I on track for my goal? (If yes — do nothing. If no — top up, don't withdraw.)",
+      ] },
+      { type: "quote", text: "You don't need to time the market. You need someone who won't let you." },
+    ],
+  },
+  {
+    slug: "sip-laziness-pays-off",
+    title: "SIP Is the Only Place Where Laziness Pays Off",
+    excerpt:
+      "Every other domain rewards active effort. Investing rewards the opposite — set it, forget it, and don't fiddle with it.",
+    category: "investing",
+    date: "2026-03-06",
+    readMinutes: 4,
+    cover:
+      "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Effort is over-rated in investing. Study after study confirms that the investors who touch their portfolio the least — after setting it up correctly — beat the ones who tinker. Vanguard's Advisor Alpha study puts the 'behaviour gap' at 1.5% per year. Compounded over 25 years, that's more than half your final corpus." },
+      { type: "h2", text: "What 'good laziness' actually looks like" },
+      { type: "list", items: [
+        "A written asset-allocation target (say 70% equity, 20% debt, 10% gold).",
+        "SIPs set to auto-debit — not open to monthly renegotiation.",
+        "One 45-minute annual review with your advisor to rebalance, top-up, or pause.",
+      ] },
+      { type: "quote", text: "The market pays a premium for the ability to sit still. Most of us collect that premium by not doing anything." },
+      { type: "p", text: "The role of your MFD is to be that written policy and that 45-minute review — the disciplined counterweight to your impulse to act." },
+    ],
+  },
+  {
+    slug: "gen-z-emotionally-intelligent-investors",
+    title: "Why Gen Z Might Become the Most Emotionally Intelligent Investors Yet",
+    excerpt:
+      "They grew up watching two crashes on their phones. Counter-intuitively, that may make them the calmest generation India has seen at the wheel of its capital.",
+    category: "planning",
+    date: "2026-02-13",
+    readMinutes: 5,
+    cover:
+      "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=1600&q=80",
+    body: [
+      { type: "p", text: "Every generation is shaped by the crashes it lived through. Baby-boomer investors in India remember 1992. Millennials remember 2008. Gen Z has watched two major drawdowns before their 25th birthday — and unlike their parents, they've watched them on a phone in real-time." },
+      { type: "h2", text: "The unexpected upside" },
+      { type: "p", text: "That exposure inoculates them. When we survey younger clients, they show less panic-selling tendency, higher SIP retention rates during corrections, and are more willing to have written investment policies." },
+      { type: "h2", text: "The three habits Gen Z is already normalising" },
+      { type: "list", items: [
+        "Starting SIPs of ₹500–2,000/mo the month they get their first job.",
+        "Buying term insurance in their twenties — historically the toughest sell.",
+        "Working with an advisor for accountability, not for stock tips.",
+      ] },
+      { type: "quote", text: "Emotional intelligence is not the absence of feelings during a fall. It's the presence of a system that outlives the feeling." },
+      { type: "p", text: "If you're 22–28, working with an advisor now — before the balance sheet gets complicated — locks in the biggest single variable in your wealth outcome: time." },
+    ],
+  },
+];
+
+export function getPost(slug) {
+  return BLOG_POSTS.find((p) => p.slug === slug);
+}
+
+export function relatedPosts(slug, n = 3) {
+  const cur = getPost(slug);
+  if (!cur) return BLOG_POSTS.slice(0, n);
+  return BLOG_POSTS
+    .filter((p) => p.slug !== slug)
+    .sort((a, b) => (a.category === cur.category ? -1 : 1))
+    .slice(0, n);
+}
+
+export function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+}

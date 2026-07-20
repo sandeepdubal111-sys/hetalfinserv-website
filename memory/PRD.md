@@ -66,12 +66,17 @@ Hetal Finserv website — a marketing site to present financial services, build 
 - ✅ PDF export on every calculator via `calcPDF.js` (jsPDF) — branded header, gold hero result, breakdown table, coral advisor CTA strip, compliance footnote
 - ✅ Resend email notification (Emergent-managed) — every new lead fires an admin email to `LEAD_NOTIFY_TO` (info@hetalfinserv.com) with a fully branded HTML template; asyncio fire-and-forget so it never blocks the API
 
-## Prioritized backlog (P1/P2)
-- P1 Admin dashboard to view/manage leads
-- P1 Blog / SEO knowledge center (large scope)
-- P2 AI chatbot for lead qualification
-- P2 Marathi language toggle (i18n)
-- P2 Shareable calculator URL params
+## Implemented (2026-07-20 — Blog / SEO knowledge center)
+- ✅ `/blog` list route with featured post + 7-card grid, category filters (Investing / Insurance / Planning / Behaviour)
+- ✅ `/blog/:slug` article route with editorial typography (h2 / quote / list / paragraph block renderer)
+- ✅ 8 original articles inspired by the topics on hetalfinserv.com (SIP signals, health insurance psychology, colour bias, creator-economy planning, quotes, corrections, laziness pays, Gen Z investors)
+- ✅ Each article has a dark obsidian "Bring these ideas to your money" CTA that routes to `/contact` with pre-filled service + article-context message
+- ✅ "Blog" tab added to top nav; related posts strip at bottom of each article
+- ✅ Fixed dead AMFI Risk Factors link → now points to current URL `https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds` (verified 200)
 
-## Next tasks
-- Confirm priority for Blog / Chatbot / Marathi
+## Prioritized backlog (P1/P2)
+- P1 AI Chatbot (Emergent LLM + widget)
+- P1 Admin dashboard for leads
+- P2 Marathi language toggle (i18n)
+- P2 Backend `/api/blog` collection so posts are DB-managed
+- P2 Shareable calculator URL params
