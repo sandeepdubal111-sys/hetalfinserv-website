@@ -765,6 +765,53 @@ async def admin_blog_audit(
     return rows
 
 
+class BulkBlogRequest(BaseModel):
+    slugs: List[str] = Field(..., min_length=1, max_length=200)
+    action: str  # "publish" | "unpublish" | "delete"
+
+
+@api_router.post("/admin/blog/bulk")
+async def admin_bulk_blog(payload: BulkBlogRequest, session: dict = Depends(require_admin)):
+    if payload.action not in {"publish", "unpublish", "delete"}:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    processed: List[dict] = []
+    failed: List[dict] = []
+    for slug in payload.slugs:
+        try:
+            if payload.action == "delete":
+                doc = await db.blog_posts.find_one({"slug": slug}, {"_id": 0, "title": 1})
+                res = await db.blog_posts.delete_one({"slug": slug})
+                if res.deleted_count == 0:
+                    failed.append({"slug": slug, "error": "not_found"})
+                    continue
+                await _log_audit("deleted", slug, session, title=(doc or {}).get("title"))
+                processed.append({"slug": slug})
+            else:
+                # publish / unpublish
+                next_val = payload.action == "publish"
+                existing = await db.blog_posts.find_one({"slug": slug}, {"_id": 0, "published": 1, "title": 1})
+                if existing is None:
+                    failed.append({"slug": slug, "error": "not_found"})
+                    continue
+                prev = bool(existing.get("published", True))
+                if prev == next_val:
+                    # No-op for this slug — skip audit to keep history clean.
+                    processed.append({"slug": slug, "no_op": True})
+                    continue
+                await db.blog_posts.update_one({"slug": slug}, {"$set": {"published": next_val}})
+                await _log_audit(
+                    "published" if next_val else "unpublished",
+                    slug, session,
+                    title=existing.get("title"),
+                    changed_fields=["published"],
+                )
+                processed.append({"slug": slug})
+        except Exception as e:
+            logger.warning(f"Bulk {payload.action} failed for {slug}: {e}")
+            failed.append({"slug": slug, "error": str(e)})
+    return {"ok": len(failed) == 0, "processed": processed, "failed": failed}
+
+
 @app.on_event("startup")
 async def _seed_blog_posts():
     """One-time seed: insert BLOG_SEED only if the collection is empty. Ensures a unique index on slug.

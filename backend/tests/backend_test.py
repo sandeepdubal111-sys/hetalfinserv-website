@@ -911,3 +911,261 @@ class TestBlogAudit:
                 assert "token" not in row, f"row unexpectedly has 'token' key: {row}"
         finally:
             api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+
+# ---------- Bulk Blog Actions ----------
+class TestBulkBlog:
+    """POST /api/admin/blog/bulk — bulk publish/unpublish/delete with per-slug audit rows.
+
+    Contract:
+    - 401 without token
+    - 400 on invalid action
+    - 422 on empty slug list (Pydantic min_length=1) and > max_length=200
+    - Response: {ok: bool, processed: [{slug, no_op?: true}], failed: [{slug, error}]}
+    - Successful flip → writes exactly ONE audit row per slug (published|unpublished|deleted).
+    - No-op flip (already at target state) → processed with no_op:true, ZERO audit rows.
+    - Non-existent slug on publish/unpublish/delete → failed with error='not_found', no audit row.
+    """
+
+    def _scratch_slug(self, tag: str = "x"):
+        # lowercase-only per BlogPostBase regex ^[a-z0-9-]+$
+        return f"pytest-bulk-{tag}-{_uuid.uuid4().hex[:8]}"
+
+    def _payload(self, slug: str, published: bool = False):
+        return {
+            "slug": slug,
+            "title": "Pytest Bulk Post — Do Not Ship",
+            "excerpt": "A temporary bulk-test post created by the automated test suite.",
+            "category": "investing",
+            "date": "2026-08-01",
+            "readMinutes": 3,
+            "cover": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1600&q=80",
+            "body": [{"type": "p", "text": "bulk body"}],
+            "published": published,
+        }
+
+    def _audit_rows(self, api, headers, slug):
+        r = api.get(f"{BASE_URL}/api/admin/blog/audit",
+                    params={"slug": slug, "limit": 500}, headers=headers)
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    def _cleanup(self, api, headers, slugs):
+        for s in slugs:
+            try:
+                api.delete(f"{BASE_URL}/api/admin/blog/{s}", headers=headers)
+            except Exception:
+                pass
+
+    # ---- Auth / validation ----
+    def test_bulk_without_token_returns_401(self, api):
+        r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": ["whatever"], "action": "publish"})
+        assert r.status_code == 401
+
+    def test_bulk_invalid_action_returns_400(self, api, admin_headers):
+        slug = self._scratch_slug("inv")
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+            r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                         json={"slugs": [slug], "action": "nuke"}, headers=admin_headers)
+            assert r.status_code == 400, r.text
+        finally:
+            self._cleanup(api, admin_headers, [slug])
+
+    def test_bulk_empty_slugs_returns_422(self, api, admin_headers):
+        r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [], "action": "publish"}, headers=admin_headers)
+        assert r.status_code == 422, r.text
+
+    def test_bulk_over_cap_returns_422(self, api, admin_headers):
+        # 201 slugs — Pydantic max_length=200 → 422
+        slugs = [f"pytest-bulk-cap-{i:03d}" for i in range(201)]
+        r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": slugs, "action": "publish"}, headers=admin_headers)
+        assert r.status_code == 422, r.text
+
+    # ---- Happy paths ----
+    def test_bulk_publish_two_drafts_writes_two_audit_rows(self, api, admin_headers):
+        a = self._scratch_slug("pa")
+        b = self._scratch_slug("pb")
+        try:
+            # Both drafts (published:false)
+            r_a = api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(a, published=False), headers=admin_headers)
+            r_b = api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(b, published=False), headers=admin_headers)
+            assert r_a.status_code == 201 and r_b.status_code == 201
+
+            # Baseline: only 'created' rows so far
+            base_a = self._audit_rows(api, admin_headers, a)
+            base_b = self._audit_rows(api, admin_headers, b)
+            assert [r["action"] for r in base_a] == ["created"]
+            assert [r["action"] for r in base_b] == ["created"]
+
+            # Bulk publish
+            r1 = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                          json={"slugs": [a, b], "action": "publish"},
+                          headers=admin_headers)
+            assert r1.status_code == 200, r1.text
+            body = r1.json()
+            assert body["ok"] is True
+            assert body["failed"] == []
+            processed_slugs = {p["slug"] for p in body["processed"]}
+            assert processed_slugs == {a, b}
+            # First call must NOT be no_op
+            for p in body["processed"]:
+                assert not p.get("no_op"), f"unexpected no_op on first publish: {p}"
+
+            # Each slug has exactly one 'published' audit row
+            for s in (a, b):
+                rows = self._audit_rows(api, admin_headers, s)
+                pub_rows = [r for r in rows if r["action"] == "published"]
+                assert len(pub_rows) == 1, f"expected 1 published row for {s}, got {rows}"
+                assert pub_rows[0]["changed_fields"] == ["published"]
+
+            # Public GET /api/blog now surfaces both
+            pub = api.get(f"{BASE_URL}/api/blog")
+            assert pub.status_code == 200
+            public_slugs = {p["slug"] for p in pub.json()}
+            assert a in public_slugs and b in public_slugs, "bulk-published slugs missing from public feed"
+
+            # Second call with same payload → no-op flips, ZERO new audit rows
+            before_a = len(self._audit_rows(api, admin_headers, a))
+            before_b = len(self._audit_rows(api, admin_headers, b))
+            r2 = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                          json={"slugs": [a, b], "action": "publish"},
+                          headers=admin_headers)
+            assert r2.status_code == 200
+            body2 = r2.json()
+            assert body2["ok"] is True and body2["failed"] == []
+            # Every processed entry must be no_op:true
+            for p in body2["processed"]:
+                assert p.get("no_op") is True, f"expected no_op on repeat publish: {p}"
+            # NO new audit rows written
+            assert len(self._audit_rows(api, admin_headers, a)) == before_a
+            assert len(self._audit_rows(api, admin_headers, b)) == before_b
+        finally:
+            self._cleanup(api, admin_headers, [a, b])
+
+    def test_bulk_unpublish_with_ghost_slug_partial_failure(self, api, admin_headers):
+        a = self._scratch_slug("ua")
+        b = self._scratch_slug("ub")
+        ghost = f"pytest-bulk-ghost-{_uuid.uuid4().hex[:8]}"
+        try:
+            # Both real ones start published
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(a, published=True), headers=admin_headers)
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(b, published=True), headers=admin_headers)
+
+            r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                         json={"slugs": [a, ghost, b], "action": "unpublish"},
+                         headers=admin_headers)
+            assert r.status_code == 200, r.text
+            body = r.json()
+            assert body["ok"] is False, "ok must be false when any slug fails"
+            processed_slugs = {p["slug"] for p in body["processed"]}
+            assert processed_slugs == {a, b}
+            assert body["failed"] == [{"slug": ghost, "error": "not_found"}]
+
+            # Only the real slugs got audit rows
+            for s in (a, b):
+                rows = self._audit_rows(api, admin_headers, s)
+                unpub = [r for r in rows if r["action"] == "unpublished"]
+                assert len(unpub) == 1, f"expected 1 unpublished row for {s}, got {rows}"
+            ghost_rows = self._audit_rows(api, admin_headers, ghost)
+            assert ghost_rows == [], f"ghost slug got audit rows: {ghost_rows}"
+        finally:
+            self._cleanup(api, admin_headers, [a, b])
+
+    def test_bulk_delete_two_slugs_then_repeat_all_not_found(self, api, admin_headers):
+        a = self._scratch_slug("da")
+        b = self._scratch_slug("db")
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(a), headers=admin_headers)
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(b), headers=admin_headers)
+
+            r1 = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                          json={"slugs": [a, b], "action": "delete"},
+                          headers=admin_headers)
+            assert r1.status_code == 200, r1.text
+            body = r1.json()
+            assert body["ok"] is True
+            assert body["failed"] == []
+            assert {p["slug"] for p in body["processed"]} == {a, b}
+
+            # Each slug has exactly one 'deleted' audit row
+            for s in (a, b):
+                rows = self._audit_rows(api, admin_headers, s)
+                deleted = [r for r in rows if r["action"] == "deleted"]
+                assert len(deleted) == 1, f"expected 1 deleted row for {s}, got {rows}"
+
+            # Rows are actually gone from the admin listing
+            admin_list = api.get(f"{BASE_URL}/api/admin/blog", headers=admin_headers)
+            assert admin_list.status_code == 200
+            remaining = {p["slug"] for p in admin_list.json()}
+            assert a not in remaining and b not in remaining
+
+            # Second call: both slugs missing → 2 failed 'not_found', no processed
+            r2 = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                          json={"slugs": [a, b], "action": "delete"},
+                          headers=admin_headers)
+            assert r2.status_code == 200
+            body2 = r2.json()
+            assert body2["ok"] is False
+            assert body2["processed"] == []
+            errs = sorted(body2["failed"], key=lambda x: x["slug"])
+            assert errs == sorted([{"slug": a, "error": "not_found"},
+                                   {"slug": b, "error": "not_found"}], key=lambda x: x["slug"])
+        finally:
+            self._cleanup(api, admin_headers, [a, b])
+
+    def test_audit_row_count_full_lifecycle(self, api, admin_headers):
+        """created + published + unpublished + deleted = exactly 4 rows.
+        Extra no_op flips in the middle MUST NOT add rows."""
+        slug = self._scratch_slug("life")
+        try:
+            # 1) create as draft (published:false) → 1 row 'created'
+            c = api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug, published=False), headers=admin_headers)
+            assert c.status_code == 201
+
+            # 2) bulk unpublish on an already-draft → no_op, 0 rows added
+            api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [slug], "action": "unpublish"}, headers=admin_headers)
+
+            # 3) bulk publish → 1 'published' row
+            api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [slug], "action": "publish"}, headers=admin_headers)
+
+            # 4) bulk publish again → no_op, 0 rows added
+            api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [slug], "action": "publish"}, headers=admin_headers)
+
+            # 5) bulk unpublish → 1 'unpublished' row
+            api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [slug], "action": "unpublish"}, headers=admin_headers)
+
+            # 6) bulk delete → 1 'deleted' row
+            api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [slug], "action": "delete"}, headers=admin_headers)
+
+            rows = self._audit_rows(api, admin_headers, slug)
+            actions = [r["action"] for r in rows]  # desc by ts
+            assert actions == ["deleted", "unpublished", "published", "created"], (
+                f"unexpected audit sequence: {actions}"
+            )
+            assert len(rows) == 4, f"expected exactly 4 audit rows, got {len(rows)}: {actions}"
+        finally:
+            self._cleanup(api, admin_headers, [slug])
+
+    def test_bulk_publish_all_ghost_slugs_returns_ok_false(self, api, admin_headers):
+        """Sanity: a bulk publish where every slug is missing must return ok=false with all failures."""
+        g1 = f"pytest-bulk-ghost1-{_uuid.uuid4().hex[:8]}"
+        g2 = f"pytest-bulk-ghost2-{_uuid.uuid4().hex[:8]}"
+        r = api.post(f"{BASE_URL}/api/admin/blog/bulk",
+                     json={"slugs": [g1, g2], "action": "publish"}, headers=admin_headers)
+        assert r.status_code == 200
+        body = r.json()
+        assert body["ok"] is False
+        assert body["processed"] == []
+        failed_slugs = sorted(f["slug"] for f in body["failed"])
+        assert failed_slugs == sorted([g1, g2])
+        for f in body["failed"]:
+            assert f["error"] == "not_found"

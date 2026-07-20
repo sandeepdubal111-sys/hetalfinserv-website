@@ -499,6 +499,8 @@ export function BlogTab({ token, onLogout }) {
   const [deleting, setDeleting] = useState(""); // slug
   const [toggling, setToggling] = useState(""); // slug currently mid-toggle
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [selected, setSelected] = useState(() => new Set()); // slugs
+  const [bulkBusy, setBulkBusy] = useState(false);
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function load() {
@@ -556,6 +558,54 @@ export function BlogTab({ token, onLogout }) {
     }
   }
 
+  function toggleSelect(slug) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug); else next.add(slug);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) => {
+      if (prev.size === posts.length) return new Set();
+      return new Set(posts.map((p) => p.slug));
+    });
+  }
+
+  async function bulkAction(action) {
+    if (selected.size === 0 || bulkBusy) return;
+    const slugs = Array.from(selected);
+    if (action === "delete") {
+      const ok = await confirm({
+        title: `Delete ${slugs.length} post${slugs.length === 1 ? "" : "s"}?`,
+        message: "This removes them permanently. Audit rows are kept.",
+        confirmLabel: `Delete ${slugs.length}`,
+        cancelLabel: "Keep",
+        tone: "danger",
+      });
+      if (!ok) return;
+    }
+    setBulkBusy(true);
+    try {
+      const res = await axios.post(
+        `${API}/api/admin/blog/bulk`,
+        { slugs, action },
+        { headers: { "X-Admin-Token": token } }
+      );
+      const failed = res.data.failed || [];
+      if (failed.length) {
+        alert(`Some rows failed:\n${failed.map((f) => `${f.slug}: ${f.error}`).join("\n")}`);
+      }
+      setSelected(new Set());
+      await load();
+    } catch (e) {
+      alert(e.response?.data?.detail || "Bulk action failed.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <div data-testid="blog-tab">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -594,9 +644,96 @@ export function BlogTab({ token, onLogout }) {
         ) : posts.length === 0 ? (
           <p className="py-16 text-center font-mono-label text-mute">No posts yet.</p>
         ) : (
+          <>
+            {selected.size > 0 && (
+              <div
+                className="mb-3 flex flex-wrap items-center justify-between gap-4 px-4 py-3"
+                style={{ background: "var(--hf-obsidian)", color: "#f4efe6" }}
+                data-testid="blog-bulk-bar"
+              >
+                <span
+                  className="font-mono-label"
+                  style={{ fontSize: "0.7rem", letterSpacing: "0.16em" }}
+                  data-testid="blog-bulk-count"
+                >
+                  {selected.size} SELECTED
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => bulkAction("publish")}
+                    disabled={bulkBusy}
+                    data-testid="blog-bulk-publish"
+                    className="inline-flex items-center gap-1.5 font-mono-label px-3 py-1.5 disabled:opacity-40 transition-colors"
+                    style={{
+                      fontSize: "0.66rem",
+                      letterSpacing: "0.12em",
+                      background: "var(--hf-gold)",
+                      color: "#0E0F0C",
+                    }}
+                  >
+                    <Eye size={12} strokeWidth={1.8} />
+                    PUBLISH
+                  </button>
+                  <button
+                    onClick={() => bulkAction("unpublish")}
+                    disabled={bulkBusy}
+                    data-testid="blog-bulk-unpublish"
+                    className="inline-flex items-center gap-1.5 font-mono-label px-3 py-1.5 disabled:opacity-40 transition-colors"
+                    style={{
+                      fontSize: "0.66rem",
+                      letterSpacing: "0.12em",
+                      color: "#f4efe6",
+                      border: "1px solid rgba(244,239,230,0.4)",
+                    }}
+                  >
+                    <EyeOff size={12} strokeWidth={1.8} />
+                    UNPUBLISH
+                  </button>
+                  <button
+                    onClick={() => bulkAction("delete")}
+                    disabled={bulkBusy}
+                    data-testid="blog-bulk-delete"
+                    className="inline-flex items-center gap-1.5 font-mono-label px-3 py-1.5 disabled:opacity-40 transition-colors"
+                    style={{
+                      fontSize: "0.66rem",
+                      letterSpacing: "0.12em",
+                      background: "var(--hf-coral)",
+                      color: "#fff",
+                    }}
+                  >
+                    <Trash2 size={12} strokeWidth={1.8} />
+                    DELETE
+                  </button>
+                  <button
+                    onClick={() => setSelected(new Set())}
+                    disabled={bulkBusy}
+                    data-testid="blog-bulk-clear"
+                    className="font-mono-label px-3 py-1.5 disabled:opacity-40 transition-colors"
+                    style={{
+                      fontSize: "0.66rem",
+                      letterSpacing: "0.12em",
+                      color: "rgba(244,239,230,0.7)",
+                    }}
+                  >
+                    CLEAR
+                  </button>
+                </div>
+              </div>
+            )}
           <table className="w-full text-left" style={{ fontSize: "0.88rem" }}>
             <thead>
               <tr className="border-b border-hair">
+                <th className="py-3 pr-3 w-[36px]">
+                  <input
+                    type="checkbox"
+                    checked={selected.size === posts.length && posts.length > 0}
+                    ref={(el) => {
+                      if (el) el.indeterminate = selected.size > 0 && selected.size < posts.length;
+                    }}
+                    onChange={toggleSelectAll}
+                    data-testid="blog-select-all"
+                  />
+                </th>
                 {["Date", "Title", "Category", "Slug", "Read", "Status", ""].map((h) => (
                   <th key={h} className="py-3 pr-4 font-mono-label text-mute whitespace-nowrap" style={{ fontSize: "0.66rem" }}>{h}</th>
                 ))}
@@ -604,7 +741,20 @@ export function BlogTab({ token, onLogout }) {
             </thead>
             <tbody>
               {posts.map((p) => (
-                <tr key={p.slug} className="border-b border-hair align-top" data-testid={`blog-row-${p.slug}`}>
+                <tr
+                  key={p.slug}
+                  className="border-b border-hair align-top"
+                  data-testid={`blog-row-${p.slug}`}
+                  style={selected.has(p.slug) ? { background: "rgba(201,162,39,0.06)" } : undefined}
+                >
+                  <td className="py-4 pr-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(p.slug)}
+                      onChange={() => toggleSelect(p.slug)}
+                      data-testid={`blog-select-${p.slug}`}
+                    />
+                  </td>
                   <td className="py-4 pr-4 text-obsidian whitespace-nowrap">{p.date}</td>
                   <td className="py-4 pr-4 text-obsidian font-display" style={{ fontSize: "1rem" }}>{p.title}</td>
                   <td className="py-4 pr-4 text-mute">{p.category}</td>
@@ -654,6 +804,7 @@ export function BlogTab({ token, onLogout }) {
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
 
