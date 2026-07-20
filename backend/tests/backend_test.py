@@ -680,3 +680,234 @@ class TestBlogAdmin:
         finally:
             # In case delete failed above, try to clean up
             api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+
+
+# ---------- Blog Audit Log ----------
+class TestBlogAudit:
+    """GET /api/admin/blog/audit + audit rows written on every CRUD action.
+
+    Audit rows: {id, action, slug, title, actor(8 hex), changed_fields[], ts(ISO)}.
+    'actor' is first 8 hex of SHA256(session_token). Token itself must never be stored.
+    """
+
+    def _scratch_slug(self):
+        return f"pytest-audit-{_uuid.uuid4().hex[:10]}"
+
+    def _payload(self, slug):
+        return {
+            "slug": slug,
+            "title": "Pytest Audit Post — Do Not Ship",
+            "excerpt": "A temporary audit-test post created by the automated test suite.",
+            "category": "investing",
+            "date": "2026-08-01",
+            "readMinutes": 3,
+            "cover": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1600&q=80",
+            "body": [{"type": "p", "text": "audit body"}],
+            "published": True,
+        }
+
+    def _rows_for(self, api, headers, slug):
+        r = api.get(f"{BASE_URL}/api/admin/blog/audit", params={"slug": slug, "limit": 500}, headers=headers)
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    def test_audit_endpoint_without_token_returns_401(self, api):
+        r = api.get(f"{BASE_URL}/api/admin/blog/audit")
+        assert r.status_code == 401
+
+    def test_create_writes_created_row(self, api, admin_headers):
+        slug = self._scratch_slug()
+        try:
+            c = api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+            assert c.status_code == 201, c.text
+
+            rows = self._rows_for(api, admin_headers, slug)
+            assert len(rows) >= 1
+            created = [r for r in rows if r["action"] == "created"]
+            assert len(created) == 1, f"expected exactly 1 created row, got {rows}"
+            row = created[0]
+            assert row["slug"] == slug
+            assert row["title"] == "Pytest Audit Post — Do Not Ship"
+            assert isinstance(row["actor"], str)
+            assert len(row["actor"]) == 8
+            assert all(c in "0123456789abcdef" for c in row["actor"])
+            assert row.get("changed_fields") == []
+            # ts serialized as ISO string
+            assert isinstance(row["ts"], str) and "T" in row["ts"]
+            # no _id, no raw token
+            assert "_id" not in row
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+    def test_update_non_published_writes_updated_row_with_changed_fields(self, api, admin_headers):
+        slug = self._scratch_slug()
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+
+            u = api.put(
+                f"{BASE_URL}/api/admin/blog/{slug}",
+                json={"title": "New Audit Title Here"},
+                headers=admin_headers,
+            )
+            assert u.status_code == 200, u.text
+
+            rows = self._rows_for(api, admin_headers, slug)
+            updated = [r for r in rows if r["action"] == "updated"]
+            assert len(updated) == 1, f"expected exactly 1 updated row, got {rows}"
+            assert updated[0]["changed_fields"] == ["title"]
+            assert updated[0]["slug"] == slug
+            # action label MUST NOT be 'published' or 'unpublished' for a plain title-only update
+            actions = {r["action"] for r in rows}
+            assert "published" not in actions and "unpublished" not in actions
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+    def test_publish_toggle_writes_published_then_unpublished(self, api, admin_headers):
+        slug = self._scratch_slug()
+        try:
+            # create as draft
+            p = self._payload(slug)
+            p["published"] = False
+            api.post(f"{BASE_URL}/api/admin/blog", json=p, headers=admin_headers)
+
+            # publish
+            r1 = api.put(f"{BASE_URL}/api/admin/blog/{slug}", json={"published": True}, headers=admin_headers)
+            assert r1.status_code == 200
+            # unpublish
+            r2 = api.put(f"{BASE_URL}/api/admin/blog/{slug}", json={"published": False}, headers=admin_headers)
+            assert r2.status_code == 200
+
+            rows = self._rows_for(api, admin_headers, slug)
+            actions_in_order = [r["action"] for r in rows]  # sorted desc by ts
+            # Latest first: unpublished, published, created
+            assert actions_in_order[:3] == ["unpublished", "published", "created"], (
+                f"unexpected order (desc): {actions_in_order}"
+            )
+            pub_row = next(r for r in rows if r["action"] == "published")
+            unpub_row = next(r for r in rows if r["action"] == "unpublished")
+            assert pub_row["changed_fields"] == ["published"]
+            assert unpub_row["changed_fields"] == ["published"]
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+    def test_delete_writes_deleted_row_with_snapshot_title(self, api, admin_headers):
+        slug = self._scratch_slug()
+        api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+
+        d = api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+        assert d.status_code == 200, d.text
+
+        rows = self._rows_for(api, admin_headers, slug)
+        deleted = [r for r in rows if r["action"] == "deleted"]
+        assert len(deleted) == 1
+        assert deleted[0]["slug"] == slug
+        # title snapshot must have been captured BEFORE deletion
+        assert deleted[0]["title"] == "Pytest Audit Post — Do Not Ship"
+
+    def test_audit_filter_by_slug_isolates_rows(self, api, admin_headers):
+        slug_a = self._scratch_slug()
+        slug_b = self._scratch_slug()
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug_a), headers=admin_headers)
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug_b), headers=admin_headers)
+
+            a_rows = self._rows_for(api, admin_headers, slug_a)
+            assert all(r["slug"] == slug_a for r in a_rows), "slug filter leaked other slugs"
+            assert any(r["action"] == "created" for r in a_rows)
+
+            b_rows = self._rows_for(api, admin_headers, slug_b)
+            assert all(r["slug"] == slug_b for r in b_rows)
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug_a}", headers=admin_headers)
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug_b}", headers=admin_headers)
+
+    def test_audit_global_list_sorted_desc_and_respects_limit(self, api, admin_headers):
+        slug = self._scratch_slug()
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+            api.put(f"{BASE_URL}/api/admin/blog/{slug}", json={"title": "Global Sort Check"}, headers=admin_headers)
+
+            # No slug filter → global
+            r = api.get(f"{BASE_URL}/api/admin/blog/audit", headers=admin_headers)
+            assert r.status_code == 200
+            rows = r.json()
+            assert isinstance(rows, list)
+            # default limit is 100
+            assert len(rows) <= 100
+            # sorted desc by ts
+            timestamps = [row["ts"] for row in rows]
+            assert timestamps == sorted(timestamps, reverse=True), "audit not sorted desc by ts"
+            # our slug should appear (unless it was pushed past 100 by other tests — allow either)
+            # but the more important assertion is the ordering above.
+
+            # limit=1 returns at most 1 row
+            r1 = api.get(f"{BASE_URL}/api/admin/blog/audit", params={"limit": 1}, headers=admin_headers)
+            assert r1.status_code == 200
+            assert len(r1.json()) <= 1
+
+            # hard-cap at 500 — asking for 10000 must NOT return more than 500
+            rmax = api.get(f"{BASE_URL}/api/admin/blog/audit", params={"limit": 10000}, headers=admin_headers)
+            assert rmax.status_code == 200
+            assert len(rmax.json()) <= 500
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)
+
+    def test_different_sessions_produce_different_actor_hashes(self, api):
+        """Two independent logins → two different tokens → two different actor hashes."""
+        # login session A
+        rA = api.post(f"{BASE_URL}/api/admin/login", json={"password": ADMIN_PASSWORD})
+        assert rA.status_code == 200
+        tokA = rA.json()["token"]
+        headersA = {"X-Admin-Token": tokA, "Content-Type": "application/json"}
+
+        # login session B (different token)
+        rB = api.post(f"{BASE_URL}/api/admin/login", json={"password": ADMIN_PASSWORD})
+        assert rB.status_code == 200
+        tokB = rB.json()["token"]
+        headersB = {"X-Admin-Token": tokB, "Content-Type": "application/json"}
+
+        assert tokA != tokB, "two logins returned identical tokens"
+
+        slug_a = f"pytest-audit-sa-{_uuid.uuid4().hex[:8]}"
+        slug_b = f"pytest-audit-sb-{_uuid.uuid4().hex[:8]}"
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug_a), headers=headersA)
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug_b), headers=headersB)
+
+            rows_a = self._rows_for(api, headersA, slug_a)
+            rows_b = self._rows_for(api, headersA, slug_b)  # any admin can read
+            assert rows_a and rows_b
+            actor_a = rows_a[0]["actor"]
+            actor_b = rows_b[0]["actor"]
+            assert actor_a != actor_b, f"expected different actors, got {actor_a} == {actor_b}"
+            # Both hashes exactly 8 lowercase hex
+            for a in (actor_a, actor_b):
+                assert len(a) == 8 and all(c in "0123456789abcdef" for c in a)
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug_a}", headers=headersA)
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug_b}", headers=headersA)
+
+    def test_token_never_leaks_into_audit_rows(self, api, admin_token, admin_headers):
+        """The raw session token must NOT appear anywhere in any audit row (no 'token' key,
+        and the token string must not appear as any value)."""
+        slug = self._scratch_slug()
+        try:
+            api.post(f"{BASE_URL}/api/admin/blog", json=self._payload(slug), headers=admin_headers)
+            api.put(f"{BASE_URL}/api/admin/blog/{slug}", json={"title": "no leak"}, headers=admin_headers)
+
+            # Pull a large batch from the global feed
+            r = api.get(f"{BASE_URL}/api/admin/blog/audit", params={"limit": 500}, headers=admin_headers)
+            assert r.status_code == 200
+            rows = r.json()
+            assert rows, "no audit rows returned"
+
+            # Serialize the whole payload as text and search for the raw token
+            import json as _json
+            blob = _json.dumps(rows)
+            assert admin_token not in blob, "raw session token leaked into audit payload!"
+            # No row should contain a 'token' key
+            for row in rows:
+                assert "token" not in row, f"row unexpectedly has 'token' key: {row}"
+        finally:
+            api.delete(f"{BASE_URL}/api/admin/blog/{slug}", headers=admin_headers)

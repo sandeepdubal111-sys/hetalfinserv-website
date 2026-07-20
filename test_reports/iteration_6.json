@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 6 — validated the NEW blog audit log (GET /api/admin/blog/audit + _log_audit hooks inside every admin blog CRUD handler) and the frontend HistoryDrawer. Backend: added TestBlogAudit (9 tests) to /app/backend/tests/backend_test.py — covers 401 unauth, created/updated/published/unpublished/deleted audit rows written on every CRUD, changed_fields correctness, sort desc + limit=1 + limit=10000→hard-capped at 500, slug filter isolation, two independent logins producing two DIFFERENT 8-hex actor hashes, and a strict token-never-leaks assertion (raw session token string is grepped out of the whole audit JSON). Full suite is now 47 tests, all pass (10.36s under pytest-xdist). Frontend Playwright: logged in with Hetal@110818, switched to Blog tab, verified [blog-history-open] renders next to [blog-new]. Opened drawer → [blog-history-drawer] + [blog-history-list] with 104 seed rows; first row correctly shows action pill (DELETED), timestamp, title, slug and 'by <8-hex>'. Closed via [blog-history-close] AND separately via backdrop click. End-to-end: created scratch post 'pw-audit-<hex>' (published:false) → edited title via UI → toggled publish via a published-only fetch PUT to guarantee a distinct 'published' row → deleted via UI (dialog auto-accepted). Reopened History → 4 scratch rows appear at the top in correct DESC order: DELETED, PUBLISHED, UPDATED, CREATED — all bearing the same actor hash c1f9235d. Regression: Leads tab still shows [admin-refresh]/[admin-export-csv]/[admin-service-filter]/[admin-search]/[admin-leads-table]. Blog CRUD (New→Save→Delete) still works end-to-end.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py:730 The action-label heuristic labels a PUT as 'published' ONLY when the request body contains EXACTLY {'published': true} and nothing else. But the frontend PostEditor (BlogTab.jsx:157) always sends the ENTIRE draft on edit (title, body, excerpt, cover, category, date, readMinutes, published…). Consequence: toggling publish from the admin UI's edit drawer produces an 'updated' audit row, not 'published'. The observed changed_fields for a UI toggle was ['body','category','cover','date','excerpt','published','readMinutes','title']. If the intent is that a user-visible 'toggle publish' UX shows up as PUBLISHED in history, either (a) add a dedicated publish/unpublish toggle in BlogTab.jsx that PATCHes only {published: bool}, or (b) broaden the backend heuristic to label it 'published' whenever the payload's `published` value flipped versus the current DB doc (regardless of other fields). Confirmed working when the caller sends published-only (e.g. via API/scripting), which is why the pytest suite passes.",
+    "server.py:757 admin_blog_audit uses `min(max(limit, 1), 500)` — this silently coerces `limit=0` to 1 and `limit=-5` to 1 rather than rejecting them with 422. Not a bug (defensive), but a Query(gt=0, le=500) would surface bad input to callers.",
+    "server.py:748-757 The endpoint has no pagination cursor (offset/skip). For long-lived deployments the last 500 rows are all that's inspectable — earlier history is unreachable via API. Consider adding `?before=<iso_ts>` for backfill browsing in a follow-up.",
+    "server.py:703 _log_audit swallows all exceptions with a warning. Correct choice (never break CRUD if audit write fails), but there's no retry/dead-letter — if Mongo is unhealthy audit rows are permanently missing. Consider a small in-memory buffer + retry-on-next-request, or at minimum emit a Prometheus counter so ops can alarm on `audit_write_failures_total`.",
+    "server.py:689 `_actor_from_session` returns the literal string 'unknown' when session.token is missing/empty. Because require_admin already guarantees a valid session dict is present, this branch should never fire in production — but if it ever does, the drawer will show 'by unknown' with no way to distinguish machine actors. Consider raising/logging instead.",
+    "BlogTab.jsx:519-535 HistoryDrawer's useEffect fetches ONCE on mount and never on re-open (because the component unmounts on close). Correct as-is, but note: if the drawer is open while a background CRUD happens elsewhere, the list is stale. A small [Refresh] button inside the drawer would help — cheap addition.",
+    "BlogTab.jsx:576 `key={r.id}` is fine (each audit row has a UUID), but the row's data-testid `blog-history-row-${r.id}` uses the UUID — main agent scripts probably won't be able to target a specific row by index/slug/action. Consider adding a secondary data-testid like `data-testid-slug={r.slug}` or `data-action={r.action}` on each `<li>` so testing agents can query 'give me the newest CREATED row for slug X' without parsing text content."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {
+    "backend": "100% (47/47 pytest, +9 new TestBlogAudit tests)",
+    "frontend": "100% (all 14 Playwright checks: history-open, drawer render, list vs empty, close-btn, backdrop-close, create/update/publish/delete → 4 rows in correct desc order, Leads regression, Blog CRUD regression)"
+  },
+  "test_credentials": "Admin password Hetal@110818 (from /app/memory/test_credentials.md). POST /api/admin/login returns 43-char opaque session token via X-Admin-Token header (8h TTL). Actor hash is first 8 hex of SHA256(token).",
+  "seed_data_creation": "Playwright scratch post 'pw-audit-<hex>' was created, edited, published-toggled and deleted within the same run (its 4 audit rows remain intentionally — append-only). One regression 'pw-audit-<hex>' scratch post also created + deleted. pytest 'pytest-audit-<hex>' scratch posts created/deleted in each test's finally block. Audit rows for scratch slugs are intentionally NOT cleaned (append-only, per problem-statement guidance). Base blog seed remains 8 posts. No lingering blog_posts data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Suite is 47 tests in /app/backend/tests/backend_test.py — added TestBlogAudit (9 tests) at the tail. All slugs must be lowercase [a-z0-9-]+ (a first-run failure was fixed by lowercasing 'A'/'B' in the two-session test). Full run: `pytest backend/tests/backend_test.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml` (~10.6s under xdist). Frontend key selectors for audit history: [blog-history-open] (button), [blog-history-drawer] (backdrop container), [blog-history-list] (ol), [blog-history-row-<uuid>] (li), [blog-history-close] (X btn), [blog-history-empty] (fallback text). Actor hashes are 8 lowercase hex chars, always. Backend heuristic: PUT with body === {published: <bool>} logs 'published'/'unpublished'; ANY other combination (even {published:true, title:'x'}) logs 'updated' — the frontend's PostEditor sends all fields so its publish-toggle produces 'updated' rows, not 'published'. Endpoint accepts ?slug=<x>&limit=<n> (default 100, hard-cap 500, min 1).",
+  "rca of the issue": "First-run failure of test_different_sessions_produce_different_actor_hashes: the scratch slugs contained uppercase 'A'/'B' ('pytest-audit-A-…'), which the backend's BlogPostBase Pydantic validator rejects with 422 (slug regex is `^[a-z0-9-]+$`). Because the POST failed silently in the test setup, the subsequent audit query returned an empty list. Fix: lowercase the discriminator ('sa'/'sb'). All 9 audit tests pass after the fix."
+}

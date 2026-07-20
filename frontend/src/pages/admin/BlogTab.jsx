@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Plus, Pencil, Trash2, X, Save, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Save, RefreshCw, History } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -370,6 +370,7 @@ export function BlogTab({ token, onLogout }) {
   const [err, setErr] = useState("");
   const [editing, setEditing] = useState(null); // { post, isNew }
   const [deleting, setDeleting] = useState(""); // slug
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -410,6 +411,14 @@ export function BlogTab({ token, onLogout }) {
           <button onClick={load} className="hf-btn-outline" data-testid="blog-refresh">
             <RefreshCw size={14} strokeWidth={1.6} />
             Refresh
+          </button>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="hf-btn-outline"
+            data-testid="blog-history-open"
+          >
+            <History size={14} strokeWidth={1.6} />
+            History
           </button>
           <button
             onClick={() => setEditing({ post: emptyDraft(), isNew: true })}
@@ -481,6 +490,142 @@ export function BlogTab({ token, onLogout }) {
           onSaved={() => { setEditing(null); load(); }}
         />
       )}
+      {historyOpen && (
+        <HistoryDrawer token={token} onClose={() => setHistoryOpen(false)} />
+      )}
+    </div>
+  );
+}
+
+const ACTION_TONE = {
+  created: "var(--hf-emerald-deep)",
+  updated: "var(--hf-obsidian)",
+  published: "var(--hf-gold)",
+  unpublished: "var(--hf-mute)",
+  deleted: "var(--hf-coral)",
+};
+
+function fmtTs(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function HistoryDrawer({ token, onClose }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      try {
+        const res = await axios.get(`${API}/api/admin/blog/audit?limit=200`, {
+          headers: { "X-Admin-Token": token },
+        });
+        if (!cancelled) setRows(Array.isArray(res.data) ? res.data : []);
+      } catch (e) {
+        if (!cancelled) setErr("Couldn't load history.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    run();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex justify-end"
+      data-testid="blog-history-drawer"
+      style={{ background: "rgba(14,15,12,0.55)" }}
+      onClick={onClose}
+    >
+      <section
+        onClick={(e) => e.stopPropagation()}
+        className="bg-ivory h-full w-full max-w-[520px] overflow-y-auto shadow-2xl"
+        style={{ borderLeft: "1px solid var(--hf-hair)" }}
+      >
+        <div className="flex items-center justify-between px-6 py-5 border-b border-hair sticky top-0 bg-ivory z-10">
+          <div>
+            <p className="font-mono-label text-mute" style={{ fontSize: "0.66rem" }}>— BLOG · HISTORY</p>
+            <h3 className="font-display text-obsidian mt-1" style={{ fontSize: "1.4rem", lineHeight: 1 }}>
+              Recent activity
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 border border-hair text-obsidian"
+            data-testid="blog-history-close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {loading ? (
+            <p className="py-10 text-center font-mono-label text-mute">Loading…</p>
+          ) : err ? (
+            <p className="py-10 text-center font-mono-label" style={{ color: "var(--hf-coral)" }}>{err}</p>
+          ) : rows.length === 0 ? (
+            <p className="py-10 text-center font-mono-label text-mute" data-testid="blog-history-empty">
+              No activity yet.
+            </p>
+          ) : (
+            <ol className="space-y-3" data-testid="blog-history-list">
+              {rows.map((r) => (
+                <li
+                  key={r.id}
+                  className="border border-hair p-4 bg-white"
+                  data-testid={`blog-history-row-${r.id}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className="font-mono-label px-2 py-0.5 text-white"
+                          style={{
+                            fontSize: "0.6rem",
+                            letterSpacing: "0.14em",
+                            background: ACTION_TONE[r.action] || "var(--hf-obsidian)",
+                          }}
+                        >
+                          {(r.action || "").toUpperCase()}
+                        </span>
+                        <span className="font-mono-label text-mute" style={{ fontSize: "0.66rem" }}>
+                          {fmtTs(r.ts)}
+                        </span>
+                      </div>
+                      <p
+                        className="mt-2 font-display text-obsidian truncate"
+                        style={{ fontSize: "0.98rem" }}
+                        title={r.title || r.slug}
+                      >
+                        {r.title || r.slug}
+                      </p>
+                      <p className="text-mute mt-0.5" style={{ fontSize: "0.78rem", fontFamily: "monospace" }}>
+                        {r.slug}
+                      </p>
+                      {r.changed_fields?.length > 0 && (
+                        <p className="text-mute mt-1.5" style={{ fontSize: "0.75rem" }}>
+                          fields: <span className="text-obsidian">{r.changed_fields.join(", ")}</span>
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className="font-mono-label text-mute whitespace-nowrap"
+                      style={{ fontSize: "0.62rem" }}
+                      title="Admin session hash (first 8 chars of SHA256 of the session token)"
+                    >
+                      by {r.actor}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

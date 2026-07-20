@@ -680,36 +680,82 @@ async def admin_list_blog(_: dict = Depends(require_admin)):
     return [_blog_to_public(r) for r in rows]
 
 
+def _actor_from_session(session: dict) -> str:
+    """Return a short, stable identifier for the admin session so audit rows can group by 'who'.
+    We hash the session token and keep the first 8 hex chars — enough to distinguish two people
+    who share the admin password (each login gets its own token), while never storing the token itself."""
+    import hashlib
+    tok = (session or {}).get("token", "")
+    return hashlib.sha256(tok.encode("utf-8")).hexdigest()[:8] if tok else "unknown"
+
+
+async def _log_audit(action: str, slug: str, session: dict, *, title: Optional[str] = None,
+                     changed_fields: Optional[List[str]] = None) -> None:
+    try:
+        await db.blog_audit.insert_one({
+            "id": str(uuid.uuid4()),
+            "action": action,
+            "slug": slug,
+            "title": title,
+            "actor": _actor_from_session(session),
+            "changed_fields": changed_fields or [],
+            "ts": datetime.now(timezone.utc),
+        })
+    except Exception as e:
+        logger.warning(f"Audit log failed for {action} {slug}: {e}")
+
+
 @api_router.post("/admin/blog", status_code=201)
-async def admin_create_blog(payload: BlogPostBase, _: dict = Depends(require_admin)):
+async def admin_create_blog(payload: BlogPostBase, session: dict = Depends(require_admin)):
     doc = payload.model_dump()
     if await db.blog_posts.find_one({"slug": doc["slug"]}):
         raise HTTPException(status_code=409, detail="Slug already exists")
     doc["id"] = str(uuid.uuid4())
     doc["created_at"] = datetime.now(timezone.utc)
     await db.blog_posts.insert_one(doc)
+    await _log_audit("created", doc["slug"], session, title=doc.get("title"))
     return _blog_to_public({k: v for k, v in doc.items() if k != "_id"})
 
 
 @api_router.put("/admin/blog/{slug}")
-async def admin_update_blog(slug: str, payload: BlogPostUpdate, _: dict = Depends(require_admin)):
+async def admin_update_blog(slug: str, payload: BlogPostUpdate, session: dict = Depends(require_admin)):
     updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
-    # Body needs to be re-serialized from BlogBlock objects (already dicts via model_dump)
     res = await db.blog_posts.update_one({"slug": slug}, {"$set": updates})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
     doc = await db.blog_posts.find_one({"slug": slug}, {"_id": 0})
+    # Distinguish "published"/"unpublished" from a regular "updated" for cleaner history reads.
+    if "published" in updates and set(updates.keys()) == {"published"}:
+        action = "published" if updates["published"] else "unpublished"
+    else:
+        action = "updated"
+    await _log_audit(action, slug, session, title=doc.get("title"), changed_fields=sorted(updates.keys()))
     return _blog_to_public(doc)
 
 
 @api_router.delete("/admin/blog/{slug}")
-async def admin_delete_blog(slug: str, _: dict = Depends(require_admin)):
+async def admin_delete_blog(slug: str, session: dict = Depends(require_admin)):
+    doc = await db.blog_posts.find_one({"slug": slug}, {"_id": 0, "title": 1})
     res = await db.blog_posts.delete_one({"slug": slug})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
+    await _log_audit("deleted", slug, session, title=(doc or {}).get("title"))
     return {"ok": True}
+
+
+@api_router.get("/admin/blog/audit")
+async def admin_blog_audit(
+    _: dict = Depends(require_admin),
+    slug: Optional[str] = None,
+    limit: int = 100,
+):
+    q: dict = {}
+    if slug:
+        q["slug"] = slug
+    rows = await db.blog_audit.find(q, {"_id": 0}).sort("ts", -1).to_list(min(max(limit, 1), 500))
+    return rows
 
 
 @app.on_event("startup")
