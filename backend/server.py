@@ -27,11 +27,16 @@ mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
 
-# Emergent-managed email integration
-EMAIL_BASE_URL = "https://integrations.emergentagent.com"
-EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
+# Direct Resend email integration
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Hetal Finserv")
+EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_FROM_ADDRESS", "no-reply@hetalfinserv.com")
+EMAIL_FROM = f"{EMAIL_FROM_NAME} <{EMAIL_FROM_ADDRESS}>"
 LEAD_NOTIFY_TO = os.environ.get("LEAD_NOTIFY_TO", "info@hetalfinserv.com")
+
+# Direct Google Gemini integration
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 logger = logging.getLogger(__name__)
 
@@ -170,22 +175,25 @@ def _lead_email_html(lead: "Lead") -> str:
 
 async def _notify_lead(lead: "Lead") -> None:
     """Fire-and-forget email to the admin inbox. Never blocks or breaks the API."""
-    if not EMAIL_KEY:
-        logger.info("EMERGENT_EMAIL_KEY not set — skipping lead email")
+    if not RESEND_API_KEY:
+        logger.info("RESEND_API_KEY not set — skipping lead email")
         return
     payload = {
+        "from": EMAIL_FROM,
         "to": [LEAD_NOTIFY_TO],
         "subject": f"New lead · {lead.name} · {lead.service or 'general'}",
         "html": _lead_email_html(lead),
-        "from_name": EMAIL_FROM_NAME,
     }
     if lead.email:
-        payload["contact_email"] = lead.email
+        payload["reply_to"] = lead.email
     try:
         async with httpx.AsyncClient(timeout=15) as hc:
             resp = await hc.post(
-                f"{EMAIL_BASE_URL}/api/v1/email/send",
-                headers={"X-Email-Key": EMAIL_KEY},
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
                 json=payload,
             )
             resp.raise_for_status()
@@ -351,36 +359,38 @@ class ChatMessage(BaseModel):
 
 @api_router.post("/chat")
 async def chat_endpoint(msg: ChatMessage):
-    """Non-streaming chat — simpler client, quicker to ship. Returns full response."""
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="LLM key not configured")
+    """Non-streaming chat via Google Gemini native SDK. Returns full response."""
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        import google.generativeai as genai
     except ImportError:
-        raise HTTPException(status_code=500, detail="emergentintegrations not installed")
+        raise HTTPException(status_code=500, detail="google-generativeai not installed")
 
-    # Load recent history for this session (last 20 messages)
-    history = await db.chat_history.find(
+    genai.configure(api_key=GEMINI_API_KEY)
+
+    history_rows = await db.chat_history.find(
         {"session_id": msg.session_id}, {"_id": 0}
     ).sort("ts", 1).to_list(20)
 
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=msg.session_id,
-        system_message=HETAL_SYSTEM_PROMPT,
-    ).with_model("gemini", "gemini-3-flash-preview")
-
-    # Replay history so the model has context
-    for h in history:
-        if h.get("role") == "user":
-            try:
-                await chat.send_message(UserMessage(text=h["text"]))
-            except Exception:
-                pass  # best-effort replay
+    gemini_history = [
+        {
+            "role": "user" if h["role"] == "user" else "model",
+            "parts": [h["text"]],
+        }
+        for h in history_rows
+    ]
 
     try:
-        reply = await chat.send_message(UserMessage(text=msg.text))
+        model = genai.GenerativeModel(
+            GEMINI_MODEL,
+            system_instruction=HETAL_SYSTEM_PROMPT,
+        )
+        chat = model.start_chat(history=gemini_history)
+        response = await asyncio.to_thread(chat.send_message, msg.text)
+        reply = (response.text or "").strip()
+        if not reply:
+            raise RuntimeError("empty response from model")
     except Exception as e:
         logger.error(f"LLM error: {e}")
         raise HTTPException(status_code=502, detail="Assistant is temporarily unavailable")
@@ -449,19 +459,22 @@ def _digest_email_html(post: dict) -> str:
 
 
 async def _send_digest_email(to_email: str, post: dict) -> bool:
-    if not EMAIL_KEY:
+    if not RESEND_API_KEY:
         return False
     payload = {
+        "from": EMAIL_FROM,
         "to": [to_email],
         "subject": f"New from Hetal Finserv · {post['title']}",
         "html": _digest_email_html(post),
-        "from_name": EMAIL_FROM_NAME,
     }
     try:
         async with httpx.AsyncClient(timeout=20) as hc:
             resp = await hc.post(
-                f"{EMAIL_BASE_URL}/api/v1/email/send",
-                headers={"X-Email-Key": EMAIL_KEY},
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
                 json=payload,
             )
             resp.raise_for_status()
