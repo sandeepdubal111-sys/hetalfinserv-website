@@ -97,7 +97,7 @@ function Shell() {
       </Routes>
       {!isAdmin && <Footer />}
       {!isAdmin && <WhatsAppFloat />}
-      {!isAdmin && <ChatWidget />}
+      {/* {!isAdmin && <ChatWidget />} */}
       <Toaster
         position="bottom-center"
         toastOptions={{
