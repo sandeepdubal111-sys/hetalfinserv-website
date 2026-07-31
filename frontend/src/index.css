@@ -241,35 +241,36 @@ body {
 }
 
 /* Coral CTA — high-contrast pill for Book Consultation */
-.hf-btn-coral {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1.4rem;
-  background: var(--hf-coral);
-  color: #fff;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 600;
-  border: 1px solid var(--hf-coral);
-  border-radius: 999px;
-  transition: background-color 260ms ease, transform 260ms ease, box-shadow 260ms ease;
-  cursor: pointer;
-  box-shadow: 0 8px 22px -8px rgba(216, 102, 63, 0.55);
-  white-space: nowrap;
+@layer components {
+  .hf-btn-coral {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.4rem;
+    background: var(--hf-coral);
+    color: #fff;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    border: 1px solid var(--hf-coral);
+    border-radius: 999px;
+    transition: background-color 260ms ease, transform 260ms ease, box-shadow 260ms ease;
+    cursor: pointer;
+    box-shadow: 0 8px 22px -8px rgba(216, 102, 63, 0.55);
+    white-space: nowrap;
+  }
+  .hf-btn-coral:hover {
+    background: var(--hf-coral-2);
+    border-color: var(--hf-coral-2);
+    box-shadow: 0 12px 30px -8px rgba(216, 102, 63, 0.75);
+    transform: translateY(-1px);
+  }
+  .hf-btn-coral:active {
+    transform: translateY(0);
+  }
 }
-.hf-btn-coral:hover {
-  background: var(--hf-coral-2);
-  border-color: var(--hf-coral-2);
-  box-shadow: 0 12px 30px -8px rgba(216, 102, 63, 0.75);
-  transform: translateY(-1px);
-}
-.hf-btn-coral:active {
-  transform: translateY(0);
-}
-
 /* Dark section button variants */
 .on-dark .hf-btn-outline {
   color: var(--hf-on-dark-primary);
