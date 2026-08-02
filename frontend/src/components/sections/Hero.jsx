@@ -68,7 +68,7 @@ export default function Hero() {
 
       <div
         key={ready ? "hero-on" : "hero-off"}
-        className="relative max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6 h-full min-h-[calc(100svh-6rem)] pb-16 pt-8 md:pt-12"
+        className="relative max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6 h-full min-h-[calc(100svh-6rem)] pb-40 md:pb-16 pt-8 md:pt-12"
       >
         {/* Left copy */}
         <motion.div
