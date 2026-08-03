@@ -313,6 +313,22 @@ const simulateGrowth = ({ lumpsum = 0, sip = 0, rate, years, stepType = "percent
   return { data, finalValue: corpus, totalInvested: invested, gain: corpus - invested };
 };
 
+// Progressive income-tax slab calculator: walks each bracket, applies Section 87A rebate
+// if taxable income is at/below the rebate threshold, then adds 4% health & education cess.
+const computeSlabTax = (taxable, slabs, rebateThreshold, rebateMax) => {
+  let tax = 0, prev = 0;
+  for (const [limit, rate] of slabs) {
+    if (taxable > prev) {
+      tax += (Math.min(taxable, limit) - prev) * rate;
+      prev = limit;
+    } else break;
+  }
+  const rebate = taxable <= rebateThreshold ? Math.min(tax, rebateMax) : 0;
+  const taxAfterRebate = Math.max(0, tax - rebate);
+  const cess = taxAfterRebate * 0.04;
+  return { taxable: Math.round(taxable), tax: Math.round(tax), rebate: Math.round(rebate), cess: Math.round(cess), totalTax: Math.round(taxAfterRebate + cess) };
+};
+
 const simulateSWP = ({ corpus, initialWithdrawal, rate, years, growing = false, inflation = 0, baseAge = null }) => {
   const r = monthlyRate(rate);
   let balance = corpus;
@@ -455,6 +471,77 @@ const defaultInsurance = { existingLife: 5000000, existingHealth: 500000, outsta
 
 const defaultFamily = { spouseName: "", spouseAge: "", children: [] };
 
+const LIABILITY_TYPE_DEFS = {
+  home: { label: "Home Loan", color: "#0F2A4A" },
+  car: { label: "Car Loan", color: "#8A5A2E" },
+  personal: { label: "Personal Loan", color: "#C1443C" },
+  education: { label: "Education Loan", color: "#3B6FA0" },
+  creditCard: { label: "Credit Card Debt", color: "#A8420F" },
+  other: { label: "Other Loan", color: "#6B7A8D" },
+};
+const defaultLiabilities = [];
+
+// Risk profiler: 6 questions, each answer scores 1-4. Total score (6-24) maps to a risk band,
+// which in turn maps to a suggested equity:debt:gold allocation -- standard CFP practice.
+const RISK_QUESTIONS = [
+  {
+    key: "horizon", text: "How many years until you'll need this money?",
+    options: [
+      { label: "Under 2 years", score: 1 }, { label: "2–5 years", score: 2 },
+      { label: "5–10 years", score: 3 }, { label: "10+ years", score: 4 },
+    ],
+  },
+  {
+    key: "reaction", text: "If your portfolio fell 20% in a month, what would you do?",
+    options: [
+      { label: "Sell everything immediately", score: 1 }, { label: "Sell some to limit losses", score: 2 },
+      { label: "Hold and wait it out", score: 3 }, { label: "Invest more at lower prices", score: 4 },
+    ],
+  },
+  {
+    key: "experience", text: "How much investing experience do you have?",
+    options: [
+      { label: "None", score: 1 }, { label: "Some, mostly FDs/insurance", score: 2 },
+      { label: "Moderate, some mutual funds", score: 3 }, { label: "Extensive, equities & funds", score: 4 },
+    ],
+  },
+  {
+    key: "income", text: "How stable is your income?",
+    options: [
+      { label: "Unstable / variable", score: 1 }, { label: "Somewhat stable", score: 2 },
+      { label: "Stable salaried", score: 3 }, { label: "Very stable + other income", score: 4 },
+    ],
+  },
+  {
+    key: "priority", text: "What matters more to you?",
+    options: [
+      { label: "Protecting capital, no losses", score: 1 }, { label: "Mostly safety, some growth", score: 2 },
+      { label: "Balanced growth and safety", score: 3 }, { label: "Maximum growth, can accept swings", score: 4 },
+    ],
+  },
+  {
+    key: "dependents", text: "How many people financially depend on you?",
+    options: [
+      { label: "4 or more", score: 1 }, { label: "2–3", score: 2 },
+      { label: "1", score: 3 }, { label: "None", score: 4 },
+    ],
+  },
+];
+const RISK_BANDS = [
+  { max: 10, label: "Conservative", equity: 20, debt: 65, gold: 15, color: "#3B6FA0" },
+  { max: 15, label: "Moderate", equity: 40, debt: 45, gold: 15, color: "#2E7D5B" },
+  { max: 20, label: "Growth", equity: 65, debt: 25, gold: 10, color: "#B8902E" },
+  { max: 24, label: "Aggressive", equity: 80, debt: 12, gold: 8, color: "#C9591D" },
+];
+const defaultRiskProfile = { answers: {} };
+
+const defaultBudget = { household: 0, insurancePremium: 0, investments: 0, discretionary: 0, other: 0 };
+
+const defaultTax = {
+  regime: "new", otherIncome: 0, section80C: 0, section80D: 0, homeLoanInterest: 0,
+  nps80CCD1B: 0, hraRentPaid: 0, hraCityMetro: true, isSalaried: true,
+};
+
 // Standard planning defaults used when auto-generating a child's Education/Marriage goals
 // (matches conventional CFP practice: education inflates faster than general costs).
 const CHILD_GOAL_DEFAULTS = {
@@ -469,12 +556,16 @@ const defaultGoals = [];
 
 const TABS = [
   { key: "profile", label: "Client & Assets", icon: User },
+  { key: "networth", label: "Net Worth", icon: Wallet },
   { key: "goals", label: "Life Goals", icon: Target },
+  { key: "risk", label: "Risk Profile", icon: Flag },
   { key: "invest", label: "MF Calculator", icon: Calculator },
   { key: "retirement", label: "Retirement", icon: PiggyBank },
   { key: "insurance", label: "Protection", icon: ShieldCheck },
+  { key: "cashflow", label: "Cash Flow", icon: TrendingDown },
+  { key: "tax", label: "Tax Planning", icon: ClipboardList },
   { key: "wealth", label: "Wealth Curve", icon: TrendingUp },
-  { key: "action", label: "Action Plan", icon: ClipboardList },
+  { key: "action", label: "Action Plan", icon: Sparkles },
 ];
 
 /* ---------------------------------------------------------------
@@ -621,6 +712,10 @@ function WealthBlueprint() {
   const [insurance, setInsurance] = useState(defaultInsurance);
   const [goals, setGoals] = useState(defaultGoals);
   const [family, setFamily] = useState(defaultFamily);
+  const [liabilities, setLiabilities] = useState(defaultLiabilities);
+  const [riskProfile, setRiskProfile] = useState(defaultRiskProfile);
+  const [budget, setBudget] = useState(defaultBudget);
+  const [tax, setTax] = useState(defaultTax);
   const [investLink, setInvestLink] = useState(null);
 
   const [savedClients, setSavedClients] = useState([]);
@@ -654,7 +749,7 @@ function WealthBlueprint() {
     if (typeof window === "undefined" || !window.storage) { flashStatus("error", "Storage isn't available in this context."); return; }
     setStorageStatus({ type: "saving", msg: "Saving…" });
     try {
-      const payload = JSON.stringify({ profile, assets, insurance, goals, family, savedAt: Date.now() });
+      const payload = JSON.stringify({ profile, assets, insurance, goals, family, liabilities, riskProfile, budget, tax, savedAt: Date.now() });
       const result = await window.storage.set(`client:${name}`, payload, false);
       if (result) {
         setSelectedClient(name);
@@ -681,6 +776,10 @@ function WealthBlueprint() {
         if (data.insurance) setInsurance(data.insurance);
         if (data.goals) setGoals(data.goals);
         if (data.family) setFamily(data.family); else setFamily(defaultFamily);
+        if (data.liabilities) setLiabilities(data.liabilities); else setLiabilities(defaultLiabilities);
+        if (data.riskProfile) setRiskProfile(data.riskProfile); else setRiskProfile(defaultRiskProfile);
+        if (data.budget) setBudget(data.budget); else setBudget(defaultBudget);
+        if (data.tax) setTax(data.tax); else setTax(defaultTax);
         setSelectedClient(name);
         setInvestLink(null);
         setActive("profile");
@@ -697,6 +796,10 @@ function WealthBlueprint() {
     setInsurance(defaultInsurance);
     setGoals(defaultGoals);
     setFamily(defaultFamily);
+    setLiabilities(defaultLiabilities);
+    setRiskProfile(defaultRiskProfile);
+    setBudget(defaultBudget);
+    setTax(defaultTax);
     setSelectedClient("");
     setInvestLink(null);
     setConfirmDelete(false);
@@ -725,7 +828,7 @@ function WealthBlueprint() {
   const importFileRef = useRef(null);
 
   const handleExport = () => {
-    const payload = JSON.stringify({ profile, assets, insurance, goals, family, exportedAt: new Date().toISOString() }, null, 2);
+    const payload = JSON.stringify({ profile, assets, insurance, goals, family, liabilities, riskProfile, budget, tax, exportedAt: new Date().toISOString() }, null, 2);
     const blob = new Blob([payload], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -754,6 +857,10 @@ function WealthBlueprint() {
         if (data.insurance) setInsurance(data.insurance);
         if (data.goals) setGoals(data.goals);
         if (data.family) setFamily(data.family); else setFamily(defaultFamily);
+        if (data.liabilities) setLiabilities(data.liabilities); else setLiabilities(defaultLiabilities);
+        if (data.riskProfile) setRiskProfile(data.riskProfile); else setRiskProfile(defaultRiskProfile);
+        if (data.budget) setBudget(data.budget); else setBudget(defaultBudget);
+        if (data.tax) setTax(data.tax); else setTax(defaultTax);
         setSelectedClient("");
         setInvestLink(null);
         setActive("profile");
@@ -808,6 +915,13 @@ function WealthBlueprint() {
     });
     if (newGoals.length) setGoals((gs) => [...gs, ...newGoals]);
     return newGoals.length;
+  };
+
+  const updateLiability = (id, patch) => setLiabilities((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  const removeLiability = (id) => setLiabilities((ls) => ls.filter((l) => l.id !== id));
+  const addLiability = (type = "other") => {
+    const def = LIABILITY_TYPE_DEFS[type] || LIABILITY_TYPE_DEFS.other;
+    setLiabilities((ls) => [...ls, { id: Date.now(), name: def.label, type, outstanding: 0, rate: 9, emiMonthly: 0 }]);
   };
 
   /* ---------------- DERIVED CALCULATIONS ---------------- */
@@ -926,6 +1040,65 @@ function WealthBlueprint() {
     return { data, depletedAge, blended };
   }, [profile, assets, goalCalcs, totalAssets]);
 
+  const netWorthCalc = useMemo(() => {
+    const totalLiabilities = liabilities.reduce((s, l) => s + (parseFloat(l.outstanding) || 0), 0);
+    const totalLiabEMI = liabilities.reduce((s, l) => s + (parseFloat(l.emiMonthly) || 0), 0);
+    const netWorth = totalAssets - totalLiabilities;
+    const byType = {};
+    liabilities.forEach((l) => { byType[l.type] = (byType[l.type] || 0) + (parseFloat(l.outstanding) || 0); });
+    return { totalLiabilities, totalLiabEMI, netWorth, byType };
+  }, [liabilities, totalAssets]);
+
+  const riskCalc = useMemo(() => {
+    const answered = RISK_QUESTIONS.filter((q) => riskProfile.answers[q.key] != null);
+    const score = answered.reduce((s, q) => s + riskProfile.answers[q.key], 0);
+    const maxPossible = RISK_QUESTIONS.length * 4;
+    const minPossible = RISK_QUESTIONS.length * 1;
+    const isComplete = answered.length === RISK_QUESTIONS.length;
+    const band = isComplete ? (RISK_BANDS.find((b) => score <= b.max) || RISK_BANDS[RISK_BANDS.length - 1]) : null;
+    return { score, maxPossible, minPossible, isComplete, answeredCount: answered.length, band };
+  }, [riskProfile]);
+
+  const budgetCalc = useMemo(() => {
+    const categorizedTotal = (parseFloat(budget.household) || 0) + (parseFloat(budget.insurancePremium) || 0)
+      + (parseFloat(budget.investments) || 0) + (parseFloat(budget.discretionary) || 0) + (parseFloat(budget.other) || 0);
+    const reconciled = Math.abs(categorizedTotal - profile.monthlyExpenses) < 100;
+    const savingsRatio = profile.monthlyIncome > 0 ? (profile.existingMonthlySavings / profile.monthlyIncome) * 100 : 0;
+    const debtToIncomeRatio = profile.monthlyIncome > 0 ? (profile.monthlyEMI / profile.monthlyIncome) * 100 : 0;
+    const liquidAssets = assets.cash + assets.debt;
+    const liquidityRatioMonths = profile.monthlyExpenses > 0 ? liquidAssets / profile.monthlyExpenses : 0;
+    return { categorizedTotal, reconciled, savingsRatio, debtToIncomeRatio, liquidAssets, liquidityRatioMonths };
+  }, [budget, profile, assets]);
+
+  const taxCalc = useMemo(() => {
+    const grossAnnual = profile.monthlyIncome * 12 + (parseFloat(tax.otherIncome) || 0);
+    const basicSalary = grossAnnual * 0.5;
+    const hraReceived = basicSalary * 0.4;
+    const rentPaid = parseFloat(tax.hraRentPaid) || 0;
+    const hraExemption = tax.isSalaried && rentPaid > 0
+      ? Math.max(0, Math.min(hraReceived, Math.max(0, rentPaid - 0.1 * basicSalary), (tax.hraCityMetro ? 0.5 : 0.4) * basicSalary))
+      : 0;
+
+    const c80C = Math.min(parseFloat(tax.section80C) || 0, 150000);
+    const c80D = Math.min(parseFloat(tax.section80D) || 0, 25000);
+    const homeLoanInt = Math.min(parseFloat(tax.homeLoanInterest) || 0, 200000);
+    const nps1B = Math.min(parseFloat(tax.nps80CCD1B) || 0, 50000);
+    const totalOldDeductions = c80C + c80D + homeLoanInt + nps1B + hraExemption;
+
+    const oldStdDed = tax.isSalaried ? 50000 : 0;
+    const oldTaxable = Math.max(0, grossAnnual - oldStdDed - totalOldDeductions);
+    const oldRegime = computeSlabTax(oldTaxable, [[250000, 0], [500000, 0.05], [1000000, 0.20], [Infinity, 0.30]], 500000, 12500);
+
+    const newStdDed = tax.isSalaried ? 75000 : 0;
+    const newTaxable = Math.max(0, grossAnnual - newStdDed);
+    const newRegime = computeSlabTax(newTaxable, [[400000, 0], [800000, 0.05], [1200000, 0.10], [1600000, 0.15], [2000000, 0.20], [2400000, 0.25], [Infinity, 0.30]], 1200000, 60000);
+
+    const recommended = newRegime.totalTax <= oldRegime.totalTax ? "new" : "old";
+    const savings = Math.abs(newRegime.totalTax - oldRegime.totalTax);
+
+    return { grossAnnual, hraExemption, c80C, c80D, homeLoanInt, nps1B, totalOldDeductions, oldRegime, newRegime, recommended, savings };
+  }, [profile, tax]);
+
   const savingsCheck = profile.monthlyIncome - profile.monthlyExpenses - profile.monthlyEMI;
   const totalMonthlyRequired = totalGoalSIP + retirementCalc.requiredSIPForGap;
   const monthlyShortfall = totalMonthlyRequired - profile.existingMonthlySavings;
@@ -1008,8 +1181,14 @@ function WealthBlueprint() {
         {active === "profile" && (
           <ProfileTab profile={profile} setP={setP} assets={assets} setA={setA} savingsCheck={savingsCheck} totalAssets={totalAssets} family={family} setFamily={setFamily} />
         )}
+        {active === "networth" && (
+          <NetWorthTab assets={assets} liabilities={liabilities} updateLiability={updateLiability} removeLiability={removeLiability} addLiability={addLiability} netWorthCalc={netWorthCalc} totalAssets={totalAssets} />
+        )}
         {active === "goals" && (
           <GoalsTab goalCalcs={goalCalcs} updateGoal={updateGoal} removeGoal={removeGoal} addGoal={addGoal} totalGoalSIP={totalGoalSIP} onOpenCalculator={(goalId) => openCalculator({ type: "goal", goalId })} family={family} generateFamilyGoals={generateFamilyGoals} />
+        )}
+        {active === "risk" && (
+          <RiskProfileTab riskProfile={riskProfile} setRiskProfile={setRiskProfile} riskCalc={riskCalc} profile={profile} setP={setP} />
         )}
         {active === "invest" && (
           <InvestTab profile={profile} goalCalcs={goalCalcs} retirementCalc={retirementCalc} linkTarget={investLink} onClearLink={() => setInvestLink(null)} />
@@ -1022,6 +1201,12 @@ function WealthBlueprint() {
           />
         )}
         {active === "insurance" && <InsuranceTab insurance={insurance} setI={setI} calc={insuranceCalc} family={family} />}
+        {active === "cashflow" && (
+          <CashFlowTab profile={profile} budget={budget} setBudget={setBudget} budgetCalc={budgetCalc} netWorthCalc={netWorthCalc} liabilities={liabilities} />
+        )}
+        {active === "tax" && (
+          <TaxPlanningTab tax={tax} setTax={setTax} taxCalc={taxCalc} profile={profile} />
+        )}
         {active === "wealth" && <WealthTab curve={wealthCurve} profile={profile} goalCalcs={goalCalcs} />}
         {active === "action" && (
           <ActionTab
@@ -1035,6 +1220,9 @@ function WealthBlueprint() {
             retirementReadiness={retirementReadiness}
             depletedAge={wealthCurve.depletedAge}
             onSimulateGap={() => openCalculator({ type: "retirement-gap" })}
+            netWorthCalc={netWorthCalc}
+            budgetCalc={budgetCalc}
+            riskCalc={riskCalc}
           />
         )}
       </main>
@@ -1054,6 +1242,11 @@ function WealthBlueprint() {
         monthlyShortfall={monthlyShortfall}
         retirementReadiness={retirementReadiness}
         depletedAge={wealthCurve.depletedAge}
+        liabilities={liabilities}
+        netWorthCalc={netWorthCalc}
+        riskCalc={riskCalc}
+        budgetCalc={budgetCalc}
+        taxCalc={taxCalc}
       />
     </>
   );
@@ -1077,7 +1270,7 @@ function PrPageHeader({ clientName }) {
   );
 }
 
-function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalcs, totalGoalSIP, retirementCalc, insuranceCalc, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge }) {
+function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalcs, totalGoalSIP, retirementCalc, insuranceCalc, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge, liabilities, netWorthCalc, riskCalc, budgetCalc, taxCalc }) {
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const cashFlows = useMemo(() => computeRetirementCashFlows(profile, assets, retirementCalc), [profile, assets, retirementCalc]);
   const childGroups = useMemo(() => groupGoalsByChild(goalCalcs, family), [goalCalcs, family]);
@@ -1209,7 +1402,71 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
             <CheckCircle2 size={16} className="pr-coverage-icon-ok" />
             <span>Emergency Fund &mdash; {formatINR(emergencyFund)} recommended (12 months of expenses)</span>
           </div>
+          <div className="pr-coverage-row">
+            {netWorthCalc.netWorth >= 0 ? <CheckCircle2 size={16} className="pr-coverage-icon-ok" /> : <AlertTriangle size={16} className="pr-coverage-icon-warn" />}
+            <span>Net Worth &mdash; {formatINR(netWorthCalc.netWorth)} (assets {formatINR(totalAssets)} less liabilities {formatINR(netWorthCalc.totalLiabilities)})</span>
+          </div>
+          <div className="pr-coverage-row">
+            {riskCalc.isComplete ? <CheckCircle2 size={16} className="pr-coverage-icon-ok" /> : <AlertTriangle size={16} className="pr-coverage-icon-warn" />}
+            <span>Risk Profile &mdash; {riskCalc.isComplete ? `${riskCalc.band.label} (score ${riskCalc.score}/${riskCalc.maxPossible})` : "not yet assessed"}</span>
+          </div>
         </div>
+      </section>
+
+      {/* ============ PAGE 1.7: NET WORTH STATEMENT ============ */}
+      <section className="pr-page">
+        <PrPageHeader clientName={clientLabel} />
+        <div className="pr-section-title">NET WORTH STATEMENT</div>
+
+        <div className="pr-two-col" style={{ marginTop: 14 }}>
+          <div className="pr-box" style={{ margin: 0 }}>
+            <div className="pr-box-header pr-box-navy">ASSETS</div>
+            <div className="pr-box-body">
+              <div className="pr-kv-row"><span>Equity / Mutual Funds</span><strong>{formatINR(assets.equity)}</strong></div>
+              <div className="pr-kv-row"><span>Debt / FD / Bonds</span><strong>{formatINR(assets.debt)}</strong></div>
+              <div className="pr-kv-row"><span>Real Estate</span><strong>{formatINR(assets.realEstate)}</strong></div>
+              <div className="pr-kv-row"><span>Gold</span><strong>{formatINR(assets.gold)}</strong></div>
+              <div className="pr-kv-row"><span>Cash / Savings</span><strong>{formatINR(assets.cash)}</strong></div>
+              <div className="pr-kv-row pr-kv-highlight"><span>Total Assets</span><strong>{formatINR(totalAssets)}</strong></div>
+            </div>
+          </div>
+          <div className="pr-box" style={{ margin: 0 }}>
+            <div className="pr-box-header pr-box-orange">LIABILITIES</div>
+            <div className="pr-box-body">
+              {liabilities.length === 0 ? (
+                <div className="pr-kv-row"><span>No liabilities on file</span><strong>{formatINR(0)}</strong></div>
+              ) : liabilities.map((l) => (
+                <div className="pr-kv-row" key={l.id}><span>{l.name}</span><strong>{formatINR(l.outstanding)}</strong></div>
+              ))}
+              <div className="pr-kv-row pr-kv-highlight"><span>Total Liabilities</span><strong>{formatINR(netWorthCalc.totalLiabilities)}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pr-hero-sip" style={{ background: netWorthCalc.netWorth >= 0 ? "#F0B429" : "#F0958B" }}>
+          <div className="pr-hero-sip-label">NET WORTH</div>
+          <div className="pr-hero-sip-value">{formatINR(netWorthCalc.netWorth)}</div>
+          <div className="pr-hero-sip-sub">Total Assets minus Total Liabilities</div>
+        </div>
+
+        <div className="pr-section-title pr-section-title-sm" style={{ marginTop: 8 }}>FINANCIAL HEALTH RATIOS</div>
+        <div className="pr-exec-grid" style={{ marginTop: 10 }}>
+          <div className="pr-exec-stat">
+            <div className="pr-exec-label">Savings Ratio</div>
+            <div className="pr-exec-value">{budgetCalc.savingsRatio.toFixed(0)}%</div>
+          </div>
+          <div className="pr-exec-stat">
+            <div className="pr-exec-label">Debt-to-Income</div>
+            <div className="pr-exec-value">{budgetCalc.debtToIncomeRatio.toFixed(0)}%</div>
+          </div>
+          <div className="pr-exec-stat">
+            <div className="pr-exec-label">Liquidity Coverage</div>
+            <div className="pr-exec-value">{budgetCalc.liquidityRatioMonths.toFixed(1)} mo</div>
+          </div>
+        </div>
+        <p className="panel-note" style={{ padding: "0 2px" }}>
+          Savings Ratio target: 20%+. Debt-to-Income healthy under 36%. Liquidity Coverage target: 6+ months of expenses held in cash or debt instruments.
+        </p>
       </section>
 
       {/* ============ PAGE 2: RETIREMENT ============ */}
@@ -1521,6 +1778,53 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
         </div>
       </section>
 
+      {/* ============ PAGE 6.5: TAX PLANNING ============ */}
+      <section className="pr-page">
+        <PrPageHeader clientName={clientLabel} />
+        <div className="pr-section-title">TAX PLANNING</div>
+        <p className="pr-narrative" style={{ marginTop: 14 }}>
+          Based on a gross annual income of {formatINR(taxCalc.grossAnnual)}, here's how {clientLabel} fares under the Old vs. New tax regime for FY 2026-27.
+          {taxCalc.recommended === "new" ? " The New Regime works out cheaper" : " The Old Regime works out cheaper"}, saving {formatINR(taxCalc.savings)} per year.
+        </p>
+
+        <div className="pr-two-col" style={{ marginTop: 14 }}>
+          <div className={`pr-box ${taxCalc.recommended === "old" ? "pr-box-winner" : ""}`} style={{ margin: 0 }}>
+            <div className="pr-box-header pr-box-navy">OLD REGIME {taxCalc.recommended === "old" ? "– RECOMMENDED" : ""}</div>
+            <div className="pr-box-body">
+              <div className="pr-kv-row"><span>Taxable Income</span><strong>{formatINR(taxCalc.oldRegime.taxable)}</strong></div>
+              <div className="pr-kv-row"><span>Deductions Claimed</span><strong>{formatINR(taxCalc.totalOldDeductions)}</strong></div>
+              <div className="pr-kv-row"><span>Tax Before Cess</span><strong>{formatINR(taxCalc.oldRegime.tax)}</strong></div>
+              <div className="pr-kv-row"><span>Section 87A Rebate</span><strong>-{formatINR(taxCalc.oldRegime.rebate)}</strong></div>
+              <div className="pr-kv-row"><span>Health &amp; Education Cess</span><strong>{formatINR(taxCalc.oldRegime.cess)}</strong></div>
+              <div className="pr-kv-row pr-kv-highlight"><span>Total Tax Payable</span><strong>{formatINR(taxCalc.oldRegime.totalTax)}</strong></div>
+            </div>
+          </div>
+          <div className={`pr-box ${taxCalc.recommended === "new" ? "pr-box-winner" : ""}`} style={{ margin: 0 }}>
+            <div className="pr-box-header pr-box-navy">NEW REGIME {taxCalc.recommended === "new" ? "– RECOMMENDED" : ""}</div>
+            <div className="pr-box-body">
+              <div className="pr-kv-row"><span>Taxable Income</span><strong>{formatINR(taxCalc.newRegime.taxable)}</strong></div>
+              <div className="pr-kv-row"><span>Standard Deduction</span><strong>{formatINR(profile.monthlyIncome > 0 ? 75000 : 0)}</strong></div>
+              <div className="pr-kv-row"><span>Tax Before Cess</span><strong>{formatINR(taxCalc.newRegime.tax)}</strong></div>
+              <div className="pr-kv-row"><span>Section 87A Rebate</span><strong>-{formatINR(taxCalc.newRegime.rebate)}</strong></div>
+              <div className="pr-kv-row"><span>Health &amp; Education Cess</span><strong>{formatINR(taxCalc.newRegime.cess)}</strong></div>
+              <div className="pr-kv-row pr-kv-highlight"><span>Total Tax Payable</span><strong>{formatINR(taxCalc.newRegime.totalTax)}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pr-hero-sip" style={{ background: "#F0B429" }}>
+          <div className="pr-hero-sip-label">{taxCalc.recommended === "new" ? "NEW" : "OLD"} REGIME SAVES</div>
+          <div className="pr-hero-sip-value">{formatINR(taxCalc.savings, false)}</div>
+          <div className="pr-hero-sip-sub">per year, compared to the other regime</div>
+        </div>
+
+        <p className="pr-footer" style={{ marginTop: 10 }}>
+          Illustrative estimate for FY 2026-27 covering the common salaried case (Sections 80C, 80D, 24b, 80CCD-1B, and HRA under the old regime;
+          standard deduction only under the new regime). Does not account for surcharge on very high incomes, capital gains, or business income.
+          Please consult a chartered accountant before filing.
+        </p>
+      </section>
+
       {/* ============ PAGE 7: CLOSING ============ */}
       <section className="pr-page pr-closing">
         <img className="pr-logo" src={HETAL_LOGO_BASE64} alt="Hetal Finserv" style={{ width: 100, height: 100 }} />
@@ -1646,6 +1950,98 @@ function ProfileTab({ profile, setP, assets, setA, savingsCheck, totalAssets, fa
           ))}
         </div>
         <button className="btn-add" onClick={addChild}><Plus size={16} /> Add Child</button>
+      </section>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
+   TAB: NET WORTH STATEMENT
+---------------------------------------------------------------- */
+
+function NetWorthTab({ assets, liabilities, updateLiability, removeLiability, addLiability, netWorthCalc, totalAssets }) {
+  const [pickType, setPickType] = useState("");
+  const handleAdd = () => {
+    if (!pickType) return;
+    addLiability(pickType);
+    setPickType("");
+  };
+  return (
+    <div className="tab-body">
+      <h1 className="tab-title">Net Worth Statement</h1>
+      <p className="tab-sub">Everything owned, minus everything owed. The single number that answers "how are we really doing?"</p>
+
+      <div className="hero-banner" style={{ marginBottom: 20 }}>
+        <div>
+          <div className="hero-label">Total Assets</div>
+          <div className="hero-value">{formatINR(totalAssets)}</div>
+        </div>
+        <div className="hero-divider" />
+        <div>
+          <div className="hero-label">Total Liabilities</div>
+          <div className="hero-value hero-alert">{formatINR(netWorthCalc.totalLiabilities)}</div>
+        </div>
+        <div className="hero-divider" />
+        <div>
+          <div className="hero-label">Net Worth</div>
+          <div className={`hero-value ${netWorthCalc.netWorth >= 0 ? "hero-ok" : "hero-alert"}`}>{formatINR(netWorthCalc.netWorth)}</div>
+        </div>
+      </div>
+
+      <section className="panel">
+        <h3 className="panel-title"><Wallet size={16} /> Liabilities</h3>
+        <p className="panel-note" style={{ marginTop: -4, marginBottom: 14 }}>
+          Assets are entered on the Client &amp; Assets tab. Add every outstanding loan here for the complete picture.
+        </p>
+
+        <div className="add-goal-row">
+          <select className="add-goal-select" value={pickType} onChange={(e) => setPickType(e.target.value)}>
+            <option value="">Select a liability to add…</option>
+            {Object.entries(LIABILITY_TYPE_DEFS).map(([key, def]) => (
+              <option key={key} value={key}>{def.label}</option>
+            ))}
+          </select>
+          <button className="btn-add" disabled={!pickType} onClick={handleAdd}><Plus size={16} /> Add Liability</button>
+        </div>
+
+        {liabilities.length === 0 && (
+          <div className="goal-empty-state">
+            <Wallet size={22} />
+            <p>No liabilities added. If this client is debt-free, that's worth celebrating &mdash; otherwise, add loans above.</p>
+          </div>
+        )}
+
+        <div className="goal-list">
+          {liabilities.map((l) => {
+            const def = LIABILITY_TYPE_DEFS[l.type] || LIABILITY_TYPE_DEFS.other;
+            return (
+              <div className="goal-card" key={l.id}>
+                <div className="goal-card-head">
+                  <div className="goal-icon" style={{ color: def.color }}><Wallet size={18} /></div>
+                  <div className="goal-card-head-main">
+                    <div className="goal-type-badge" style={{ background: def.color }}>{def.label.toUpperCase()}</div>
+                    <input className="goal-name-input" value={l.name} onChange={(e) => updateLiability(l.id, { name: e.target.value })} />
+                  </div>
+                  <button className="icon-btn" onClick={() => removeLiability(l.id)}><Trash2 size={16} /></button>
+                </div>
+                <div className="grid-3" style={{ marginTop: 10 }}>
+                  <Field label="Outstanding Balance" value={l.outstanding} onChange={(v) => updateLiability(l.id, { outstanding: v })} suffix="₹" step={10000} />
+                  <Field label="Interest Rate" value={l.rate} onChange={(v) => updateLiability(l.id, { rate: v })} suffix="%" step={0.25} />
+                  <Field label="Monthly EMI" value={l.emiMonthly} onChange={(v) => updateLiability(l.id, { emiMonthly: v })} suffix="₹" step={500} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {liabilities.length > 0 && (
+          <div className="summary-strip">
+            <div>
+              <span>Total Monthly EMI Outflow</span>
+              <strong>{formatINR(netWorthCalc.totalLiabEMI, false)}</strong>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
@@ -2115,6 +2511,83 @@ function InvestTab({ profile, goalCalcs, retirementCalc, linkTarget, onClearLink
 }
 
 /* ---------------------------------------------------------------
+   TAB: RISK PROFILER
+---------------------------------------------------------------- */
+
+function RiskProfileTab({ riskProfile, setRiskProfile, riskCalc, profile, setP }) {
+  const setAnswer = (qKey, score) => setRiskProfile((rp) => ({ ...rp, answers: { ...rp.answers, [qKey]: score } }));
+  const [applyMsg, setApplyMsg] = useState("");
+
+  const applyToAssumptions = () => {
+    if (!riskCalc.band) return;
+    const blendedReturn = (riskCalc.band.equity / 100) * 12 + (riskCalc.band.debt / 100) * 7 + (riskCalc.band.gold / 100) * 8;
+    setP("equityReturn")(12);
+    setP("debtReturn")(7);
+    setApplyMsg(`Recommended mix noted: ~${blendedReturn.toFixed(1)}% blended return at ${riskCalc.band.label} risk. Adjust individual asset returns on the Client & Assets tab if needed.`);
+    setTimeout(() => setApplyMsg(""), 6000);
+  };
+
+  return (
+    <div className="tab-body">
+      <h1 className="tab-title">Risk Profiler</h1>
+      <p className="tab-sub">Six questions that turn "how much risk can this client actually handle" from a guess into a number.</p>
+
+      <section className="panel">
+        <h3 className="panel-title"><Flag size={16} /> Questionnaire</h3>
+        <div className="risk-question-list">
+          {RISK_QUESTIONS.map((q) => (
+            <div className="risk-question" key={q.key}>
+              <div className="risk-question-text">{q.text}</div>
+              <div className="risk-options">
+                {q.options.map((opt) => (
+                  <button
+                    key={opt.label}
+                    className={`risk-option-btn ${riskProfile.answers[q.key] === opt.score ? "is-selected" : ""}`}
+                    onClick={() => setAnswer(q.key, opt.score)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <h3 className="panel-title"><TrendingUp size={16} /> Result</h3>
+        {!riskCalc.isComplete ? (
+          <div className="inline-note note-warn">
+            <AlertTriangle size={14} /> Answer all {RISK_QUESTIONS.length} questions to see the risk score ({riskCalc.answeredCount}/{RISK_QUESTIONS.length} done).
+          </div>
+        ) : (
+          <>
+            <div className="risk-result-banner" style={{ background: riskCalc.band.color }}>
+              <div className="risk-result-label">Risk Category</div>
+              <div className="risk-result-value">{riskCalc.band.label}</div>
+              <div className="risk-result-score">Score: {riskCalc.score} / {riskCalc.maxPossible}</div>
+            </div>
+            <div className="grid-3" style={{ marginTop: 16 }}>
+              <StatCard label="Suggested Equity" value={`${riskCalc.band.equity}%`} tone="navy" />
+              <StatCard label="Suggested Debt" value={`${riskCalc.band.debt}%`} tone="gold" />
+              <StatCard label="Suggested Gold" value={`${riskCalc.band.gold}%`} tone="orange" />
+            </div>
+            <button className="btn-link" style={{ marginTop: 16 }} onClick={applyToAssumptions}>
+              <CheckCircle2 size={14} /> Note Recommended Allocation
+            </button>
+            {applyMsg && <div className="inline-note note-ok" style={{ marginTop: 12 }}>{applyMsg}</div>}
+            <p className="panel-note" style={{ marginTop: 12 }}>
+              This is a starting-point allocation based on standard risk-banding practice, not a substitute for full KYC risk assessment.
+              Use it to sanity-check the return assumptions set on the Client &amp; Assets tab.
+            </p>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
    TAB: RETIREMENT
 ---------------------------------------------------------------- */
 
@@ -2247,6 +2720,147 @@ function InsuranceTab({ insurance, setI, calc, family }) {
 }
 
 /* ---------------------------------------------------------------
+   TAB: CASH FLOW / BUDGET BREAKDOWN
+---------------------------------------------------------------- */
+
+function CashFlowTab({ profile, budget, setBudget, budgetCalc, netWorthCalc, liabilities }) {
+  const setB = (k) => (v) => setBudget((b) => ({ ...b, [k]: v }));
+  const ratioTone = (val, good, warn) => (val >= good ? "green" : val >= warn ? "gold" : "alert");
+
+  return (
+    <div className="tab-body">
+      <h1 className="tab-title">Cash Flow &amp; Financial Health</h1>
+      <p className="tab-sub">Where the money actually goes each month, and the ratios that tell you if that's healthy.</p>
+
+      <section className="panel">
+        <h3 className="panel-title"><TrendingDown size={16} /> Monthly Expense Breakdown</h3>
+        <p className="panel-note" style={{ marginTop: -4, marginBottom: 14 }}>
+          Break down the {formatINR(profile.monthlyExpenses, false)}/month set on the Client &amp; Assets tab into categories. EMI is pulled automatically from Net Worth &mdash; {formatINR(netWorthCalc.totalLiabEMI, false)}/month across {liabilities.length} loan{liabilities.length === 1 ? "" : "s"}.
+        </p>
+        <div className="grid-3">
+          <Field label="Household / Living" value={budget.household} onChange={setB("household")} suffix="₹" step={1000} />
+          <Field label="Insurance Premiums" value={budget.insurancePremium} onChange={setB("insurancePremium")} suffix="₹" step={500} />
+          <Field label="Investments (SIPs etc.)" value={budget.investments} onChange={setB("investments")} suffix="₹" step={1000} />
+        </div>
+        <div className="grid-2">
+          <Field label="Discretionary / Lifestyle" value={budget.discretionary} onChange={setB("discretionary")} suffix="₹" step={500} />
+          <Field label="Other" value={budget.other} onChange={setB("other")} suffix="₹" step={500} />
+        </div>
+        <div className={`inline-note ${budgetCalc.reconciled ? "note-ok" : "note-warn"}`}>
+          {budgetCalc.reconciled ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+          Categories total {formatINR(budgetCalc.categorizedTotal, false)} vs {formatINR(profile.monthlyExpenses, false)} stated on Client &amp; Assets
+          {budgetCalc.reconciled ? " — matches." : " — adjust categories or the expense figure so they agree."}
+        </div>
+      </section>
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <h3 className="panel-title"><ShieldCheck size={16} /> Financial Health Ratios</h3>
+        <div className="grid-3">
+          <StatCard label="Savings Ratio" value={`${budgetCalc.savingsRatio.toFixed(0)}%`} tone={ratioTone(budgetCalc.savingsRatio, 20, 10)} sub="Target: 20%+ of income saved" />
+          <StatCard label="Debt-to-Income" value={`${budgetCalc.debtToIncomeRatio.toFixed(0)}%`} tone={budgetCalc.debtToIncomeRatio <= 36 ? (budgetCalc.debtToIncomeRatio <= 20 ? "green" : "gold") : "alert"} sub="Healthy: under 36%" />
+          <StatCard label="Liquidity Coverage" value={`${budgetCalc.liquidityRatioMonths.toFixed(1)} mo`} tone={ratioTone(budgetCalc.liquidityRatioMonths, 6, 3)} sub="Target: 6+ months of expenses" />
+        </div>
+        <p className="panel-note" style={{ marginTop: 12 }}>
+          <strong>Savings Ratio</strong> = monthly savings ÷ monthly income. <strong>Debt-to-Income</strong> = monthly EMI ÷ monthly income &mdash; above 40% is a red flag to most lenders.
+          <strong> Liquidity Coverage</strong> = liquid assets (cash + debt instruments) ÷ monthly expenses, in months.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
+   TAB: TAX PLANNING
+---------------------------------------------------------------- */
+
+function TaxPlanningTab({ tax, setTax, taxCalc, profile }) {
+  const setT = (k) => (v) => setTax((t) => ({ ...t, [k]: v }));
+  return (
+    <div className="tab-body">
+      <h1 className="tab-title">Tax Planning</h1>
+      <p className="tab-sub">Old regime vs. New regime, side by side, with the deductions that actually move the needle &mdash; FY 2026-27 slabs.</p>
+
+      <section className="panel">
+        <h3 className="panel-title"><ClipboardList size={16} /> Income &amp; Deductions</h3>
+        <div className="grid-2">
+          <Field label="Other Annual Income (rental, interest, etc.)" value={tax.otherIncome} onChange={setT("otherIncome")} suffix="₹" step={10000} />
+          <label className="field">
+            <span className="field-label">Salaried Employee?</span>
+            <div className="field-input-wrap">
+              <select value={tax.isSalaried ? "yes" : "no"} onChange={(e) => setT("isSalaried")(e.target.value === "yes")} style={{ border: "none", background: "transparent", width: "100%", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+                <option value="yes">Yes (Standard Deduction applies)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+          </label>
+        </div>
+        <p className="panel-note" style={{ margin: "4px 0 14px" }}>
+          Gross annual income used: {formatINR(taxCalc.grossAnnual)} (12 &times; monthly income + other income above).
+        </p>
+
+        <h3 className="panel-title" style={{ marginTop: 16 }}>Deductions <span className="tax-old-only-tag">Old Regime Only</span></h3>
+        <div className="grid-2">
+          <Field label="Section 80C (PPF, ELSS, EPF, Life Insurance)" value={tax.section80C} onChange={setT("section80C")} suffix="₹" step={5000} />
+          <Field label="Section 80D (Health Insurance Premium)" value={tax.section80D} onChange={setT("section80D")} suffix="₹" step={1000} />
+        </div>
+        <div className="grid-2">
+          <Field label="Home Loan Interest (Section 24b)" value={tax.homeLoanInterest} onChange={setT("homeLoanInterest")} suffix="₹" step={5000} />
+          <Field label="NPS Additional (80CCD-1B)" value={tax.nps80CCD1B} onChange={setT("nps80CCD1B")} suffix="₹" step={5000} />
+        </div>
+        <div className="grid-2">
+          <Field label="Annual Rent Paid (for HRA)" value={tax.hraRentPaid} onChange={setT("hraRentPaid")} suffix="₹" step={10000} />
+          <label className="field">
+            <span className="field-label">City Type</span>
+            <div className="field-input-wrap">
+              <select value={tax.hraCityMetro ? "metro" : "non-metro"} onChange={(e) => setT("hraCityMetro")(e.target.value === "metro")} style={{ border: "none", background: "transparent", width: "100%", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+                <option value="metro">Metro (Delhi, Mumbai, Chennai, Kolkata)</option>
+                <option value="non-metro">Non-Metro</option>
+              </select>
+            </div>
+          </label>
+        </div>
+        <p className="panel-note">
+          HRA exemption estimated at {formatINR(taxCalc.hraExemption)}, assuming Basic Salary is 50% of gross income and HRA received is 40% of Basic
+          &mdash; a standard approximation. For an exact figure, use the client's actual salary structure.
+        </p>
+      </section>
+
+      <div className="grid-2" style={{ marginTop: 18 }}>
+        <section className={`panel tax-regime-card ${taxCalc.recommended === "old" ? "tax-regime-winner" : ""}`}>
+          <h3 className="panel-title">Old Regime {taxCalc.recommended === "old" && <span className="tax-winner-badge">RECOMMENDED</span>}</h3>
+          <div className="stack-stats">
+            <StatCard label="Taxable Income" value={formatINR(taxCalc.oldRegime.taxable)} tone="navy" />
+            <StatCard label="Total Deductions Claimed" value={formatINR(taxCalc.totalOldDeductions)} tone="gold" />
+            <StatCard label="Tax + Cess Payable" value={formatINR(taxCalc.oldRegime.totalTax)} tone={taxCalc.recommended === "old" ? "green" : "orange"} />
+          </div>
+        </section>
+        <section className={`panel tax-regime-card ${taxCalc.recommended === "new" ? "tax-regime-winner" : ""}`}>
+          <h3 className="panel-title">New Regime {taxCalc.recommended === "new" && <span className="tax-winner-badge">RECOMMENDED</span>}</h3>
+          <div className="stack-stats">
+            <StatCard label="Taxable Income" value={formatINR(taxCalc.newRegime.taxable)} tone="navy" />
+            <StatCard label="Standard Deduction Only" value={formatINR(tax.isSalaried ? 75000 : 0)} tone="gold" />
+            <StatCard label="Tax + Cess Payable" value={formatINR(taxCalc.newRegime.totalTax)} tone={taxCalc.recommended === "new" ? "green" : "orange"} />
+          </div>
+        </section>
+      </div>
+
+      <div className="summary-strip" style={{ marginTop: 18 }}>
+        <div>
+          <span>{taxCalc.recommended === "new" ? "New" : "Old"} Regime Saves</span>
+          <strong>{formatINR(taxCalc.savings, false)}/year</strong>
+        </div>
+      </div>
+      <p className="panel-note" style={{ marginTop: 10 }}>
+        Based on FY 2026-27 slabs. New regime: nil up to ₹4L, then 5/10/15/20/25/30% in ₹4L steps, with a full rebate (tax reduced to
+        ₹0) for taxable income up to ₹12L. Old regime: nil up to ₹2.5L, 5% to ₹5L, 20% to ₹10L, 30% above, with rebate up to ₹5L.
+        Both add 4% health &amp; education cess. This covers the common case and does not include surcharge on very high incomes, capital gains,
+        or business income &mdash; treat it as a planning estimate, not a filing.
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
    TAB: WEALTH CURVE
 ---------------------------------------------------------------- */
 
@@ -2286,7 +2900,7 @@ function WealthTab({ curve, profile, goalCalcs }) {
    TAB: ACTION PLAN
 ---------------------------------------------------------------- */
 
-function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoalSIP, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge, onSimulateGap }) {
+function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoalSIP, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge, onSimulateGap, netWorthCalc, budgetCalc, riskCalc }) {
   const readinessColor = retirementReadiness >= 90 ? "var(--green)" : retirementReadiness >= 60 ? "var(--gold)" : "var(--alert)";
   return (
     <div className="tab-body">
@@ -2334,6 +2948,23 @@ function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoa
           <div className={`flag-pill ${insuranceCalc.healthGap > 0 ? "flag-bad" : "flag-good"}`}>
             {insuranceCalc.healthGap > 0 ? `Underinsured by ${formatINR(insuranceCalc.healthGap)}` : "Adequately covered"}
           </div>
+        </div>
+      </div>
+
+      <div className="grid-3" style={{ marginTop: 16 }}>
+        <div className="panel compact">
+          <h3 className="panel-title"><Wallet size={16} /> Net Worth</h3>
+          <div className={`flag-pill ${netWorthCalc.netWorth >= 0 ? "flag-good" : "flag-bad"}`}>{formatINR(netWorthCalc.netWorth)}</div>
+        </div>
+        <div className="panel compact">
+          <h3 className="panel-title"><Flag size={16} /> Risk Profile</h3>
+          <div className={`flag-pill ${riskCalc.isComplete ? "flag-good" : "flag-bad"}`}>
+            {riskCalc.isComplete ? `${riskCalc.band.label} (${riskCalc.score}/${riskCalc.maxPossible})` : "Not yet assessed"}
+          </div>
+        </div>
+        <div className="panel compact">
+          <h3 className="panel-title"><TrendingDown size={16} /> Savings Ratio</h3>
+          <div className={`flag-pill ${budgetCalc.savingsRatio >= 20 ? "flag-good" : "flag-bad"}`}>{budgetCalc.savingsRatio.toFixed(0)}% of income saved</div>
         </div>
       </div>
 
@@ -2512,6 +3143,7 @@ const CSS = `
 .pr-coverage-icon-warn { color: #C1443C; flex-shrink: 0; }
 
 .pr-box { text-align: left; border: 1px solid #E4DFD3; border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+.pr-box-winner { border: 2px solid #2E7D5B; }
 .pr-box-header { padding: 8px 16px; font-size: 12.5px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
 .pr-box-orange { background: #C9591D; }
 .pr-box-navy { background: #0F2A4A; }
@@ -2668,6 +3300,24 @@ const CSS = `
 .goal-empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 40px 20px; border: 1.5px dashed var(--grid-line); border-radius: 12px; color: var(--text-muted); margin-bottom: 18px; }
 .goal-empty-state svg { color: var(--orange); }
 .goal-empty-state p { font-size: 13px; max-width: 380px; margin: 0; }
+
+/* Risk Profiler */
+.risk-question-list { display: flex; flex-direction: column; gap: 18px; }
+.risk-question-text { font-size: 13.5px; font-weight: 600; color: var(--navy-deep); margin-bottom: 10px; }
+.risk-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.risk-option-btn { border: 1.5px solid var(--grid-line); background: #fff; color: var(--text-main); font-size: 12.5px; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-family: var(--font-body); }
+.risk-option-btn:hover { border-color: var(--orange); }
+.risk-option-btn.is-selected { background: var(--navy-deep); border-color: var(--navy-deep); color: #fff; font-weight: 600; }
+.risk-result-banner { border-radius: 12px; padding: 20px; text-align: center; color: #fff; }
+.risk-result-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85; }
+.risk-result-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin: 6px 0; }
+.risk-result-score { font-size: 12px; opacity: 0.85; }
+
+/* Tax Planning */
+.tax-old-only-tag { font-size: 9.5px; font-weight: 600; color: var(--text-muted); background: var(--cream); padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+.tax-regime-card { position: relative; transition: border-color 0.15s; }
+.tax-regime-winner { border: 2px solid var(--green); }
+.tax-winner-badge { font-size: 9.5px; font-weight: 700; background: var(--green); color: #fff; padding: 3px 9px; border-radius: 10px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.03em; }
 
 .btn-add { margin-top: 14px; display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--grid-line); background: transparent; color: var(--navy); font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
 .btn-add:hover { border-color: var(--orange); color: var(--orange); }
