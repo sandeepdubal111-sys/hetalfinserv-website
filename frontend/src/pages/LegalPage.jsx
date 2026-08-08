@@ -56,7 +56,7 @@ export default function LegalPage() {
           <span className="italic" style={{ color: "var(--hf-gold)" }}>plainly written.</span>
         </h1>
         <p className="mt-8 max-w-2xl text-obsidian leading-relaxed">
-          Every regulator we're registered with — AMFI, SEBI, IRDAI, MahaRERA and PMS —
+          Every regulator we're registered with — AMFI, IRDAI, MahaRERA and PMS —
           expects us to publish these disclosures. We've made them readable.
         </p>
 
