@@ -42,7 +42,7 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
-        <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-16 md:h-[76px] flex items-center justify-between gap-6">
+       <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-20 md:h-24 flex items-center justify-between gap-6">
           <Link
             to="/"
             data-testid="brand-logo-link"
@@ -56,8 +56,19 @@ export default function Navbar() {
               width="40"
               height="40"
             />
-            <span className={`font-display text-[1.25rem] md:text-[1.4rem] leading-none transition-colors ${brandTextClass}`}>
-              Hetal Finserv
+            <span className="flex flex-col leading-tight">
+              <span className={`font-display text-[1.25rem] md:text-[1.4rem] leading-none transition-colors ${brandTextClass}`}>
+                Hetal Finserv
+              </span>
+              <span
+                data-testid="amfi-tagline"
+                className={`font-mono-label mt-1 transition-colors ${
+                  scrolled || !darkHero ? "text-[rgba(14,15,12,0.55)]" : "text-[color:var(--hf-on-dark-secondary)]"
+                }`}
+                style={{ fontSize: "0.75rem", letterSpacing: "0.02em" }}
+              >
+                AMFI-registered Mutual Fund Distributor
+              </span>
             </span>
           </Link>
 
