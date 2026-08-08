@@ -90,7 +90,7 @@ function Shell({ token, onLogout }) {
   const [tab, setTab] = useState("leads");
   return (
     <main data-testid="admin-dashboard" className="bg-ivory min-h-screen">
-      <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 pt-24 md:pt-32 pb-16">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 pt-28 md:pt-32 pb-16">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="font-mono-label text-mute">— HETAL FINSERV · ADMIN</p>
