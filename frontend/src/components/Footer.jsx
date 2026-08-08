@@ -145,6 +145,13 @@ export default function Footer() {
               <div className="font-mono-label mt-1" style={{ color: "var(--hf-gold-soft)", fontSize: "0.55rem" }}>
                 PVT LTD · MAKE YOUR MONEY GROW
               </div>
+              <div
+                data-testid="amfi-tagline-footer"
+                className="font-mono-label mt-1"
+                style={{ color: "var(--hf-on-dark-secondary)", fontSize: "0.75rem", letterSpacing: "0.02em" }}
+              >
+                AMFI-registered Mutual Fund Distributor
+              </div>
             </div>
           </div>
           <p className="mt-6 max-w-sm leading-relaxed" style={{ color: "var(--hf-on-dark-secondary)" }}>
