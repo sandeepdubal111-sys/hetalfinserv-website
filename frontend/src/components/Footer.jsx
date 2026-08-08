@@ -60,7 +60,7 @@ export default function Footer() {
             <Link to="/contact" className="hf-btn-coral" data-testid="footer-book-cta">
               Book Free Consultation →
             </Link>
-            <a
+            
               href={`tel:${SITE.phoneClean}`}
               className="hf-btn-outline"
               data-testid="footer-call-cta"
@@ -82,7 +82,7 @@ export default function Footer() {
           </div>
           <div className="flex flex-wrap items-center gap-4" data-testid="footer-socials">
             {socials.map((s) => (
-              <a
+              
                 key={s.key}
                 href={s.href}
                 target="_blank"
@@ -160,7 +160,7 @@ export default function Footer() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {["AMFI ARN-254254", "MahaRERA A52100043460", "PMS APRN00234"].map((r) => (
+            {["AMFI ARN-254254", "PMS APRN00234"].map((r) => (
               <span
                 key={r}
                 className="font-mono-label px-3 py-1.5"
@@ -174,6 +174,27 @@ export default function Footer() {
                 {r}
               </span>
             ))}
+          </div>
+
+          <div
+            data-testid="maharera-compliance-block"
+            className="mt-5 flex items-center gap-3 pt-5"
+            style={{ borderTop: "1px solid rgba(253,249,238,0.12)" }}
+          >
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fmaharera.maharashtra.gov.in%2Fen%2Fagents-search-result"
+              alt="Scan to verify Hetal Finserv's MahaRERA registration"
+              width="64"
+              height="64"
+              className="shrink-0"
+              style={{ background: "#fff", padding: "3px" }}
+            />
+            <div style={{ color: "var(--hf-on-dark-primary)" }}>
+              <p style={{ fontSize: "1rem", lineHeight: 1.3 }}>MahaRERA Reg. A52100043460</p>
+              <p style={{ fontSize: "1rem", lineHeight: 1.3 }} className="mt-0.5">
+                hetalfinserv.com
+              </p>
+            </div>
           </div>
         </div>
 
@@ -230,7 +251,7 @@ export default function Footer() {
                 <a href={`tel:${SITE.phoneClean}`} data-testid="footer-phone" className="block">
                   {SITE.phone}
                 </a>
-                <a
+                
                   href={`tel:${(SITE.phoneAlt || "").replace(/\D/g, "")}`}
                   className="block mt-1"
                   style={{ color: "var(--hf-on-dark-secondary)" }}
@@ -284,26 +305,36 @@ export default function Footer() {
             registration — 03-Oct-2022 · Current validity of ARN — 02-Oct-2028
           </p>
 
+          <p
+            className="mt-4 font-mono-label"
+            data-testid="irdai-disclosure"
+            style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
+          >
+            Insurance is the subject matter of solicitation · IRDAI-registered Insurance
+            Broker · License No. 00115138383
+          </p>
+
           <ul
             className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 font-mono-label"
             data-testid="footer-legal-links"
             style={{ fontSize: "0.72rem" }}
           >
             {[
-              { label: "Important Links", href: "https://hetalfinserv.com/home/importantlinks" },
-              { label: "Disclaimer", href: "https://hetalfinserv.com/home/disclaimer" },
-              { label: "Disclosure", href: "https://hetalfinserv.com/home/disclosure" },
-              { label: "Privacy Policy", href: "https://hetalfinserv.com/home/privacypolicy" },
+              { label: "Disclaimer", href: "/legal#disclaimer" },
+              { label: "Disclosure", href: "/legal#disclosure" },
+              { label: "Privacy Policy", href: "/legal#privacy" },
+              { label: "Risk Factors", href: "/legal#risk" },
               { label: "SID/SAI/KIM", href: "https://www.sebi.gov.in/filings/mutual-funds.html" },
-              { label: "Code of Conduct", href: "https://hetalfinserv.com/content/codeof_conduct.pdf" },
               { label: "SEBI Circulars", href: "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0" },
               { label: "AMFI Risk Factors", href: "https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds" },
+              { label: "SEBI SCORES", href: "https://scores.sebi.gov.in" },
+              { label: "SMART ODR", href: "https://smartodr.in" },
             ].map((l, i, arr) => (
               <li key={l.label} className="flex items-center gap-6">
-                <a
+                
                   href={l.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={l.href.startsWith("/") ? undefined : "_blank"}
+                  rel={l.href.startsWith("/") ? undefined : "noopener noreferrer"}
                   className="transition-colors hover:text-[color:var(--hf-gold)]"
                   style={{ color: "var(--hf-coral)" }}
                   data-testid={`legal-link-${l.label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
