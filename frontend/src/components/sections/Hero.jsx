@@ -40,7 +40,7 @@ export default function Hero() {
     <section
       ref={wrapRef}
       data-testid="hero-section"
-      className="relative min-h-[100svh] w-full overflow-hidden bg-ivory pt-24"
+      className="relative min-h-[100svh] w-full overflow-hidden bg-ivory pt-28"
     >
       {/* Background editorial ticker (huge outlined type) */}
       <div className="absolute inset-x-0 top-[28%] pointer-events-none select-none opacity-[0.06]">
