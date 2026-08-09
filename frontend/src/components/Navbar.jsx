@@ -42,11 +42,11 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
-       <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-20 md:h-24 flex items-center justify-between gap-6">
+       <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 h-24 flex items-center justify-between gap-3">
           <Link
             to="/"
             data-testid="brand-logo-link"
-            className="flex items-center gap-2.5 shrink-0 group"
+            className="flex items-center gap-2.5 min-w-0 flex-1 group"
             aria-label="Hetal Finserv — Home"
           >
             <img
@@ -56,16 +56,16 @@ export default function Navbar() {
               width="40"
               height="40"
             />
-            <span className="flex flex-col leading-tight">
+            <span className="flex flex-col leading-tight min-w-0">
               <span className={`font-display text-[1.25rem] md:text-[1.4rem] leading-none transition-colors ${brandTextClass}`}>
                 Hetal Finserv
               </span>
               <span
                 data-testid="amfi-tagline"
-                className={`font-mono-label mt-1 transition-colors ${
+                className={`font-mono-label mt-1 transition-colors block ${
                   scrolled || !darkHero ? "text-[rgba(14,15,12,0.55)]" : "text-[color:var(--hf-on-dark-secondary)]"
                 }`}
-                style={{ fontSize: "0.75rem", letterSpacing: "0.02em" }}
+                style={{ fontSize: "0.75rem", letterSpacing: "0.01em", lineHeight: 1.3, whiteSpace: "normal" }}
               >
                 AMFI-registered Mutual Fund Distributor
               </span>
@@ -139,7 +139,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30 md:hidden bg-[color:var(--hf-ivory)] pt-24 px-6"
+            className="fixed inset-0 z-30 md:hidden bg-[color:var(--hf-ivory)] pt-28 px-6"
           >
             <nav className="flex flex-col gap-6" aria-label="Mobile">
               {NAV.map((item, i) => (
@@ -165,13 +165,13 @@ export default function Navbar() {
               </div>
               <div className="mt-8 pt-8 border-t border-[rgba(14,15,12,0.15)]">
                 <p className="font-mono-label text-mute">Direct</p>
-                <a
+                
                   href={`tel:${SITE.phoneClean}`}
                   className="block font-display text-3xl mt-2 text-obsidian"
                 >
                   {SITE.phone}
                 </a>
-                <a
+                
                   href={`mailto:${SITE.email}`}
                   className="block text-obsidian mt-2 link-underline"
                 >
