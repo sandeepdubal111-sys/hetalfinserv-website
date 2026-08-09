@@ -165,13 +165,13 @@ export default function Navbar() {
               </div>
               <div className="mt-8 pt-8 border-t border-[rgba(14,15,12,0.15)]">
                 <p className="font-mono-label text-mute">Direct</p>
-                
+                <a
                   href={`tel:${SITE.phoneClean}`}
                   className="block font-display text-3xl mt-2 text-obsidian"
                 >
                   {SITE.phone}
                 </a>
-                
+                <a
                   href={`mailto:${SITE.email}`}
                   className="block text-obsidian mt-2 link-underline"
                 >
