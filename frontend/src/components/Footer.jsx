@@ -60,7 +60,7 @@ export default function Footer() {
             <Link to="/contact" className="hf-btn-coral" data-testid="footer-book-cta">
               Book Free Consultation →
             </Link>
-            
+            <a
               href={`tel:${SITE.phoneClean}`}
               className="hf-btn-outline"
               data-testid="footer-call-cta"
@@ -82,7 +82,7 @@ export default function Footer() {
           </div>
           <div className="flex flex-wrap items-center gap-4" data-testid="footer-socials">
             {socials.map((s) => (
-              
+              <a
                 key={s.key}
                 href={s.href}
                 target="_blank"
@@ -150,7 +150,7 @@ export default function Footer() {
                 className="font-mono-label mt-1"
                 style={{ color: "var(--hf-on-dark-secondary)", fontSize: "0.75rem", letterSpacing: "0.02em" }}
               >
-                AMFI-registered Mutual Fund Distributor
+                AMFI-registered Mutual Fund Distributor · ARN-254254
               </div>
             </div>
           </div>
@@ -191,6 +191,9 @@ export default function Footer() {
             />
             <div style={{ color: "var(--hf-on-dark-primary)" }}>
               <p style={{ fontSize: "1rem", lineHeight: 1.3 }}>MahaRERA Reg. A52100043460</p>
+              <p style={{ fontSize: "1rem", lineHeight: 1.3 }} className="mt-0.5">
+                Valid 14-Jun-2023 to 14-Jun-2028
+              </p>
               <p style={{ fontSize: "1rem", lineHeight: 1.3 }} className="mt-0.5">
                 hetalfinserv.com
               </p>
@@ -251,7 +254,7 @@ export default function Footer() {
                 <a href={`tel:${SITE.phoneClean}`} data-testid="footer-phone" className="block">
                   {SITE.phone}
                 </a>
-                
+                <a
                   href={`tel:${(SITE.phoneAlt || "").replace(/\D/g, "")}`}
                   className="block mt-1"
                   style={{ color: "var(--hf-on-dark-secondary)" }}
@@ -311,7 +314,16 @@ export default function Footer() {
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
             Insurance is the subject matter of solicitation · IRDAI-registered Insurance
-            Broker · License No. 00115138383
+            Broker · License No. 00115138383 · Certified BQP (Composite) — training valid
+            till 09-Apr-2029
+          </p>
+
+          <p
+            className="mt-4 font-mono-label"
+            data-testid="pms-disclosure"
+            style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
+          >
+            SEBI-recognised PMS Distributor · APRN00234 · Valid 20-Feb-2024 to 19-Feb-2027
           </p>
 
           <ul
@@ -324,14 +336,19 @@ export default function Footer() {
               { label: "Disclosure", href: "/legal#disclosure" },
               { label: "Privacy Policy", href: "/legal#privacy" },
               { label: "Risk Factors", href: "/legal#risk" },
+              { label: "Code of Conduct", href: "https://www.amfiindia.com/uploads/AMFI_Master_Cicular_for_MF_Ds_3c7f5ee44f.pdf" },
               { label: "SID/SAI/KIM", href: "https://www.sebi.gov.in/filings/mutual-funds.html" },
               { label: "SEBI Circulars", href: "https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0" },
               { label: "AMFI Risk Factors", href: "https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds" },
               { label: "SEBI SCORES", href: "https://scores.sebi.gov.in" },
               { label: "SMART ODR", href: "https://smartodr.in" },
+              { label: "AMFI", href: "https://www.amfiindia.com" },
+              { label: "IRDAI", href: "https://irdai.gov.in" },
+              { label: "MahaRERA", href: "https://maharera.maharashtra.gov.in" },
+              { label: "KYC (CVL KRA)", href: "https://www.cvlkra.com" },
             ].map((l, i, arr) => (
               <li key={l.label} className="flex items-center gap-6">
-                
+                <a
                   href={l.href}
                   target={l.href.startsWith("/") ? undefined : "_blank"}
                   rel={l.href.startsWith("/") ? undefined : "noopener noreferrer"}
