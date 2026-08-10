@@ -63,7 +63,7 @@ export default function Navbar() {
               <span
                 data-testid="amfi-tagline"
                 className={`font-mono-label mt-1 transition-colors block ${
-                  scrolled || !darkHero ? "text-[rgba(14,15,12,0.55)]" : "text-[color:var(--hf-on-dark-secondary)]"
+                  scrolled || !darkHero ? "text-[rgba(14,15,12,0.65)]" : "text-[color:var(--hf-on-dark-secondary)]"
                 }`}
                 style={{ fontSize: "0.75rem", letterSpacing: "0.01em", lineHeight: 1.3, whiteSpace: "normal" }}
               >
