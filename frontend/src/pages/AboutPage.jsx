@@ -36,7 +36,8 @@ export default function AboutPage() {
             >
               Hetal Finserv Private Limited is a Pune-based financial services company,
               purpose-built to be your one-stop advisor for wealth, protection, credit, and
-              real estate. Backed by SEBI, AMFI, IRDAI and RERA registrations, we help
+              real estate. Backed by AMFI, IRDAI and MahaRERA registrations, and a
+              SEBI-recognised Portfolio Management Services distribution empanelment, we help
               individuals, families and businesses make informed, confident decisions —
               with the discretion and rigour usually reserved for institutions.
             </motion.p>
