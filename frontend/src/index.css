@@ -20,10 +20,11 @@
   --hf-emerald-deep: #0a4633;
   --hf-emerald-mid: #0f6d4e;
   --hf-gold: #d9a54b;
-  --hf-gold-2: #b7873a;
+  --hf-gold-2: #8f6426;
   --hf-gold-soft: #e6be6f;
   --hf-coral: #d8663f;
   --hf-coral-2: #b95530;
+  --hf-coral-3: #a84d2c;
   --hf-mute: #6a6960;
   /* High-contrast text tokens for dark surfaces */
   --hf-on-dark-primary: #fdf9ee;
@@ -247,24 +248,24 @@ body {
     align-items: center;
     gap: 0.6rem;
     padding: 0.85rem 1.4rem;
-    background: var(--hf-coral);
+    background: var(--hf-coral-2);
     color: #fff;
     font-family: "JetBrains Mono", monospace;
     font-size: 0.68rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     font-weight: 600;
-    border: 1px solid var(--hf-coral);
+    border: 1px solid var(--hf-coral-2);
     border-radius: 999px;
     transition: background-color 260ms ease, transform 260ms ease, box-shadow 260ms ease;
     cursor: pointer;
-    box-shadow: 0 8px 22px -8px rgba(216, 102, 63, 0.55);
+    box-shadow: 0 8px 22px -8px rgba(185, 85, 48, 0.55);
     white-space: nowrap;
   }
   .hf-btn-coral:hover {
-    background: var(--hf-coral-2);
-    border-color: var(--hf-coral-2);
-    box-shadow: 0 12px 30px -8px rgba(216, 102, 63, 0.75);
+    background: var(--hf-coral-3);
+    border-color: var(--hf-coral-3);
+    box-shadow: 0 12px 30px -8px rgba(185, 85, 48, 0.75);
     transform: translateY(-1px);
   }
   .hf-btn-coral:active {
