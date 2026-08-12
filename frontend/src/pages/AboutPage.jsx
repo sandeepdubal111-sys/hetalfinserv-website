@@ -7,12 +7,18 @@ import EditorialMarquee from "@/components/sections/EditorialMarquee";
 import Testimonials from "@/components/sections/Testimonials";
 import ContactForm from "@/components/sections/ContactForm";
 import { MANIFESTO } from "@/lib/data";
+import SEO from "@/components/SEO";
 
 export default function AboutPage() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <main data-testid="about-page" className="bg-ivory">
+      <SEO
+        title="About Us — Sandeep & Tanuja Dubal"
+        description="Meet the team behind Hetal Finserv — AMFI, IRDAI and MahaRERA registered, a SEBI-recognised PMS distribution empanelment, and 20+ years of experience helping Pune families make confident financial decisions."
+        path="/about"
+      />
       {/* Hero */}
       <section className="pt-40 pb-20 md:pt-52 md:pb-32 border-b border-hair">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6">

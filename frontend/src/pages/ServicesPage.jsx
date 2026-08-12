@@ -7,6 +7,7 @@ import { SERVICES } from "@/lib/data";
 import AMCPartners from "@/components/sections/AMCPartners";
 import Calculator from "@/components/sections/Calculator";
 import ContactForm from "@/components/sections/ContactForm";
+import SEO from "@/components/SEO";
 
 export default function ServicesPage() {
   const { hash } = useLocation();
@@ -23,6 +24,11 @@ export default function ServicesPage() {
 
   return (
     <main data-testid="services-page" className="bg-ivory">
+      <SEO
+        title="Our Services — Mutual Funds, PMS, Insurance, Loans, Real Estate"
+        description="Explore Hetal Finserv's full range of financial services: Mutual Fund distribution, Portfolio Management Services, Insurance broking, Loans, and Real Estate advisory — all under one roof in Pune."
+        path="/services"
+      />
       {/* Page hero */}
       <section className="pt-40 pb-20 md:pt-52 md:pb-32 border-b border-hair">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6">

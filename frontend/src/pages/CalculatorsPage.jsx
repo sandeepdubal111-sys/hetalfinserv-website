@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { MaskLine } from "@/components/MaskedReveal";
 import { CALCULATORS, CALC_GROUPS, getCalculator } from "@/lib/calculators";
 import CalcRunner from "@/components/calculators/CalcRunner";
+import SEO from "@/components/SEO";
 
 export default function CalculatorsPage() {
   const { slug } = useParams();
@@ -27,6 +28,15 @@ export default function CalculatorsPage() {
 
   return (
     <main data-testid="calculators-page" className="bg-obsidian on-dark text-ivory min-h-screen">
+      <SEO
+        title={active ? `${active.title} — Free Online Calculator` : "Financial Calculators"}
+        description={
+          active
+            ? `Use our free ${active.title} to plan your finances — instant, accurate results with no signup required.`
+            : "15 free financial calculators — SIP, PPF, EMI, retirement planning and more — from Hetal Finserv."
+        }
+        path={active ? `/calculators/${active.slug}` : "/calculators"}
+      />
       {/* Hero */}
       <section className="pt-40 pb-16 md:pt-52 md:pb-24 border-b border-hair-light">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6">

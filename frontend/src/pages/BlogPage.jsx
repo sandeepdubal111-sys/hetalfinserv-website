@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { fetchPosts, BLOG_CATEGORIES, formatDate } from "@/lib/blog";
 import { useEffect, useState } from "react";
 import { MaskLine } from "@/components/MaskedReveal";
+import SEO from "@/components/SEO";
 
 const catToneColor = {
   gold: "var(--hf-gold)",
@@ -54,6 +55,11 @@ export default function BlogPage() {
 
   return (
     <main data-testid="blog-page" className="bg-ivory pt-40 md:pt-52 pb-24">
+      <SEO
+        title="Blog — Notes on Money, Plainly Written"
+        description="Practical, jargon-free articles on investing, insurance, financial planning and money behaviour from the Hetal Finserv team — the same people who manage your money."
+        path="/blog"
+      />
       <section className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14">
         <p className="font-mono-label text-mute">— The Hetal Finserv Knowledge Center</p>
         <h1

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowLeft } from "lucide-react";
 import { fetchPost, fetchRelated, formatDate, BLOG_CATEGORIES } from "@/lib/blog";
 import { SITE } from "@/lib/data";
+import SEO from "@/components/SEO";
 
 function Block({ block }) {
   if (block.type === "h2") {
@@ -99,6 +100,13 @@ export default function BlogPostPage() {
 
   return (
     <main data-testid="blog-post-page" className="bg-ivory pt-40 md:pt-48 pb-24">
+      <SEO
+        title={post.title}
+        description={post.excerpt}
+        path={`/blog/${slug}`}
+        image={post.cover}
+        type="article"
+      />
       {/* Hero */}
       <article className="max-w-[900px] mx-auto px-6 md:px-10">
         <Link

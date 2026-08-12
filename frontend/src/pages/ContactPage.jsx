@@ -5,12 +5,18 @@ import ContactForm from "@/components/sections/ContactForm";
 import FAQ from "@/components/sections/FAQ";
 import { SITE } from "@/lib/data";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import SEO from "@/components/SEO";
 
 export default function ContactPage() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <main data-testid="contact-page" className="bg-ivory">
+      <SEO
+        title="Contact Us — Book a Free Consultation"
+        description="Get in touch with Hetal Finserv for a free financial consultation. Based in Wadgaon Sheri, Pune — serving clients across India for Mutual Funds, PMS, Insurance, Loans and Real Estate."
+        path="/contact"
+      />
       <section className="pt-40 pb-20 md:pt-52 md:pb-24 border-b border-hair">
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 grid grid-cols-12 gap-6 md:gap-10">
           <div className="col-span-12 md:col-span-3">

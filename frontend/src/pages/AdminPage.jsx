@@ -3,6 +3,7 @@ import axios from "axios";
 import { LogOut } from "lucide-react";
 import { LeadsTab } from "@/pages/admin/LeadsTab";
 import { BlogTab } from "@/pages/admin/BlogTab";
+import SEO from "@/components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const TOKEN_KEY = "hf-admin-token";
@@ -154,6 +155,10 @@ export default function AdminPage() {
     }
     setToken("");
   };
-  if (!token) return <LoginPanel onLogin={setToken} />;
-  return <Shell token={token} onLogout={logout} />;
+  return (
+    <>
+      <SEO title="Admin" path="/admin" noindex />
+      {!token ? <LoginPanel onLogin={setToken} /> : <Shell token={token} onLogout={logout} />}
+    </>
+  );
 }

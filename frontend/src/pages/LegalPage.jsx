@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { SITE } from "@/lib/data";
+import SEO from "@/components/SEO";
 
 const SECTIONS = [
   {
@@ -46,6 +47,12 @@ const SECTIONS = [
 export default function LegalPage() {
   return (
     <main data-testid="legal-page" className="bg-ivory pt-40 md:pt-52 pb-28">
+      <SEO
+        title="Legal, Compliance & Disclosures"
+        description="Disclaimer, disclosure, privacy policy and risk factor information for Hetal Finserv Pvt Ltd."
+        path="/legal"
+        noindex
+      />
       <div className="max-w-[1100px] mx-auto px-6 md:px-10">
         <p className="font-mono-label text-mute">— Legal · Compliance · Trust</p>
         <h1

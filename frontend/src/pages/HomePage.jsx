@@ -11,10 +11,18 @@ import Leadership from "@/components/sections/Leadership";
 import Testimonials from "@/components/sections/Testimonials";
 import FAQ from "@/components/sections/FAQ";
 import ContactForm from "@/components/sections/ContactForm";
+import SEO from "@/components/SEO";
+import StructuredData from "@/components/StructuredData";
 
 export default function HomePage() {
   return (
     <main data-testid="home-page">
+      <SEO
+        title="Mutual Funds, PMS, Insurance & Real Estate — Pune"
+        description="Hetal Finserv Pvt Ltd — One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate. AMFI-registered distributor, IRDAI-registered broker, MahaRERA-registered agent. Serving Pune and across India."
+        path="/"
+      />
+      <StructuredData />
       <Hero />
       <Registrations />
       <Manifesto />
