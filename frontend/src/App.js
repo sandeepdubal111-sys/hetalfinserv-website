@@ -17,6 +17,7 @@ import LegalPage from "@/pages/LegalPage";
 import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
 import AdminPage from "@/pages/AdminPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 import ChatWidget from "@/components/ChatWidget";
 
 // Lenis smooth scrolling — respects reduced-motion
@@ -93,7 +94,7 @@ function Shell() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/legal" element={<LegalPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<HomePage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isAdmin && <Footer />}
       {!isAdmin && <WhatsAppFloat />}
