@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://hetalfinserv.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://hetalfinserv.com/services</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hetalfinserv.com/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://hetalfinserv.com/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/sip</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/lumpsum</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/cost-of-delay</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/sip-topup</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/limited-period-sip</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/birthday-sip</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/home-loan-sip</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/emi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/swp</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/retirement</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/child-education</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/child-marriage</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/dream-car</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/dream-vacation</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://hetalfinserv.com/calculators/life-insurance</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>
