@@ -37,22 +37,16 @@
    This block replaces the three `import` statements from the
    Claude-artifact version so the exact same component code runs
    unmodified in a plain browser tab (no build step, no Claude).
+   niceMax/buildScale are NOT redeclared here -- they're defined
+   once in the body (used by FanChartSVG too) to avoid duplicate
+   `const` declarations when this shim is concatenated with it.
    ============================================================ */
 
 const { useState, useMemo, useEffect, useRef } = React;
 
 // ---- Dependency-free SVG chart primitives (no external chart library needed) ----
-const niceMax = (v) => {
-  if (!isFinite(v) || v <= 0) return 1;
-  const mag = Math.pow(10, Math.floor(Math.log10(v)));
-  const norm = v / mag;
-  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
-  return nice * mag;
-};
-const buildScale = (domain, range) => {
-  const span = domain[1] - domain[0] || 1;
-  return (v) => range[0] + ((v - domain[0]) / span) * (range[1] - range[0]);
-};
+// NOTE: niceMax/buildScale referenced below are defined later in the concatenated
+// body; safe due to closures + top-level script running fully before any render.
 
 function AreaChartSVG({ data, xKey, yKey, height = 300, lineColor = "var(--orange)", refLinesX = [], yFormat = formatINR }) {
   const W = 700;
@@ -204,6 +198,7 @@ const Save = (p) => <IconBase {...p}><path d="M5 3h11l3 3v15H5z" /><polyline poi
 const Download = (p) => <IconBase {...p}><path d="M12 3v12" /><polyline points="7 10 12 15 17 10" /><path d="M5 19h14" /></IconBase>;
 const Upload = (p) => <IconBase {...p}><path d="M12 21V9" /><polyline points="7 14 12 9 17 14" /><path d="M5 5h14" /></IconBase>;
 const Printer = (p) => <IconBase {...p}><polyline points="6 9 6 3 18 3 18 9" /><rect x="4" y="9" width="16" height="8" rx="1" /><rect x="7" y="14" width="10" height="7" /></IconBase>;
+const Activity = (p) => <IconBase {...p}><polyline points="3 12 8 12 10 6 14 18 16 12 21 12" /></IconBase>;
 
 // ---- window.storage polyfill: same API Claude artifacts get, backed by this browser's localStorage ----
 // Saved clients live on THIS device/browser only (no cross-device sync, unlike the Claude-hosted version).
@@ -406,6 +401,77 @@ const computeRetirementCashFlows = (profile, assets, retirementCalc) => {
   return { preRows, postRows };
 };
 
+/* ---------------------------------------------------------------
+   MONTE CARLO SIMULATION
+   The one capability that separates institutional-grade planning
+   software (MoneyGuidePro, eMoney, RightCapital) from a deterministic
+   calculator: instead of assuming one fixed return every year, run
+   hundreds of randomized-return trials and report what fraction of
+   them never run out of money -- the "Probability of Success."
+---------------------------------------------------------------- */
+
+// Box-Muller transform: converts uniform random draws into a normal (bell-curve) distribution,
+// so simulated annual returns cluster around the mean the way real market returns roughly do.
+const randomNormal = (mean, stdDev) => {
+  let u1 = Math.random(), u2 = Math.random();
+  if (u1 === 0) u1 = 1e-9;
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mean + z * stdDev;
+};
+
+const runMonteCarloSimulation = ({
+  currentAge, retirementAge, lifeExpectancy, totalAssets, monthlySavings,
+  monthlyExpenseAtRetirement, postRetInflation, lifestylePct,
+  equityWeight, debtWeight, otherWeight,
+  equityMean, equityStdDev, debtMean, debtStdDev, otherMean, otherStdDev,
+  simulations = 500,
+}) => {
+  const yearsToRet = Math.max(retirementAge - currentAge, 0);
+  const yearsInRet = Math.max(lifeExpectancy - retirementAge, 1);
+  const totalYears = yearsToRet + yearsInRet;
+  let successCount = 0;
+  const allPaths = [];
+
+  for (let sim = 0; sim < simulations; sim++) {
+    let corpus = totalAssets;
+    let expense = monthlyExpenseAtRetirement * 12 * (lifestylePct / 100);
+    const path = [Math.round(corpus)];
+    let failed = false;
+
+    for (let y = 1; y <= totalYears; y++) {
+      const eqReturn = randomNormal(equityMean, equityStdDev) / 100;
+      const debtReturn = randomNormal(debtMean, debtStdDev) / 100;
+      const otherReturn = randomNormal(otherMean, otherStdDev) / 100;
+      const portReturn = equityWeight * eqReturn + debtWeight * debtReturn + otherWeight * otherReturn;
+
+      if (y <= yearsToRet) {
+        corpus = corpus * (1 + portReturn) + monthlySavings * 12;
+      } else {
+        corpus = corpus * (1 + portReturn) - expense;
+        expense *= (1 + postRetInflation / 100);
+        if (corpus <= 0) { failed = true; corpus = 0; }
+      }
+      path.push(Math.round(Math.max(0, corpus)));
+    }
+    if (!failed) successCount++;
+    allPaths.push(path);
+  }
+
+  const probabilityOfSuccess = simulations > 0 ? (successCount / simulations) * 100 : 0;
+
+  const percentileBands = [];
+  for (let y = 0; y <= totalYears; y++) {
+    const valuesAtYear = allPaths.map((p) => p[y]).sort((a, b) => a - b);
+    const pIdx = (p) => valuesAtYear[Math.min(simulations - 1, Math.max(0, Math.floor(simulations * p)))];
+    percentileBands.push({
+      year: y, age: currentAge + y,
+      p10: pIdx(0.10), p50: pIdx(0.50), p90: pIdx(0.90),
+    });
+  }
+
+  return { probabilityOfSuccess, percentileBands, simulations, yearsToRet, totalYears };
+};
+
 // Best-effort match of auto-generated per-child goals (see generateFamilyGoals) back to each child,
 // so the print report can build dedicated Education/Marriage sections per child.
 const groupGoalsByChild = (goalCalcs, family) => {
@@ -565,6 +631,7 @@ const TABS = [
   { key: "cashflow", label: "Cash Flow", icon: TrendingDown },
   { key: "tax", label: "Tax Planning", icon: ClipboardList },
   { key: "wealth", label: "Wealth Curve", icon: TrendingUp },
+  { key: "montecarlo", label: "Monte Carlo", icon: Activity },
   { key: "action", label: "Action Plan", icon: Sparkles },
 ];
 
@@ -698,6 +765,58 @@ function MiniBarRow({ label, value, max, color }) {
       <div className="mini-bar-track"><div className="mini-bar-fill" style={{ width: `${pct}%`, background: color }} /></div>
       <span className="mini-bar-value">{formatINR(value, false)}</span>
     </div>
+  );
+}
+
+// "Cone of uncertainty" fan chart: shades the 10th-90th percentile range across all simulated
+// trials, with the median path drawn as a solid line -- the standard visual for Monte Carlo output.
+const niceMax = (v) => {
+  if (!isFinite(v) || v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return nice * mag;
+};
+const buildScale = (domain, range) => {
+  const span = domain[1] - domain[0] || 1;
+  return (v) => range[0] + ((v - domain[0]) / span) * (range[1] - range[0]);
+};
+
+function FanChartSVG({ data, xKey = "age", height = 340, retirementAge }) {
+  const W = 700;
+  const pad = { l: 64, r: 20, t: 16, b: 32 };
+  const xs = data.map((d) => d[xKey]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const maxY = niceMax(Math.max(...data.map((d) => d.p90), 1));
+  const xScale = buildScale([minX, maxX], [pad.l, W - pad.r]);
+  const yScale = buildScale([0, maxY], [height - pad.b, pad.t]);
+  const step = Math.max(1, Math.round(data.length / 8));
+
+  const topPts = data.map((d) => [xScale(d[xKey]), yScale(d.p90)]);
+  const botPts = [...data].reverse().map((d) => [xScale(d[xKey]), yScale(d.p10)]);
+  const bandPath = "M " + topPts.map((p) => p.join(",")).join(" L ") + " L " + botPts.map((p) => p.join(",")).join(" L ") + " Z";
+  const medianPath = "M " + data.map((d) => [xScale(d[xKey]), yScale(d.p50)].join(",")).join(" L ");
+
+  return (
+    <svg viewBox={`0 0 ${W} ${height}`} width="100%">
+      {[0, 0.25, 0.5, 0.75, 1].map((f, i) => {
+        const val = maxY * f, y = yScale(val);
+        return (
+          <g key={i}>
+            <line x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="var(--grid-line)" strokeDasharray="3 3" />
+            <text x={pad.l - 8} y={y + 4} textAnchor="end" fontSize="11" fill="var(--text-muted)">{formatINR(val)}</text>
+          </g>
+        );
+      })}
+      {data.map((d, i) => (i % step === 0 ? (
+        <text key={i} x={xScale(d[xKey])} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--text-muted)">{d[xKey]}</text>
+      ) : null))}
+      {retirementAge != null && (
+        <line x1={xScale(retirementAge)} x2={xScale(retirementAge)} y1={pad.t} y2={height - pad.b} stroke="var(--navy)" strokeDasharray="4 4" />
+      )}
+      <path d={bandPath} fill="var(--orange)" fillOpacity="0.18" stroke="none" />
+      <path d={medianPath} fill="none" stroke="var(--orange)" strokeWidth="2.5" />
+    </svg>
   );
 }
 
@@ -1208,6 +1327,9 @@ function WealthBlueprint() {
           <TaxPlanningTab tax={tax} setTax={setTax} taxCalc={taxCalc} profile={profile} />
         )}
         {active === "wealth" && <WealthTab curve={wealthCurve} profile={profile} goalCalcs={goalCalcs} />}
+        {active === "montecarlo" && (
+          <MonteCarloTab profile={profile} assets={assets} totalAssets={totalAssets} retirementCalc={retirementCalc} />
+        )}
         {active === "action" && (
           <ActionTab
             profile={profile}
@@ -2897,6 +3019,129 @@ function WealthTab({ curve, profile, goalCalcs }) {
 }
 
 /* ---------------------------------------------------------------
+   TAB: MONTE CARLO SIMULATION
+---------------------------------------------------------------- */
+
+function MonteCarloTab({ profile, assets, totalAssets, retirementCalc }) {
+  const [vol, setVol] = useState({ equityStdDev: 18, debtStdDev: 5, otherStdDev: 12 });
+  const [result, setResult] = useState(null);
+  const [running, setRunning] = useState(false);
+
+  const weights = useMemo(() => {
+    const otherAssets = assets.gold + assets.realEstate + assets.cash;
+    const total = totalAssets > 0 ? totalAssets : 1;
+    return {
+      equityWeight: assets.equity / total,
+      debtWeight: assets.debt / total,
+      otherWeight: otherAssets / total,
+    };
+  }, [assets, totalAssets]);
+
+  const setV = (k) => (v) => setVol((s) => ({ ...s, [k]: v }));
+
+  const runSimulation = () => {
+    setRunning(true);
+    setTimeout(() => {
+      const r = runMonteCarloSimulation({
+        currentAge: profile.currentAge, retirementAge: profile.retirementAge, lifeExpectancy: profile.lifeExpectancy,
+        totalAssets, monthlySavings: profile.existingMonthlySavings,
+        monthlyExpenseAtRetirement: retirementCalc.expenseAtRetirement / 12, postRetInflation: profile.postRetInflation,
+        lifestylePct: profile.lifestylePct,
+        equityWeight: weights.equityWeight, debtWeight: weights.debtWeight, otherWeight: weights.otherWeight,
+        equityMean: profile.equityReturn, equityStdDev: vol.equityStdDev,
+        debtMean: profile.debtReturn, debtStdDev: vol.debtStdDev,
+        otherMean: 8, otherStdDev: vol.otherStdDev,
+        simulations: 500,
+      });
+      setResult(r);
+      setRunning(false);
+    }, 30);
+  };
+
+  const successTone = !result ? "navy" : result.probabilityOfSuccess >= 80 ? "green" : result.probabilityOfSuccess >= 60 ? "gold" : "alert";
+  const successColor = !result ? "var(--navy)" : result.probabilityOfSuccess >= 80 ? "var(--green)" : result.probabilityOfSuccess >= 60 ? "var(--gold)" : "var(--alert)";
+
+  return (
+    <div className="tab-body">
+      <h1 className="tab-title">Monte Carlo Simulation</h1>
+      <p className="tab-sub">
+        Every other tab assumes one fixed return, every year, forever. Markets don't work that way. This runs 500 randomized
+        market scenarios and reports what fraction of them actually get the client through retirement.
+      </p>
+
+      <section className="panel">
+        <h3 className="panel-title"><Activity size={16} /> Volatility Assumptions</h3>
+        <p className="panel-note" style={{ marginTop: -4, marginBottom: 14 }}>
+          Return assumptions come from the Client &amp; Assets tab. These are the year-to-year swings around that average &mdash;
+          standard deviation, in the same units as the return. Defaults reflect typical long-run Indian market volatility.
+        </p>
+        <div className="grid-3">
+          <Field label="Equity Volatility" value={vol.equityStdDev} onChange={setV("equityStdDev")} suffix="%" step={1} />
+          <Field label="Debt Volatility" value={vol.debtStdDev} onChange={setV("debtStdDev")} suffix="%" step={0.5} />
+          <Field label="Gold/Real Estate/Cash Volatility" value={vol.otherStdDev} onChange={setV("otherStdDev")} suffix="%" step={1} />
+        </div>
+        <div className="mc-weights-row">
+          <span>Current portfolio mix used: </span>
+          <strong>{(weights.equityWeight * 100).toFixed(0)}% Equity</strong> &middot;
+          <strong> {(weights.debtWeight * 100).toFixed(0)}% Debt</strong> &middot;
+          <strong> {(weights.otherWeight * 100).toFixed(0)}% Gold/RE/Cash</strong>
+        </div>
+        <button className="btn-add" onClick={runSimulation} disabled={running} style={{ marginTop: 14 }}>
+          <Activity size={16} /> {running ? "Running 500 trials…" : result ? "Re-run Simulation" : "Run Simulation (500 trials)"}
+        </button>
+      </section>
+
+      {result && (
+        <>
+          <div className="mc-result-banner" style={{ borderColor: successColor }}>
+            <div className="mc-result-label">PROBABILITY OF PLAN SUCCESS</div>
+            <div className="mc-result-value" style={{ color: successColor }}>{result.probabilityOfSuccess.toFixed(0)}%</div>
+            <div className="mc-result-sub">
+              of 500 simulated market scenarios, the corpus lasted through age {profile.lifeExpectancy} without running out
+            </div>
+          </div>
+
+          <div className="grid-3" style={{ marginTop: 16 }}>
+            <StatCard label="Simulations Run" value={result.simulations} tone="navy" />
+            <StatCard label="Median Outcome at Life Expectancy" value={formatINR(result.percentileBands[result.percentileBands.length - 1].p50)} tone="gold" />
+            <StatCard label="Worst 10% of Scenarios" value={formatINR(result.percentileBands[result.percentileBands.length - 1].p10)} tone="alert" />
+          </div>
+
+          <section className="panel" style={{ marginTop: 18 }}>
+            <h3 className="panel-title"><TrendingUp size={16} /> Range of Outcomes ("Cone of Uncertainty")</h3>
+            <FanChartSVG data={result.percentileBands} retirementAge={profile.retirementAge} />
+            <div className="legend-row">
+              <span><i className="dot" style={{ background: "var(--navy)" }} /> Retirement age</span>
+              <span><i className="dot" style={{ background: "var(--orange)" }} /> Shaded band = middle 80% of outcomes, line = median</span>
+            </div>
+            <p className="panel-note">
+              The shaded band shows where the corpus landed in 80% of simulated scenarios (10th to 90th percentile) at each age;
+              the solid line is the median (typical) outcome. A wide band means the plan is sensitive to market timing.
+            </p>
+          </section>
+
+          <div className={`inline-note ${successTone === "green" ? "note-ok" : successTone === "gold" ? "note-longevity" : "note-warn"}`} style={{ marginTop: 16 }}>
+            {successTone === "green" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+            {result.probabilityOfSuccess >= 80
+              ? "This is generally considered a high-confidence plan. Most advisors treat 80%+ as comfortable, though it's not a guarantee."
+              : result.probabilityOfSuccess >= 60
+              ? "This plan has meaningful market risk. Consider increasing savings, working longer, or reducing planned retirement expenses."
+              : "This plan fails in a large share of simulated scenarios. The gap needs to be addressed — see the Retirement tab for options."}
+          </div>
+        </>
+      )}
+
+      <p className="panel-note" style={{ marginTop: 18 }}>
+        <strong>An honest caveat:</strong> "Probability of success" is a widely used but widely misunderstood number. It does not mean
+        an 80% score gives an 80% chance of a comfortable retirement and a 20% chance of poverty &mdash; most "failures" in these models
+        mean the plan needed a small mid-course correction (spend a little less, work a little longer), not financial ruin. Treat this
+        as a stress-test signal, not a verdict, and re-run it whenever the client's numbers change materially.
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
    TAB: ACTION PLAN
 ---------------------------------------------------------------- */
 
@@ -3318,6 +3563,14 @@ const CSS = `
 .tax-regime-card { position: relative; transition: border-color 0.15s; }
 .tax-regime-winner { border: 2px solid var(--green); }
 .tax-winner-badge { font-size: 9.5px; font-weight: 700; background: var(--green); color: #fff; padding: 3px 9px; border-radius: 10px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.03em; }
+
+/* Monte Carlo */
+.mc-weights-row { margin-top: 12px; padding: 10px 14px; background: var(--cream); border-radius: 8px; font-size: 12.5px; color: var(--text-muted); }
+.mc-weights-row strong { color: var(--navy-deep); }
+.mc-result-banner { text-align: center; background: #fff; border: 3px solid var(--navy); border-radius: 14px; padding: 24px; margin-top: 18px; }
+.mc-result-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted); }
+.mc-result-value { font-family: var(--font-display); font-size: 48px; font-weight: 800; margin: 8px 0; }
+.mc-result-sub { font-size: 12.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
 .btn-add { margin-top: 14px; display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--grid-line); background: transparent; color: var(--navy); font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
 .btn-add:hover { border-color: var(--orange); color: var(--orange); }
