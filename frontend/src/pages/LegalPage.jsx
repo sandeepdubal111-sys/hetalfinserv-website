@@ -20,6 +20,7 @@ const SECTIONS = [
     body: [
       "Under SEBI and AMFI guidelines, all Mutual Fund Distributors are required to disclose their commission earnings to clients. Hetal Finserv Pvt. Ltd. makes this disclosure at the time of every investment recommendation.",
       "We are also licensed as a MahaRERA Real Estate Consultant (A52100043460), an IRDAI-registered Insurance Broker (Reg. 00115138383), and hold a PMS Distribution registration (APRN00234). Where applicable, commissions received from insurance and PMS partners are disclosed in the respective proposal documents.",
+      "We hold direct distribution empanelment for Alternative Investment Funds (AIF) and Specialized Investment Funds (SIF). Bonds, NCDs, Sovereign Gold Bonds and the National Pension System (NPS) are offered through our empanelled National Distributor partners. As with all our offerings, applicable commissions and fees are disclosed to clients at the time of investment.",
       "Our team members hold the following certifications: Certified Financial Goal Planner (CFGP — NISM & PGP Academy), Investment Foundations® Certificate — CFA Institute, Practising Goal Planner (Advanced) — HSBC & PGP Academy, and Professional Certificate in Global Wealth Management — The Wealth Company.",
     ],
   },
