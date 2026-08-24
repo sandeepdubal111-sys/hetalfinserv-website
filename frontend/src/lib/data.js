@@ -227,7 +227,6 @@ export const STATS = [
   { value: "20+", label: "Years of experience" },
   { value: "5+", label: "Service verticals" },
   { value: "5", label: "Regulatory registrations" },
-  { value: "4.9", label: "Client rating · 200+ reviews" },
 ];
 
 // AMC partners — with brand domain for logo lookup via public logo service (Clearbit)
