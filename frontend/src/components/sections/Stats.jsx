@@ -61,7 +61,7 @@ export default function Stats() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 border-t border-hair">
+        <div className="grid grid-cols-1 sm:grid-cols-3 border-t border-hair">
           {STATS.map((s, i) => {
             const { prefix, target, suffix } = parseStat(s.value);
             return (
@@ -71,7 +71,7 @@ export default function Stats() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-10%" }}
                 transition={{ duration: 0.8, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className={`py-10 md:py-16 pr-4 ${i > 0 ? "md:border-l md:border-hair" : ""} ${i % 2 === 1 ? "border-l border-hair md:border-l" : ""}`}
+                className={`py-10 md:py-16 pr-4 ${i > 0 ? "border-t sm:border-t-0 sm:border-l border-hair" : ""}`}
                 data-testid={`stat-${i}`}
               >
                 <div
