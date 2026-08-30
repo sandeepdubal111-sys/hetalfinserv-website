@@ -267,7 +267,7 @@ export const LEADERSHIP = [
     linkedin: "https://in.linkedin.com/in/sandeep-dubal-44a29547",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
-    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with 20+ years in senior leadership roles at Kotak Mahindra Group, Max Financial Services, Bharti AXA Life Insurance, Exide Life Insurance and HDFC Financial Services, he is personally involved with every client relationship — from first conversation to every quarterly review that follows. A meaningful part of his practice today is guiding Non-Resident Indians through Indian markets — from NRI-specific KYC and FATCA/CRS compliance to building SIP, SWP and portfolio strategies that work across tax jurisdictions and time zones.",
+    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with 20+ years in senior leadership across India's leading financial services firms, he is personally involved in every client relationship — with a particular focus on guiding NRIs through Indian markets, from FATCA/CRS compliance to cross-border SIP and portfolio strategy.",
     certifications: [
       "Certified Financial Goal Planner — CFGP (NISM & PGP Academy)",
       "Investment Foundations® Certificate — CFA Institute",
