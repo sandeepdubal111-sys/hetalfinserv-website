@@ -288,6 +288,46 @@ export default function Leadership({ inline = false }) {
                       </li>
                     ))}
                   </ul>
+
+              {/* Career History — only renders for leaders with real, documented prior roles */}
+              {leader.career?.length > 0 && (
+                <div className="mt-14">
+                  <p className="font-mono-label mb-6" style={{ color: "var(--hf-gold-soft)" }}>
+                    — Career History
+                  </p>
+                  <ul className="space-y-0" data-testid={`career-${leader.id}`}>
+                    {leader.career.map((r) => (
+                      <li
+                        key={`${r.period}-${r.company}`}
+                        className="grid grid-cols-12 gap-4 py-4"
+                        style={{ borderTop: "1px solid rgba(253,249,238,0.18)" }}
+                      >
+                        <span
+                          className="col-span-12 md:col-span-3 font-mono-label"
+                          style={{ color: "var(--hf-gold)", fontSize: "0.68rem" }}
+                        >
+                          {r.period}
+                        </span>
+                        <span
+                          className="col-span-12 md:col-span-9"
+                          style={{ color: "var(--hf-on-dark-primary)" }}
+                        >
+                          {r.role}
+                          <span style={{ color: "rgba(253,249,238,0.6)" }}> — {r.company}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {leader.education && (
+                    <p
+                      className="mt-6 font-mono-label"
+                      style={{ color: "rgba(253,249,238,0.6)", fontSize: "0.68rem" }}
+                    >
+                      Education: {leader.education}
+                    </p>
+                  )}
+                </div>
+              )}
                 </div>
               )}
 

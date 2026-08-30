@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 export default function EditorialMarquee({
-  words = ["Independent", "Fiduciary-minded", "Boutique", "Multi-decade", "Family-first", "Discreet"],
+  words = ["Disciplined", "Transparent", "Boutique", "Multi-decade", "Family-first", "Discreet"],
   variant = "light", // "light" | "dark"
   speed = 60,
 }) {
