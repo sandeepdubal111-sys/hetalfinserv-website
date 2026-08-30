@@ -267,7 +267,7 @@ export const LEADERSHIP = [
     linkedin: "https://in.linkedin.com/in/sandeep-dubal-44a29547",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
-    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with two decades of experience across mutual funds, PMS, insurance, loans and real estate, he is personally involved with every client relationship — from first conversation to every quarterly review that follows.",
+    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with 20+ years in senior leadership roles at Kotak Mahindra Group, Max Financial Services, Bharti AXA Life Insurance, Exide Life Insurance and HDFC Financial Services, he is personally involved with every client relationship — from first conversation to every quarterly review that follows. A meaningful part of his practice today is guiding Non-Resident Indians through Indian markets — from NRI-specific KYC and FATCA/CRS compliance to building SIP, SWP and portfolio strategies that work across tax jurisdictions and time zones.",
     certifications: [
       "Certified Financial Goal Planner — CFGP (NISM & PGP Academy)",
       "Investment Foundations® Certificate — CFA Institute",
@@ -278,10 +278,20 @@ export const LEADERSHIP = [
       "IRDAI Certified BQP · Insurance Broker",
       "AMFI Registered Mutual Fund Distributor (ARN-254254)",
     ],
+    education: "Master's degree, Physics — Fergusson College, Pune",
+    career: [
+      { period: "Jun 2022 – Present", role: "Founder & Director", company: "Hetal Finserv Private Limited" },
+      { period: "Jan 2022 – Jun 2022", role: "Deputy Vice President", company: "Kotak Mahindra Group" },
+      { period: "Sep 2018 – Jan 2022", role: "Senior AVP", company: "Max Financial Services Ltd" },
+      { period: "Sep 2015 – Aug 2018", role: "Chief Manager", company: "Bharti AXA Life Insurance" },
+      { period: "Oct 2014 – Jul 2015", role: "Branch Head", company: "Exide Life Insurance Co. Ltd." },
+      { period: "Sep 2012 – Oct 2014", role: "Associate Circle Head", company: "HDFC Financial Services Ltd" },
+      { period: "Jan 2008 – Sep 2012", role: "Sr. Agency Development Manager", company: "Max Financial Services Inc" },
+    ],
     achievements: [
       { year: "20+ yrs", title: "Financial services experience across India" },
       { year: "5 licenses", title: "AMFI · MahaRERA · IRDAI · PMS · Insurance Broker" },
-      { year: "200+", title: "Verified client reviews · 4.9★ average rating" },
+      { year: "NRI focus", title: "FATCA/CRS-compliant advisory for NRI clients worldwide" },
       { year: "48+", title: "Financial products & services under one roof" },
     ],
   },
