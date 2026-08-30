@@ -30,7 +30,7 @@ export default function HomePage() {
       <Stats />
       <Regulators />
       <EditorialMarquee
-        words={["Independent", "Fiduciary-minded", "Boutique", "Personal", "Transparent", "Certified"]}
+        words={["Disciplined", "Goal-based", "Boutique", "Personal", "Transparent", "Certified"]}
       />
       <AMCPartners />
       <Calculator />
