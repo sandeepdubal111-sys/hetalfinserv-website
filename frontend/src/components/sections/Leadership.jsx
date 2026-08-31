@@ -190,16 +190,20 @@ export default function Leadership({ inline = false }) {
               <p className="font-mono-label mt-3" style={{ color: "rgba(253,249,238,0.72)" }}>
                 {leader.years}
               </p>
-              <p
-                className="mt-8 max-w-2xl"
-                style={{
-                  fontSize: "1.1rem",
-                  lineHeight: 1.75,
-                  color: "var(--hf-on-dark-primary)",
-                }}
-              >
-                {leader.bio}
-              </p>
+              <div className="mt-8 max-w-2xl space-y-5">
+                {leader.bio.split("\n\n").map((para, i) => (
+                  <p
+                    key={i}
+                    style={{
+                      fontSize: "1.1rem",
+                      lineHeight: 1.75,
+                      color: "var(--hf-on-dark-primary)",
+                    }}
+                  >
+                    {para}
+                  </p>
+                ))}
+              </div>
 
               {leader.linkedin && (
                 <a
@@ -288,36 +292,21 @@ export default function Leadership({ inline = false }) {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
 
-              {/* Career History — only renders for leaders with real, documented prior roles */}
-              {leader.career?.length > 0 && (
+              {/* Career History — only renders for leaders with a documented prior-roles description */}
+              {leader.career && (
                 <div className="mt-14">
                   <p className="font-mono-label mb-6" style={{ color: "var(--hf-gold-soft)" }}>
                     — Career History
                   </p>
-                  <ul className="space-y-0" data-testid={`career-${leader.id}`}>
-                    {leader.career.map((r) => (
-                      <li
-                        key={`${r.period}-${r.company}`}
-                        className="grid grid-cols-12 gap-4 py-4"
-                        style={{ borderTop: "1px solid rgba(253,249,238,0.18)" }}
-                      >
-                        <span
-                          className="col-span-12 md:col-span-3 font-mono-label"
-                          style={{ color: "var(--hf-gold)", fontSize: "0.68rem" }}
-                        >
-                          {r.period}
-                        </span>
-                        <span
-                          className="col-span-12 md:col-span-9"
-                          style={{ color: "var(--hf-on-dark-primary)" }}
-                        >
-                          {r.role}
-                          <span style={{ color: "rgba(253,249,238,0.6)" }}> — {r.company}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <p
+                    data-testid={`career-${leader.id}`}
+                    style={{ fontSize: "1.05rem", lineHeight: 1.75, color: "var(--hf-on-dark-primary)" }}
+                  >
+                    {leader.career}
+                  </p>
                   {leader.education && (
                     <p
                       className="mt-6 font-mono-label"
@@ -326,8 +315,6 @@ export default function Leadership({ inline = false }) {
                       Education: {leader.education}
                     </p>
                   )}
-                </div>
-              )}
                 </div>
               )}
 
