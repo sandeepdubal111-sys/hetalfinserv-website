@@ -267,7 +267,7 @@ export const LEADERSHIP = [
     linkedin: "https://in.linkedin.com/in/sandeep-dubal-44a29547",
     portrait:
       "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/gbpfg0jc_5.png",
-    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with 20+ years in senior leadership across India's leading financial services firms, he is personally involved in every client relationship — with a particular focus on guiding NRIs through Indian markets, from FATCA/CRS compliance to cross-border SIP and portfolio strategy.",
+    bio: "Sandeep founded Hetal Finserv on a single conviction — that no two clients should have the same strategy. A Certified Financial Goal Planner with 20+ years of experience in financial services, he built his practice on plain-language advice, complete transparency on costs and commissions, and recommendations built around each client's actual goals — never the product with the highest payout. He works directly with individuals, families and business owners across Pune, and with Non-Resident Indians navigating Indian markets from abroad — from FATCA/CRS compliance to building SIP, SWP and portfolio strategies that work across tax jurisdictions and time zones.\n\nBefore founding Hetal Finserv, Sandeep spent two decades in senior leadership roles across some of India's most established financial services institutions, building deep expertise in wealth advisory, insurance distribution, and financial planning at scale. That corporate leadership background — combined with the independence of running his own practice — is what shapes how he works with clients today: institutional rigour, delivered personally.",
     certifications: [
       "Certified Financial Goal Planner — CFGP (NISM & PGP Academy)",
       "Investment Foundations® Certificate — CFA Institute",
@@ -279,15 +279,7 @@ export const LEADERSHIP = [
       "AMFI Registered Mutual Fund Distributor (ARN-254254)",
     ],
     education: "Master's degree, Physics — Fergusson College, Pune",
-    career: [
-      { period: "Jun 2022 – Present", role: "Founder & Director", company: "Hetal Finserv Private Limited" },
-      { period: "Jan 2022 – Jun 2022", role: "Deputy Vice President", company: "Kotak Mahindra Group" },
-      { period: "Sep 2018 – Jan 2022", role: "Senior AVP", company: "Max Financial Services Ltd" },
-      { period: "Sep 2015 – Aug 2018", role: "Chief Manager", company: "Bharti AXA Life Insurance" },
-      { period: "Oct 2014 – Jul 2015", role: "Branch Head", company: "Exide Life Insurance Co. Ltd." },
-      { period: "Sep 2012 – Oct 2014", role: "Associate Circle Head", company: "HDFC Financial Services Ltd" },
-      { period: "Jan 2008 – Sep 2012", role: "Sr. Agency Development Manager", company: "Max Financial Services Inc" },
-    ],
+    career: "Prior to founding Hetal Finserv, Sandeep held senior leadership positions as Deputy Vice President at Kotak Mahindra Group, Senior AVP at Max Financial Services, Chief Manager at Bharti AXA Life Insurance, Branch Head at Exide Life Insurance, and Associate Circle Head at HDFC Financial Services.",
     achievements: [
       { year: "20+ yrs", title: "Financial services experience across India" },
       { year: "5 licenses", title: "AMFI · MahaRERA · IRDAI · PMS · Insurance Broker" },
