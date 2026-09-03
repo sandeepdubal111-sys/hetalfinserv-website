@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { createLead } from "@/lib/api";
 import { SERVICES, SITE } from "@/lib/data";
-const EMPTY = { name: "", phone: "", email: "", service: "", message: "" };
+const EMPTY = { name: "", phone: "", email: "", service: "", message: "", consent: false };
 
 function buildWhatsAppUrl(lead) {
   const lines = [
@@ -249,10 +249,26 @@ export default function ContactForm({ compact = false }) {
                     data-testid="lead-input-message"
                   />
                 </div>
-                <div className="col-span-2 mt-10 flex flex-wrap items-center gap-4">
+                <div className="col-span-2 mt-8">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.consent || false}
+                      onChange={(e) => setForm((f) => ({ ...f, consent: e.target.checked }))}
+                      required
+                      className="mt-1 shrink-0"
+                      data-testid="lead-consent-checkbox"
+                    />
+                    <span className="text-on-dark-2 text-sm leading-relaxed">
+                      I consent to be contacted by Hetal Finserv regarding my enquiry. I understand
+                      this website provides education and facilitation, not investment or legal advice.
+                    </span>
+                  </label>
+                </div>
+                <div className="col-span-2 mt-6 flex flex-wrap items-center gap-4">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !form.consent}
                     className="hf-btn-coral disabled:opacity-60 disabled:cursor-not-allowed"
                     data-testid="lead-submit"
                   >
