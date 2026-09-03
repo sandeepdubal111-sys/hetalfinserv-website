@@ -370,6 +370,14 @@ export const FAQS = [
     a: "Contact us — zero investment required. We provide full product training, branded marketing materials and a real-time digital portal to track your referrals and commissions.",
   },
   {
+    q: "Do you provide investment advice?",
+    a: "No — Hetal Finserv is an AMFI-registered Mutual Fund Distributor, not a SEBI Registered Investment Adviser. We provide education-led product distribution and goal-based financial planning support, not formal investment advice. We're happy to explain this distinction further if it matters for your decision.",
+  },
+  {
+    q: "Do you offer Direct Plan mutual funds?",
+    a: "We deal in Regular Plans only, across all mutual fund schemes. Regular Plans include a trailing commission paid to us by the AMC, which we disclose transparently at the time of every investment. Direct Plans don't carry this commission but also don't include distributor support — happy to walk you through the trade-off either way.",
+  },
+  {
     q: "Where is Hetal Finserv located?",
     a: "Wadgaon Sheri, Pune — 411 014, Maharashtra. Call +91 87670 95307 or email info@hetalfinserv.com. Consultations are also available on video for clients across India.",
   },
