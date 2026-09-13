@@ -498,12 +498,20 @@ const GOAL_ICONS = {
 // Catalog of addable goal types: label doubles as the card's category "heading",
 // color drives the badge, and cost/inflation/rate/years are sensible starting defaults.
 const GOAL_TYPE_DEFS = {
-  education: { label: "Child's Education", color: "#0F2A4A", cost: 500000, inflation: 10, rate: 12, years: 10 },
-  wedding: { label: "Child's Marriage", color: "#B8902E", cost: 1000000, inflation: 5, rate: 12, years: 15 },
-  home: { label: "Home Purchase", color: "#2E7D5B", cost: 5000000, inflation: 6, rate: 12, years: 7 },
-  travel: { label: "Dream Vacation", color: "#3B6FA0", cost: 800000, inflation: 6, rate: 8, years: 3 },
-  vehicle: { label: "Vehicle Purchase", color: "#8A5A2E", cost: 1200000, inflation: 5, rate: 8, years: 4 },
-  other: { label: "Other Goal", color: "#6B7A8D", cost: 500000, inflation: 6, rate: 10, years: 5 },
+  education: { label: "Child's Education", color: "#0F2A4A", cost: 500000, inflation: 10, rate: 12, years: 10, priority: "need" },
+  wedding: { label: "Child's Marriage", color: "#B8902E", cost: 1000000, inflation: 5, rate: 12, years: 15, priority: "want" },
+  home: { label: "Home Purchase", color: "#2E7D5B", cost: 5000000, inflation: 6, rate: 12, years: 7, priority: "want" },
+  travel: { label: "Dream Vacation", color: "#3B6FA0", cost: 800000, inflation: 6, rate: 8, years: 3, priority: "wish" },
+  vehicle: { label: "Vehicle Purchase", color: "#8A5A2E", cost: 1200000, inflation: 5, rate: 8, years: 4, priority: "wish" },
+  other: { label: "Other Goal", color: "#6B7A8D", cost: 500000, inflation: 6, rate: 10, years: 5, priority: "want" },
+};
+
+// Standard CFP triage (popularized by MoneyGuidePro): rank order in which available savings
+// get allocated across goals when there isn't enough to fund everything at once.
+const PRIORITY_DEFS = {
+  need: { label: "Need", rank: 0, color: "#C1443C" },
+  want: { label: "Want", rank: 1, color: "#C9591D" },
+  wish: { label: "Wish", rank: 2, color: "#3B6FA0" },
 };
 
 /* ---------------------------------------------------------------
@@ -1006,7 +1014,7 @@ function WealthBlueprint() {
     const def = GOAL_TYPE_DEFS[type] || GOAL_TYPE_DEFS.other;
     setGoals((gs) => [
       ...gs,
-      { id: Date.now(), name: def.label, type, yearsFromNow: def.years, currentCost: def.cost, inflation: def.inflation, rate: def.rate },
+      { id: Date.now(), name: def.label, type, yearsFromNow: def.years, currentCost: def.cost, inflation: def.inflation, rate: def.rate, priority: def.priority },
     ]);
   };
 
@@ -1017,17 +1025,17 @@ function WealthBlueprint() {
       if (!c.name || isNaN(age)) return;
       const d = CHILD_GOAL_DEFAULTS;
       newGoals.push({
-        id: Date.now() + Math.random(), name: `${c.name}'s Graduation`, type: "education",
+        id: Date.now() + Math.random(), name: `${c.name}'s Graduation`, type: "education", priority: "need",
         yearsFromNow: Math.max(0, d.graduation.ageAt - age), currentCost: d.graduation.cost,
         inflation: d.graduation.inflation, rate: d.graduation.rate,
       });
       newGoals.push({
-        id: Date.now() + Math.random(), name: `${c.name}'s Post-Graduation`, type: "education",
+        id: Date.now() + Math.random(), name: `${c.name}'s Post-Graduation`, type: "education", priority: "need",
         yearsFromNow: Math.max(0, d.postGraduation.ageAt - age), currentCost: d.postGraduation.cost,
         inflation: d.postGraduation.inflation, rate: d.postGraduation.rate,
       });
       newGoals.push({
-        id: Date.now() + Math.random(), name: `${c.name}'s Wedding`, type: "wedding",
+        id: Date.now() + Math.random(), name: `${c.name}'s Wedding`, type: "wedding", priority: "want",
         yearsFromNow: Math.max(0, d.marriage.ageAt - age), currentCost: d.marriage.cost,
         inflation: d.marriage.inflation, rate: d.marriage.rate,
       });
@@ -1053,7 +1061,8 @@ function WealthBlueprint() {
       const infl = g.inflation != null ? g.inflation : profile.inflation;
       const futureCost = fvLumpsum(g.currentCost, infl, g.yearsFromNow);
       const sip = requiredSIP(futureCost, rate, g.yearsFromNow);
-      return { ...g, rate, inflation: infl, futureCost, sip };
+      const priority = g.priority || "want";
+      return { ...g, rate, inflation: infl, futureCost, sip, priority };
     });
   }, [goals, profile.inflation, profile.equityReturn, profile.debtReturn]);
 
@@ -1225,6 +1234,31 @@ function WealthBlueprint() {
     ? Math.min(100, (retirementCalc.projectedCorpus / retirementCalc.requiredCorpus) * 100)
     : 100;
 
+  // Needs/Wants/Wishes funding waterfall: allocates the client's actual available monthly
+  // savings across retirement (always treated as a Need) and every goal, in priority order,
+  // then within a priority tier, nearest-first -- so a client immediately sees not just "you're
+  // short," but exactly which specific commitments would go unfunded first if nothing changes.
+  const fundingWaterfall = useMemo(() => {
+    const items = [
+      { id: "__retirement", name: "Retirement", priority: "need", sip: retirementCalc.requiredSIPForGap, yearsFromNow: retirementCalc.yearsToRet, isRetirement: true },
+      ...goalCalcs.map((g) => ({ id: g.id, name: g.name, priority: g.priority || "want", sip: g.sip, yearsFromNow: g.yearsFromNow, isRetirement: false })),
+    ];
+    const rankOf = (p) => (PRIORITY_DEFS[p] ? PRIORITY_DEFS[p].rank : 1);
+    const sorted = [...items].sort((a, b) => rankOf(a.priority) - rankOf(b.priority) || a.yearsFromNow - b.yearsFromNow);
+    let remaining = profile.existingMonthlySavings;
+    const rows = sorted.map((it) => {
+      let funded, status;
+      if (remaining >= it.sip) { funded = it.sip; status = "full"; remaining -= it.sip; }
+      else if (remaining > 0) { funded = remaining; status = "partial"; remaining = 0; }
+      else { funded = 0; status = "none"; }
+      const pctFunded = it.sip > 0 ? (funded / it.sip) * 100 : 100;
+      return { ...it, funded, status, pctFunded };
+    });
+    const byPriority = { need: { total: 0, funded: 0 }, want: { total: 0, funded: 0 }, wish: { total: 0, funded: 0 } };
+    rows.forEach((r) => { byPriority[r.priority].total += r.sip; byPriority[r.priority].funded += r.funded; });
+    return { rows, byPriority, leftoverCapacity: Math.max(0, remaining) };
+  }, [goalCalcs, retirementCalc, profile.existingMonthlySavings]);
+
   /* ---------------- RENDER ---------------- */
 
   return (
@@ -1345,6 +1379,7 @@ function WealthBlueprint() {
             netWorthCalc={netWorthCalc}
             budgetCalc={budgetCalc}
             riskCalc={riskCalc}
+            fundingWaterfall={fundingWaterfall}
           />
         )}
       </main>
@@ -2230,7 +2265,21 @@ function GoalsTab({ goalCalcs, updateGoal, removeGoal, addGoal, totalGoalSIP, on
               <div className="goal-card-head">
                 <div className="goal-icon" style={{ color: typeDef.color }}><Icon size={18} /></div>
                 <div className="goal-card-head-main">
-                  <div className="goal-type-badge" style={{ background: typeDef.color }}>{typeDef.label.toUpperCase()}</div>
+                  <div className="goal-badge-row">
+                    <div className="goal-type-badge" style={{ background: typeDef.color }}>{typeDef.label.toUpperCase()}</div>
+                    <div className="priority-toggle">
+                      {Object.entries(PRIORITY_DEFS).map(([key, def]) => (
+                        <button
+                          key={key}
+                          className={`priority-btn ${g.priority === key ? "is-selected" : ""}`}
+                          style={g.priority === key ? { background: def.color, borderColor: def.color } : {}}
+                          onClick={() => updateGoal(g.id, { priority: key })}
+                        >
+                          {def.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <input
                     className="goal-name-input"
                     value={g.name}
@@ -3145,7 +3194,7 @@ function MonteCarloTab({ profile, assets, totalAssets, retirementCalc }) {
    TAB: ACTION PLAN
 ---------------------------------------------------------------- */
 
-function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoalSIP, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge, onSimulateGap, netWorthCalc, budgetCalc, riskCalc }) {
+function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoalSIP, totalMonthlyRequired, monthlyShortfall, retirementReadiness, depletedAge, onSimulateGap, netWorthCalc, budgetCalc, riskCalc, fundingWaterfall }) {
   const readinessColor = retirementReadiness >= 90 ? "var(--green)" : retirementReadiness >= 60 ? "var(--gold)" : "var(--alert)";
   return (
     <div className="tab-body">
@@ -3214,14 +3263,41 @@ function ActionTab({ profile, goalCalcs, retirementCalc, insuranceCalc, totalGoa
       </div>
 
       <section className="panel" style={{ marginTop: 20 }}>
-        <h3 className="panel-title"><Target size={16} /> Goal-by-Goal Funding Status</h3>
-        <GapBar label="Retirement" have={retirementCalc.projectedCorpus} need={retirementCalc.requiredCorpus} />
-        {goalCalcs.map((g) => (
-          <GapBar key={g.id} label={g.name} have={0} need={g.futureCost} />
-        ))}
-        <p className="panel-note">
-          Goal bars show funding assuming no dedicated investment has started for that goal yet. As SIPs are set up per goal, this updates in real time in front of the client.
+        <h3 className="panel-title"><Target size={16} /> Funding Waterfall &mdash; Needs, Wants &amp; Wishes</h3>
+        <p className="panel-note" style={{ marginTop: -6, marginBottom: 14 }}>
+          {formatINR(profile.existingMonthlySavings, false)}/month in current savings, allocated to retirement and every goal in priority
+          order &mdash; nearest-first within each tier. This shows exactly what's funded, what's short, and what's next in line.
         </p>
+        <div className="waterfall-summary-row">
+          {Object.entries(PRIORITY_DEFS).map(([key, def]) => {
+            const b = fundingWaterfall.byPriority[key];
+            const pct = b.total > 0 ? Math.min(100, (b.funded / b.total) * 100) : 100;
+            return (
+              <div className="waterfall-summary-cell" key={key}>
+                <div className="waterfall-summary-label" style={{ color: def.color }}>{def.label}s</div>
+                <div className="waterfall-summary-pct">{pct.toFixed(0)}%</div>
+                <div className="waterfall-summary-sub">{formatINR(b.funded, false)} of {formatINR(b.total, false)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="waterfall-rows">
+          {fundingWaterfall.rows.map((r) => (
+            <div className="waterfall-row" key={r.id}>
+              <span className="waterfall-priority-tag" style={{ background: PRIORITY_DEFS[r.priority].color }}>{PRIORITY_DEFS[r.priority].label}</span>
+              <span className="waterfall-name">{r.name}</span>
+              <div className="waterfall-track"><div className={`waterfall-fill waterfall-fill-${r.status}`} style={{ width: `${r.pctFunded}%` }} /></div>
+              <span className={`waterfall-status waterfall-status-${r.status}`}>
+                {r.status === "full" ? "Fully funded" : r.status === "partial" ? `${r.pctFunded.toFixed(0)}% funded` : "Not funded"}
+              </span>
+            </div>
+          ))}
+        </div>
+        {fundingWaterfall.leftoverCapacity > 0 && (
+          <div className="inline-note note-ok" style={{ marginTop: 14 }}>
+            <CheckCircle2 size={14} /> {formatINR(fundingWaterfall.leftoverCapacity, false)}/month left over after everything above is funded.
+          </div>
+        )}
       </section>
 
       <section className="cta-banner">
@@ -3523,6 +3599,11 @@ const CSS = `
 .goal-card-head-main { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .goal-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--cream); display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: flex-start; }
 .goal-type-badge { display: inline-block; width: fit-content; color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 10px; }
+.goal-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.priority-toggle { display: flex; gap: 4px; }
+.priority-btn { border: 1.5px solid var(--grid-line); background: #fff; color: var(--text-muted); font-size: 9.5px; font-weight: 700; padding: 2px 9px; border-radius: 10px; cursor: pointer; letter-spacing: 0.03em; }
+.priority-btn:hover { border-color: var(--orange); color: var(--orange); }
+.priority-btn.is-selected { color: #fff; font-weight: 800; }
 .goal-name-input { border: none; background: transparent; font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--navy-deep); outline: none; width: 100%; }
 .goal-type-select { border: 1px solid var(--grid-line); border-radius: 6px; padding: 5px 8px; font-size: 12px; color: var(--text-muted); background: #fff; align-self: flex-start; }
 .icon-btn { border: none; background: transparent; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; align-self: flex-start; }
@@ -3586,6 +3667,25 @@ const CSS = `
 .gapbar-ok { color: var(--green); font-weight: 600; }
 .gapbar-track { height: 8px; background: var(--ring-track); border-radius: 6px; overflow: hidden; }
 .gapbar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--gold)); border-radius: 6px; }
+
+.waterfall-summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.waterfall-summary-cell { text-align: center; border: 1px solid var(--grid-line); border-radius: 10px; padding: 12px; background: #FBF9F4; }
+.waterfall-summary-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.waterfall-summary-pct { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--navy-deep); margin: 4px 0; }
+.waterfall-summary-sub { font-size: 10.5px; color: var(--text-muted); }
+.waterfall-rows { display: flex; flex-direction: column; gap: 10px; }
+.waterfall-row { display: flex; align-items: center; gap: 10px; }
+.waterfall-priority-tag { flex-shrink: 0; width: 44px; text-align: center; color: #fff; font-size: 9px; font-weight: 700; padding: 3px 0; border-radius: 6px; letter-spacing: 0.02em; }
+.waterfall-name { flex-shrink: 0; width: 160px; font-size: 12.5px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.waterfall-track { flex: 1; height: 10px; background: var(--ring-track); border-radius: 5px; overflow: hidden; }
+.waterfall-fill { height: 100%; border-radius: 5px; }
+.waterfall-fill-full { background: var(--green); }
+.waterfall-fill-partial { background: var(--gold); }
+.waterfall-fill-none { background: var(--alert); }
+.waterfall-status { flex-shrink: 0; width: 110px; text-align: right; font-size: 11.5px; font-weight: 600; }
+.waterfall-status-full { color: var(--green); }
+.waterfall-status-partial { color: #A8802E; }
+.waterfall-status-none { color: var(--alert); }
 
 .legend-row { display: flex; gap: 20px; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
 .legend-row span { display: flex; align-items: center; gap: 6px; }
