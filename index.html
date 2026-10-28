@@ -230,6 +230,7 @@ if (!window.storage) {
 }
 
 
+
 /* ---------------------------------------------------------------
    FINANCE ENGINE
    All formulas operate on annual % rates, converted to monthly
@@ -270,6 +271,72 @@ const goalReturnRate = (years, eq, debt) => {
   if (years >= 5) return eq;
   if (years >= 2) return (eq + debt) / 2;
   return debt;
+};
+
+// ---- Goal funding solvers (recurring investment with an optional limited pay term) ----
+// A limited-pay plan pays for `payYears`, then stops contributing and lets the corpus keep
+// compounding until the goal date `totalYears`.
+
+// Level SIP paid for payYears, then left to grow until totalYears: what monthly amount hits `fv`?
+const requiredSIPLimitedPay = (fv, annualPct, payYears, totalYears) => {
+  if (fv <= 0) return 0;
+  const growthAfterPay = Math.pow(1 + annualPct / 100, Math.max(totalYears - payYears, 0));
+  return requiredSIP(fv / growthAfterPay, annualPct, payYears);
+};
+
+// Step-up SIP (annual % or fixed-amount increase) paid for payYears, then left to grow.
+// Solves for the STARTING monthly amount via bisection (no closed form once step-ups are involved).
+const solveStepUpSIP = (targetFV, annualPct, payYears, totalYears, stepType, stepValue) => {
+  if (targetFV <= 0) return 0;
+  const r = monthlyRate(annualPct);
+  const payMonths = Math.round(payYears * 12);
+  const totalMonths = Math.round(totalYears * 12);
+  if (totalMonths <= 0 || payMonths <= 0) return targetFV;
+  let lo = 0, hi = targetFV; // starting SIP can never exceed the target itself
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    let pmt = mid, corpus = 0;
+    for (let m = 1; m <= totalMonths; m++) {
+      if (m <= payMonths) {
+        corpus = (corpus + pmt) * (1 + r);
+        if (m % 12 === 0) pmt = stepType === "percent" ? pmt * (1 + stepValue / 100) : pmt + stepValue;
+      } else {
+        corpus = corpus * (1 + r);
+      }
+    }
+    if (corpus > targetFV) hi = mid; else lo = mid;
+  }
+  return (lo + hi) / 2;
+};
+
+// Sum of every contribution made under a (possibly stepping-up) plan -- used to show what
+// the client actually pays out of pocket versus the goal value they receive.
+const totalContributed = (startPmt, payYears, mode, stepType, stepValue) => {
+  const payMonths = Math.round(payYears * 12);
+  if (mode !== "stepup") return startPmt * payMonths;
+  let pmt = startPmt, total = 0;
+  for (let m = 1; m <= payMonths; m++) {
+    total += pmt;
+    if (m % 12 === 0) pmt = stepType === "percent" ? pmt * (1 + stepValue / 100) : pmt + stepValue;
+  }
+  return total;
+};
+
+// What to print in a "SIP Required" column for a goal, given how it is being funded.
+const goalSipDisplay = (g) => {
+  if (g.fundingMode === "none") return "Lumpsum";
+  return formatINR(g.sip, false) + (g.fundingMode === "stepup" ? " (start)" : "");
+};
+
+// Short human-readable description of a goal's funding strategy ("" for a plain full-term SIP).
+const fundingNote = (g) => {
+  const parts = [];
+  if (g.fundingMode === "none") parts.push("Lumpsum-only funding");
+  else if (g.fundingMode === "stepup") parts.push(`Step-up SIP (${g.stepType === "percent" ? g.stepValue + "% yearly" : "+" + formatINR(g.stepValue, false) + " yearly"})`);
+  if (g.fundingMode !== "none" && g.effPayYears < g.yearsFromNow - 0.01) parts.push(`limited pay: ${Math.round(g.effPayYears * 10) / 10} yrs`);
+  if (g.todayLumpsum > 0) parts.push(`lumpsum today ${formatINR(g.todayLumpsum)}`);
+  if (g.futureLumpsum > 0) parts.push(`lumpsum ${formatINR(g.futureLumpsum)} in year ${g.futureLumpsumYear}`);
+  return parts.join(" + ");
 };
 
 const formatINR = (num, compact = true) => {
@@ -1060,9 +1127,38 @@ function WealthBlueprint() {
       const rate = g.rate != null ? g.rate : goalReturnRate(g.yearsFromNow, profile.equityReturn, profile.debtReturn);
       const infl = g.inflation != null ? g.inflation : profile.inflation;
       const futureCost = fvLumpsum(g.currentCost, infl, g.yearsFromNow);
-      const sip = requiredSIP(futureCost, rate, g.yearsFromNow);
       const priority = g.priority || "want";
-      return { ...g, rate, inflation: infl, futureCost, sip, priority };
+
+      const fundingMode = g.fundingMode || "sip"; // "sip" | "stepup" | "none" (lumpsum-only)
+      const todayLumpsum = g.todayLumpsum || 0;
+      const futureLumpsum = g.futureLumpsum || 0;
+      const futureLumpsumYear = g.futureLumpsumYear != null ? Math.min(g.futureLumpsumYear, g.yearsFromNow) : Math.round(g.yearsFromNow / 2);
+      const stepType = g.stepType || "percent";
+      const stepValue = g.stepValue != null ? g.stepValue : 10;
+      // Limited pay: stop contributing after payYears, let the corpus keep compounding to the goal date.
+      const effPayYears = g.limitedPay && g.payYears != null ? Math.min(g.payYears, g.yearsFromNow) : g.yearsFromNow;
+
+      const todayLumpsumFV = fvLumpsum(todayLumpsum, rate, g.yearsFromNow);
+      const futureLumpsumFV = futureLumpsum > 0 ? fvLumpsum(futureLumpsum, rate, Math.max(0, g.yearsFromNow - futureLumpsumYear)) : 0;
+      const lumpsumFV = todayLumpsumFV + futureLumpsumFV;
+      const remainingTarget = Math.max(0, futureCost - lumpsumFV);
+
+      let sip = 0;
+      if (fundingMode === "sip") sip = requiredSIPLimitedPay(remainingTarget, rate, effPayYears, g.yearsFromNow);
+      else if (fundingMode === "stepup") sip = solveStepUpSIP(remainingTarget, rate, effPayYears, g.yearsFromNow, stepType, stepValue);
+      // fundingMode === "none": sip stays 0, the goal is funded purely by lumpsum(s)
+
+      const totalPaid = todayLumpsum + futureLumpsum + (fundingMode !== "none" ? totalContributed(sip, effPayYears, fundingMode, stepType, stepValue) : 0);
+      const shortfall = fundingMode === "none" ? remainingTarget : 0;
+      const surplus = Math.max(0, lumpsumFV - futureCost);
+
+      const gCalc = {
+        ...g, rate, inflation: infl, futureCost, sip, priority,
+        fundingMode, todayLumpsum, futureLumpsum, futureLumpsumYear, stepType, stepValue,
+        limitedPay: !!g.limitedPay, effPayYears, lumpsumFV, remainingTarget, totalPaid, shortfall, surplus,
+      };
+      gCalc.strategyNote = fundingNote(gCalc);
+      return gCalc;
     });
   }, [goals, profile.inflation, profile.equityReturn, profile.debtReturn]);
 
@@ -1240,13 +1336,22 @@ function WealthBlueprint() {
   // short," but exactly which specific commitments would go unfunded first if nothing changes.
   const fundingWaterfall = useMemo(() => {
     const items = [
-      { id: "__retirement", name: "Retirement", priority: "need", sip: retirementCalc.requiredSIPForGap, yearsFromNow: retirementCalc.yearsToRet, isRetirement: true },
-      ...goalCalcs.map((g) => ({ id: g.id, name: g.name, priority: g.priority || "want", sip: g.sip, yearsFromNow: g.yearsFromNow, isRetirement: false })),
+      { id: "__retirement", name: "Retirement", priority: "need", sip: retirementCalc.requiredSIPForGap, yearsFromNow: retirementCalc.yearsToRet, isRetirement: true, lumpsumOnly: false },
+      ...goalCalcs.map((g) => ({
+        id: g.id, name: g.name, priority: g.priority || "want", sip: g.sip, yearsFromNow: g.yearsFromNow, isRetirement: false,
+        lumpsumOnly: g.fundingMode === "none", lumpsumCoverage: g.futureCost > 0 ? Math.min(100, (g.lumpsumFV / g.futureCost) * 100) : 100,
+      })),
     ];
     const rankOf = (p) => (PRIORITY_DEFS[p] ? PRIORITY_DEFS[p].rank : 1);
     const sorted = [...items].sort((a, b) => rankOf(a.priority) - rankOf(b.priority) || a.yearsFromNow - b.yearsFromNow);
     let remaining = profile.existingMonthlySavings;
     const rows = sorted.map((it) => {
+      // Lumpsum-only goals never draw on monthly savings; their status is purely how much of
+      // the goal the committed lumpsum(s) cover.
+      if (it.lumpsumOnly) {
+        const pct = it.lumpsumCoverage;
+        return { ...it, funded: 0, status: pct >= 99.99 ? "full" : pct > 0 ? "partial" : "none", pctFunded: pct };
+      }
       let funded, status;
       if (remaining >= it.sip) { funded = it.sip; status = "full"; remaining -= it.sip; }
       else if (remaining > 0) { funded = remaining; status = "partial"; remaining = 0; }
@@ -1745,7 +1850,7 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
                   <div className="pr-kv-row"><span>Education Inflation</span><strong>{cg.graduation.inflation}%</strong></div>
                   <div className="pr-kv-row"><span>Investment Return</span><strong>{cg.graduation.rate}%</strong></div>
                   <div className="pr-kv-row"><span>Expected Cost</span><strong>{formatINR(cg.graduation.futureCost)}</strong></div>
-                  <div className="pr-kv-row pr-kv-highlight"><span>SIP Required</span><strong>{formatINR(cg.graduation.sip, false)}</strong></div>
+                  <div className="pr-kv-row pr-kv-highlight"><span>{cg.graduation.fundingMode === "none" ? "Funded By" : cg.graduation.fundingMode === "stepup" ? "Starting SIP" : "SIP Required"}</span><strong>{goalSipDisplay(cg.graduation)}</strong></div>
                 </div>
               ))}
             </div>
@@ -1759,7 +1864,7 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
                   <div className="pr-kv-row"><span>Education Inflation</span><strong>{cg.postGraduation.inflation}%</strong></div>
                   <div className="pr-kv-row"><span>Investment Return</span><strong>{cg.postGraduation.rate}%</strong></div>
                   <div className="pr-kv-row"><span>Expected Cost</span><strong>{formatINR(cg.postGraduation.futureCost)}</strong></div>
-                  <div className="pr-kv-row pr-kv-highlight"><span>SIP Required</span><strong>{formatINR(cg.postGraduation.sip, false)}</strong></div>
+                  <div className="pr-kv-row pr-kv-highlight"><span>{cg.postGraduation.fundingMode === "none" ? "Funded By" : cg.postGraduation.fundingMode === "stepup" ? "Starting SIP" : "SIP Required"}</span><strong>{goalSipDisplay(cg.postGraduation)}</strong></div>
                 </div>
               ))}
             </div>
@@ -1803,7 +1908,7 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
                 <div className="pr-kv-row"><span>Inflation</span><strong>{cg.marriage.inflation}%</strong></div>
                 <div className="pr-kv-row"><span>Investment Return</span><strong>{cg.marriage.rate}%</strong></div>
                 <div className="pr-kv-row"><span>Expected Cost</span><strong>{formatINR(cg.marriage.futureCost)}</strong></div>
-                <div className="pr-kv-row pr-kv-highlight"><span>SIP Required</span><strong>{formatINR(cg.marriage.sip, false)}</strong></div>
+                <div className="pr-kv-row pr-kv-highlight"><span>{cg.marriage.fundingMode === "none" ? "Funded By" : cg.marriage.fundingMode === "stepup" ? "Starting SIP" : "SIP Required"}</span><strong>{goalSipDisplay(cg.marriage)}</strong></div>
               </div>
             ))}
           </div>
@@ -1860,14 +1965,14 @@ function PrintReport({ profile, assets, insurance, family, totalAssets, goalCalc
               return (
                 <React.Fragment key={cg.child.id}>
                   {rows.map((g) => (
-                    <tr key={g.id}><td>{g.name}</td><td>{formatINR(g.futureCost)}</td><td>{Math.round(g.yearsFromNow)}</td><td>{formatINR(g.sip, false)}</td></tr>
+                    <tr key={g.id}><td>{g.name}{g.strategyNote && <div className="pr-strategy-note">{g.strategyNote}</div>}</td><td>{formatINR(g.futureCost)}</td><td>{Math.round(g.yearsFromNow)}</td><td>{goalSipDisplay(g)}</td></tr>
                   ))}
                   <tr className="pr-total-row"><td colSpan={1}>{cg.child.name} Subtotal</td><td>{formatINR(subTarget)}</td><td></td><td>{formatINR(subSIP, false)}</td></tr>
                 </React.Fragment>
               );
             })}
             {otherGoals.map((g) => (
-              <tr key={g.id}><td>{g.name}</td><td>{formatINR(g.futureCost)}</td><td>{Math.round(g.yearsFromNow)}</td><td>{formatINR(g.sip, false)}</td></tr>
+              <tr key={g.id}><td>{g.name}{g.strategyNote && <div className="pr-strategy-note">{g.strategyNote}</div>}</td><td>{formatINR(g.futureCost)}</td><td>{Math.round(g.yearsFromNow)}</td><td>{goalSipDisplay(g)}</td></tr>
             ))}
             <tr className="pr-total-row pr-grand-total-row"><td>GRAND TOTAL</td><td>{formatINR(totalTargetValue)}</td><td></td><td>{formatINR(grandTotalSIP, false)}</td></tr>
           </tbody>
@@ -2208,9 +2313,17 @@ function NetWorthTab({ assets, liabilities, updateLiability, removeLiability, ad
    TAB: GOALS
 ---------------------------------------------------------------- */
 
+const FUNDING_MODE_DEFS = {
+  sip: { label: "Level SIP" },
+  stepup: { label: "Step-up SIP" },
+  none: { label: "Lumpsum Only" },
+};
+
 function GoalsTab({ goalCalcs, updateGoal, removeGoal, addGoal, totalGoalSIP, onOpenCalculator, family, generateFamilyGoals }) {
   const [genMsg, setGenMsg] = useState("");
   const [pickType, setPickType] = useState("");
+  const [expanded, setExpanded] = useState({});
+  const toggleExpanded = (id) => setExpanded((e) => ({ ...e, [id]: !e[id] }));
 
   const handleGenerate = () => {
     const count = generateFamilyGoals();
@@ -2312,26 +2425,128 @@ function GoalsTab({ goalCalcs, updateGoal, removeGoal, addGoal, totalGoalSIP, on
                 </div>
                 <ArrowRight size={16} className="goal-arrow" />
                 <div>
-                  <span>Monthly SIP Needed</span>
-                  <strong className="accent">{formatINR(g.sip, false)}</strong>
+                  <span>{g.fundingMode === "none" ? "Recurring Investment" : g.fundingMode === "stepup" ? "Starting Monthly SIP" : "Monthly SIP Needed"}</span>
+                  <strong className="accent">{g.fundingMode === "none" ? "–" : formatINR(g.sip, false)}</strong>
                 </div>
-                <button className="goal-test-btn" onClick={() => onOpenCalculator(g.id)}>
-                  <Calculator size={13} /> Test in Calculator
+                {g.strategyNote && <div className="goal-strategy-chip">{g.strategyNote}</div>}
+                <button className="goal-strategy-toggle" onClick={() => toggleExpanded(g.id)}>
+                  {expanded[g.id] ? "Hide" : "Funding Strategy"} {expanded[g.id] ? "▴" : "▾"}
                 </button>
+                {g.fundingMode === "sip" && !g.todayLumpsum && !g.futureLumpsum && !g.limitedPay && (
+                  <button className="goal-test-btn" onClick={() => onOpenCalculator(g.id)}>
+                    <Calculator size={13} /> Test in Calculator
+                  </button>
+                )}
               </div>
+
+              {expanded[g.id] && (
+                <div className="goal-strategy-panel">
+                  <div className="field-label" style={{ marginBottom: 8 }}>How will this goal be funded?</div>
+                  <div className="mode-tabs" style={{ marginBottom: 14 }}>
+                    {Object.entries(FUNDING_MODE_DEFS).map(([key, def]) => (
+                      <button
+                        key={key}
+                        className={`mode-tab ${g.fundingMode === key ? "is-active" : ""}`}
+                        onClick={() => updateGoal(g.id, { fundingMode: key })}
+                      >
+                        {def.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {g.fundingMode === "stepup" && (
+                    <div className="grid-2">
+                      <label className="field">
+                        <span className="field-label">Step-up Type</span>
+                        <div className="field-input-wrap">
+                          <select value={g.stepType} onChange={(e) => updateGoal(g.id, { stepType: e.target.value })} style={{ border: "none", background: "transparent", width: "100%", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+                            <option value="percent">Annual % Increase</option>
+                            <option value="amount">Fixed ₹ Increase</option>
+                          </select>
+                        </div>
+                      </label>
+                      <Field label={g.stepType === "percent" ? "Step-up % Every Year" : "Step-up Amount Every Year"} value={g.stepValue} onChange={(v) => updateGoal(g.id, { stepValue: v })} suffix={g.stepType === "percent" ? "%" : "₹"} step={g.stepType === "percent" ? 1 : 500} />
+                    </div>
+                  )}
+
+                  {g.fundingMode !== "none" && (
+                    <div className="goal-limitedpay-row">
+                      <label className="goal-checkbox-label">
+                        <input type="checkbox" checked={!!g.limitedPay} onChange={(e) => updateGoal(g.id, { limitedPay: e.target.checked, payYears: g.payYears ?? Math.max(1, Math.round(g.yearsFromNow / 2)) })} />
+                        Limited Pay Term (stop contributing early, let it keep growing)
+                      </label>
+                      {g.limitedPay && (
+                        <Field label="Pay For" value={g.payYears ?? Math.round(g.yearsFromNow / 2)} onChange={(v) => updateGoal(g.id, { payYears: v })} suffix="yrs" />
+                      )}
+                    </div>
+                  )}
+
+                  <div className="grid-2" style={{ marginTop: 10 }}>
+                    <Field label="Lumpsum Invested Today" value={g.todayLumpsum} onChange={(v) => updateGoal(g.id, { todayLumpsum: v })} suffix="₹" step={10000} />
+                    <div className="goal-lumpsum-future">
+                      <Field label="Future Lumpsum Amount" value={g.futureLumpsum} onChange={(v) => updateGoal(g.id, { futureLumpsum: v })} suffix="₹" step={10000} />
+                      {g.futureLumpsum > 0 && (
+                        <Field label="Arrives in Year" value={g.futureLumpsumYear} onChange={(v) => updateGoal(g.id, { futureLumpsumYear: v })} suffix="yrs" />
+                      )}
+                    </div>
+                  </div>
+
+                  {g.fundingMode === "none" && (
+                    <button
+                      className="btn-link"
+                      style={{ marginTop: 10 }}
+                      onClick={() => {
+                        const futureNeeded = Math.max(0, g.futureCost - (g.futureLumpsum > 0 ? fvLumpsum(g.futureLumpsum, g.rate, Math.max(0, g.yearsFromNow - g.futureLumpsumYear)) : 0));
+                        const needed = futureNeeded / Math.pow(1 + g.rate / 100, g.yearsFromNow);
+                        updateGoal(g.id, { todayLumpsum: Math.round(needed) });
+                      }}
+                    >
+                      <Calculator size={13} /> Auto-fill Lumpsum Needed Today
+                    </button>
+                  )}
+
+                  <div className="goal-strategy-results">
+                    <div><span>Covered by Lumpsum(s)</span><strong>{formatINR(g.lumpsumFV)}</strong></div>
+                    <div><span>Total You'll Pay In</span><strong>{formatINR(g.totalPaid)}</strong></div>
+                    {g.fundingMode === "none" && g.shortfall > 0 && (
+                      <div><span className="goal-shortfall-label">Shortfall</span><strong className="goal-shortfall-value">{formatINR(g.shortfall)}</strong></div>
+                    )}
+                    {g.surplus > 0 && (
+                      <div><span className="goal-surplus-label">Surplus</span><strong className="goal-surplus-value">{formatINR(g.surplus)}</strong></div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {goalCalcs.length > 0 && (
-        <div className="summary-strip">
-          <div>
-            <span>Total Monthly SIP for All Goals</span>
-            <strong>{formatINR(totalGoalSIP, false)}</strong>
-          </div>
-        </div>
-      )}
+      {goalCalcs.length > 0 && (() => {
+        const totalLumpsum = goalCalcs.reduce((s, g) => s + (g.todayLumpsum || 0) + (g.futureLumpsum || 0), 0);
+        const totalShortfall = goalCalcs.reduce((s, g) => s + (g.shortfall || 0), 0);
+        return (
+          <>
+            <div className="summary-strip" style={{ gap: 40 }}>
+              <div>
+                <span>Total Monthly SIP for All Goals</span>
+                <strong>{formatINR(totalGoalSIP, false)}</strong>
+              </div>
+              {totalLumpsum > 0 && (
+                <div>
+                  <span>Total One-Time Lumpsums Committed</span>
+                  <strong>{formatINR(totalLumpsum, false)}</strong>
+                </div>
+              )}
+            </div>
+            {totalShortfall > 0 && (
+              <div className="inline-note note-warn" style={{ marginTop: 12 }}>
+                <AlertTriangle size={14} /> {formatINR(totalShortfall)} of lumpsum-only goals is still unfunded &mdash; open each goal's Funding Strategy and use "Auto-fill Lumpsum Needed Today," or switch it to a SIP.
+              </div>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -3502,6 +3717,7 @@ const CSS = `
 .pr-data-table th { text-align: left; background: #C9591D; color: #fff; padding: 6px 8px; font-size: 9.5px; text-transform: uppercase; }
 .pr-data-table td { padding: 5px 8px; border-bottom: 1px solid #F0EBE0; font-family: var(--font-mono, monospace); }
 .pr-negative { color: #C1443C; font-weight: 700; }
+.pr-strategy-note { font-family: var(--font-body, 'Inter', sans-serif); font-size: 8.5px; font-weight: 400; color: #7A5A1E; margin-top: 2px; line-height: 1.4; }
 .pr-goals-table th { background: #0F2A4A; }
 .pr-total-row td { font-weight: 700; background: #F8F4EC; }
 .pr-grand-total-row td { background: #F0B429; color: #0F2A4A; font-size: 14.5px; font-weight: 900; padding: 11px 8px; letter-spacing: 0.02em; border-top: 2px solid #0F2A4A; border-bottom: 2px solid #0F2A4A; }
@@ -3726,6 +3942,23 @@ const CSS = `
 .invest-table td.accent-alert { color: var(--alert); font-weight: 600; }
 
 .goal-test-btn { margin-left: auto; display: flex; align-items: center; gap: 6px; border: 1px solid var(--grid-line); background: #fff; color: var(--navy); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+
+.goal-strategy-toggle { display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--navy); background: #fff; color: var(--navy); font-size: 11.5px; font-weight: 700; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+.goal-strategy-toggle:hover { background: var(--navy); color: #fff; }
+.goal-strategy-chip { font-size: 11px; font-weight: 600; color: #7A5A1E; background: #FBF3E4; border: 1px solid var(--gold); padding: 4px 10px; border-radius: 20px; max-width: 360px; line-height: 1.4; }
+.goal-strategy-panel { margin-top: 14px; padding: 16px; background: #FBF9F4; border: 1px solid var(--grid-line); border-radius: 10px; }
+.goal-limitedpay-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+.goal-checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-main); cursor: pointer; }
+.goal-lumpsum-future { display: flex; gap: 10px; }
+.goal-lumpsum-future .field { flex: 1; }
+.goal-strategy-results { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--grid-line); }
+.goal-strategy-results > div { display: flex; flex-direction: column; gap: 2px; }
+.goal-strategy-results span { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; }
+.goal-strategy-results strong { font-family: var(--font-mono); font-size: 14px; color: var(--navy-deep); }
+.goal-shortfall-label { color: var(--alert) !important; }
+.goal-shortfall-value { color: var(--alert) !important; }
+.goal-surplus-label { color: var(--green) !important; }
+.goal-surplus-value { color: var(--green) !important; }
 .goal-test-btn:hover { border-color: var(--orange); color: var(--orange); }
 
 .link-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
