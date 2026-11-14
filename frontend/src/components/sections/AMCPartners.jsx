@@ -42,7 +42,7 @@ export default function AMCPartners() {
       <div className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 mb-12 md:mb-16">
         <div className="grid grid-cols-12 gap-6 md:gap-10 items-end">
           <div className="col-span-12 md:col-span-6">
-            <p className="font-mono-label text-mute">— Our AMC partners</p>
+            <p className="font-mono-label text-mute">— Fund houses we distribute</p>
             <h2
               className="font-display text-obsidian mt-6"
               style={{ fontSize: "clamp(2rem, 4vw, 3.6rem)", lineHeight: 0.98 }}
@@ -53,7 +53,7 @@ export default function AMCPartners() {
           </div>
           <div className="col-span-12 md:col-span-6">
             <p className="text-obsidian max-w-lg leading-relaxed">
-              AMFI-Registered MFD (ARN-254254). {AMCS.length} leading Asset Management
+              AMFI-Registered MFD (ARN-254254). {AMCS.length} Asset Management
               Companies. Regular Plans only, with full commission disclosure.
             </p>
           </div>
@@ -114,6 +114,13 @@ export default function AMCPartners() {
           ))}
         </div>
       </div>
+
+      <p className="max-w-[1600px] mx-auto px-6 md:px-10 lg:px-14 mt-12 text-xs text-mute leading-relaxed">
+        Names and logos are trademarks of their respective owners, shown only to identify
+        the mutual fund houses whose schemes are available through Hetal Finserv as an
+        AMFI-registered distributor. They do not imply endorsement, sponsorship or any
+        exclusive relationship.
+      </p>
     </section>
   );
 }
