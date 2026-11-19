@@ -19,7 +19,7 @@ export default function HomePage() {
     <main data-testid="home-page">
       <SEO
         title="Mutual Funds, PMS, Insurance & Real Estate — Pune"
-        description="Hetal Finserv Pvt Ltd — One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate. AMFI-registered distributor, IRDAI-registered broker, MahaRERA-registered agent. Serving Pune and across India."
+        description="Hetal Finserv Pvt Ltd — One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate. AMFI-registered distributor, IRDAI Certified BQP, MahaRERA-registered agent. Serving Pune and across India."
         path="/"
       />
       <StructuredData />
