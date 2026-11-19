@@ -313,8 +313,9 @@ export default function Footer() {
             data-testid="irdai-disclosure"
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
-            Insurance is the subject matter of solicitation · IRDAI-registered Insurance
-            Broker · License No. 00115138383 · Certified BQP (Composite) — training valid
+            Insurance is the subject matter of solicitation · Insurance policies are
+            solicited through an IRDAI-registered Insurance Broker partner · Sandeep
+            Dubal · IRDAI Certified BQP (Composite) · BQP Reg. 00115138383 — training valid
             till 09-Apr-2029
           </p>
 
@@ -380,7 +381,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Hetal Finserv Pvt. Ltd. · All rights reserved
           </p>
           <p className="font-mono-label" style={{ color: "rgba(253,249,238,0.55)" }}>
-            AMFI · MahaRERA · IRDAI · PMS · Insurance Broker · Investments are subject to
+            AMFI · MahaRERA · IRDAI BQP · PMS · Investments are subject to
             market risk
           </p>
         </div>
