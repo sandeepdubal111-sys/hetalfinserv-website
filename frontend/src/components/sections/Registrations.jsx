@@ -16,7 +16,7 @@ export default function Registrations() {
           — Regulatory registrations & certifications
         </p>
         <p className="font-mono-label text-[color:rgba(244,239,230,0.55)]">
-          AMFI · MahaRERA · IRDAI · PMS · Insurance Broker
+          AMFI · MahaRERA · IRDAI BQP · PMS
         </p>
       </div>
 
