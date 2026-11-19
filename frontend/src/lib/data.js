@@ -37,7 +37,7 @@ export const REGISTRATIONS = [
   },
   {
     label: "IRDAI Certified BQP",
-    detail: "Insurance Broker Reg. 00115138383",
+    detail: "Sandeep Dubal · BQP Reg. 00115138383",
     tag: "IRDAI",
   },
   {
@@ -83,8 +83,8 @@ export const REGULATORS = [
     domain: "irdai.gov.in",
     brandColor: "#B8232F",
     verifyUrl:
-      "https://www.irdai.gov.in/con_intermediaries/List-of-Insurance-Brokers.aspx",
-    regNo: "Broker Reg. 00115138383 · Certified BQP",
+      "https://www.irdai.gov.in/",
+    regNo: "Sandeep Dubal · Certified BQP · Reg. 00115138383",
   },
   {
     key: "maharera",
@@ -153,7 +153,7 @@ export const SERVICES = [
     id: "insurance",
     number: "03",
     title: "Insurance Services",
-    tagline: "IRDAI Certified BQP — Life, Health, Motor, Home, Travel & Commercial.",
+    tagline: "Life, Health, Motor, Home, Travel & Commercial — guided by an IRDAI Certified BQP.",
     bullets: [
       "Life & term insurance",
       "Health & critical illness cover",
@@ -213,8 +213,8 @@ export const MANIFESTO = [
   {
     number: "02",
     kicker: "The Structure",
-    title: "One firm. Five regulatory registrations.",
-    body: "AMFI (ARN-254254). MahaRERA (A52100043460). IRDAI Certified BQP. PMS Distributor (APRN00234). Government-registered Pvt Ltd. Every conversation, every recommendation, and every rupee moved is backed by the correct license — and full disclosure of every commission we earn.",
+    title: "One firm. Four registrations and certifications.",
+    body: "AMFI (ARN-254254). MahaRERA (A52100043460). IRDAI Certified BQP (Sandeep Dubal). PMS Distributor (APRN00234). Government-registered Pvt Ltd. Every conversation, every recommendation, and every rupee moved is backed by the correct license — and full disclosure of every commission we earn.",
   },
   {
     number: "03",
@@ -227,7 +227,7 @@ export const MANIFESTO = [
 export const STATS = [
   { value: "20+", label: "Years of experience" },
   { value: "5+", label: "Service verticals" },
-  { value: "5", label: "Regulatory registrations" },
+  { value: "4", label: "Registrations & certifications" },
 ];
 
 // AMC partners — with brand domain for logo lookup via public logo service (Clearbit)
@@ -293,14 +293,14 @@ export const LEADERSHIP = [
       "Practising Goal Planner (Advanced) — HSBC & PGP Academy",
       "Professional Certificate in Global Wealth Management — The Wealth Company",
       "MahaRERA Real Estate Consultant",
-      "IRDAI Certified BQP · Insurance Broker",
+      "IRDAI Certified BQP · Reg. 00115138383",
       "AMFI Registered Mutual Fund Distributor (ARN-254254)",
     ],
     education: "Master's degree, Physics — Fergusson College, Pune",
     career: "Prior to founding Hetal Finserv, Sandeep held senior leadership positions as Deputy Vice President at Kotak Mahindra Group, Senior AVP at Max Financial Services, Chief Manager at Bharti AXA Life Insurance, Branch Head at Exide Life Insurance, and Associate Circle Head at HDFC Financial Services.",
     achievements: [
       { year: "20+ yrs", title: "Financial services experience across India" },
-      { year: "5 licenses", title: "AMFI · MahaRERA · IRDAI · PMS · Insurance Broker" },
+      { year: "4 registrations", title: "AMFI · MahaRERA · IRDAI Certified BQP · PMS" },
       { year: "NRI focus", title: "FATCA/CRS-compliant advisory for NRI clients worldwide" },
       { year: "48+", title: "Financial products & services under one roof" },
     ],
@@ -381,7 +381,7 @@ export const FAQS = [
   },
   {
     q: "What makes Hetal Finserv different from other advisors?",
-    a: "We are a truly one-stop shop with 5 separate regulatory certifications — AMFI, MahaRERA, IRDAI, PMS (APRN00234) and Insurance Broker. Our founders are personally involved with every client, ensuring personalised advice with complete transparency and 20+ years of experience.",
+    a: "We are a truly one-stop shop with 4 registrations and certifications — AMFI (ARN-254254), MahaRERA (A52100043460), PMS (APRN00234) and an IRDAI Certified BQP (Sandeep Dubal). Our founders are personally involved with every client, ensuring personalised advice with complete transparency and 20+ years of experience.",
   },
   {
     q: "How do I become a Channel Partner?",
