@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { createLead } from "@/lib/api";
+import { track } from "@/lib/tracking";
 import { SERVICES, SITE } from "@/lib/data";
 const EMPTY = { name: "", phone: "", email: "", service: "", message: "", consent: false };
 
@@ -55,6 +56,7 @@ export default function ContactForm({ compact = false }) {
     try {
       setLoading(true);
       await createLead({ ...form, source: "website-contact-form" });
+      track("Lead", { content_name: "website-contact-form" });
       setLastLead({ ...form });
       setDone(true);
       setForm(EMPTY);
@@ -143,6 +145,7 @@ export default function ContactForm({ compact = false }) {
                   {lastLead && (
                     <a
                       href={buildWhatsAppUrl(lastLead)}
+                      onClick={() => track("Contact", { content_name: "lead-success-whatsapp" })}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hf-btn-coral"

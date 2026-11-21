@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/data";
 import { motion } from "framer-motion";
+import { track } from "@/lib/tracking";
 
 export default function WhatsAppFloat() {
   const href = `https://wa.me/${SITE.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
@@ -30,6 +31,7 @@ export default function WhatsAppFloat() {
     <motion.a
       data-testid="whatsapp-float-cta"
       href={href}
+      onClick={() => track("Contact", { content_name: "whatsapp-float" })}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"

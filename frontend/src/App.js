@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Lenis from "lenis";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -6,6 +6,8 @@ import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import ConsentBanner from "@/components/ConsentBanner";
+import { trackPageView } from "@/lib/tracking";
 import GrainOverlay from "@/components/GrainOverlay";
 import IntroLoader from "@/components/IntroLoader";
 import HomePage from "@/pages/HomePage";
@@ -54,6 +56,12 @@ function ScrollToTopOnRoute() {
     if (hash) return; // let page hashes handle themselves
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname, hash]);
+  // Count each in-app page change (the first page view is sent when the Pixel starts).
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    trackPageView();
+  }, [pathname]);
   return null;
 }
 
@@ -82,6 +90,7 @@ function Shell() {
       {!isAdmin && <IntroLoader onDone={() => setIntroDone(true)} />}
       <ScrollToTopOnRoute />
       {!isAdmin && <GrainOverlay />}
+      {!isAdmin && <ConsentBanner />}
       {!isAdmin && <Navbar />}
       <Routes>
         <Route path="/" element={<HomePage />} />

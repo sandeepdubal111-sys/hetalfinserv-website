@@ -28,8 +28,9 @@ const SECTIONS = [
     id: "privacy",
     title: "Privacy Policy",
     body: [
-      "Hetal Finserv Pvt. Ltd. respects your privacy. Any personal information you share with us — your name, phone number, email, financial goals or investment history — is used solely to serve you better. We do not sell, rent or share your data with third parties for marketing purposes.",
+      "Hetal Finserv Pvt. Ltd. respects your privacy. Any personal information you share with us — your name, phone number, email, financial goals or investment history — is used solely to serve you better. We do not sell or rent your personal data.",
       "Personal data is stored on secure servers and is accessible only to authorised personnel of Hetal Finserv. Where required by law (SEBI, AMFI, IRDAI, income-tax authorities or law enforcement), we may be obligated to disclose specific information.",
+      "Cookies and the Meta Pixel: if you click Accept on our cookie notice, we use cookies and the Meta Pixel (provided by Meta Platforms) to understand how visitors use this website and to measure the performance of our advertising. This records actions such as pages viewed, a contact-form submission or a click on our WhatsApp button, and may be linked by Meta to your Facebook or Instagram account if you are signed in. We do not send the text you type into our forms to Meta. If you click Decline, no such cookies or Pixel are loaded. You can change your choice at any time by clearing this website's data in your browser, after which the notice will appear again.",
       "You may write to us at info@hetalfinserv.com at any time to review, update or delete your personal information. For questions regarding this policy, please contact us at +91 87670 95307.",
     ],
   },
