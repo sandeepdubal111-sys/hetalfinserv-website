@@ -155,7 +155,7 @@ export default function Footer() {
             </div>
           </div>
           <p className="mt-6 max-w-sm leading-relaxed" style={{ color: "var(--hf-on-dark-secondary)" }}>
-            Your one-stop financial partner for Mutual Funds, PMS, Insurance, Loans and
+            Your one-stop financial partner for Mutual Funds, PMS, Loans and
             Real Estate — serving families across India from Pune.
           </p>
 
@@ -313,10 +313,9 @@ export default function Footer() {
             data-testid="irdai-disclosure"
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
-            Insurance is the subject matter of solicitation · Insurance policies are
-            solicited through an IRDAI-registered Insurance Broker partner · Sandeep
-            Dubal · IRDAI Certified BQP (Composite) · BQP Reg. 00115138383 — training valid
-            till 09-Apr-2029
+            Sandeep Dubal holds an IRDAI Broker Qualified Person (BQP) certification,
+            Reg. No. 00115138383 (training valid till 09-Apr-2029) · Hetal Finserv Pvt.
+            Ltd. is not an insurance broker and does not sell insurance directly
           </p>
 
           <p
@@ -344,7 +343,6 @@ export default function Footer() {
               { label: "SEBI SCORES", href: "https://scores.sebi.gov.in" },
               { label: "SMART ODR", href: "https://smartodr.in" },
               { label: "AMFI", href: "https://www.amfiindia.com" },
-              { label: "IRDAI", href: "https://irdai.gov.in" },
               { label: "MahaRERA", href: "https://maharera.maharashtra.gov.in" },
               { label: "KYC (CVL KRA)", href: "https://www.cvlkra.com" },
             ].map((l, i, arr) => (
@@ -381,7 +379,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Hetal Finserv Pvt. Ltd. · All rights reserved
           </p>
           <p className="font-mono-label" style={{ color: "rgba(253,249,238,0.55)" }}>
-            AMFI · MahaRERA · IRDAI BQP · PMS · Investments are subject to
+            AMFI · MahaRERA · PMS · Investments are subject to
             market risk
           </p>
         </div>

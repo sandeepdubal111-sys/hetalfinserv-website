@@ -21,7 +21,7 @@ function genSession() {
 const OPENING = {
   role: "assistant",
   text:
-    "Hi! I'm the Hetal Finserv assistant. Ask me about SIPs, insurance, loans, taxes, our founders — anything. I'll also arrange a call with Sandeep if you'd like.",
+    "Hi! I'm the Hetal Finserv assistant. Ask me about SIPs, loans, taxes, our founders — anything. I'll also arrange a call with Sandeep if you'd like.",
 };
 
 export default function ChatWidget() {

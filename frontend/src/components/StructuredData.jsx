@@ -16,7 +16,7 @@ export default function StructuredData() {
     logo: "https://hetalfinserv.com/logo.png",
     image: "https://hetalfinserv.com/og-image.jpg",
     description:
-      "One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate. AMFI-registered Mutual Fund Distributor, IRDAI Certified BQP, MahaRERA-registered agent, serving Pune and across India.",
+      "One-stop financial partner for Mutual Funds, PMS, Loans and Real Estate. AMFI-registered Mutual Fund Distributor, MahaRERA-registered agent, serving Pune and across India.",
     telephone: "+91-87670-95307",
     email: "info@hetalfinserv.com",
     address: {

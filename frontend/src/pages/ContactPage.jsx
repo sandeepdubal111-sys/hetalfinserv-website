@@ -14,7 +14,7 @@ export default function ContactPage() {
     <main data-testid="contact-page" className="bg-ivory">
       <SEO
         title="Contact Us — Book a Free Consultation"
-        description="Get in touch with Hetal Finserv for a free financial consultation. Based in Wadgaon Sheri, Pune — serving clients across India for Mutual Funds, PMS, Insurance, Loans and Real Estate."
+        description="Get in touch with Hetal Finserv for a free financial consultation. Based in Wadgaon Sheri, Pune — serving clients across India for Mutual Funds, PMS, Loans and Real Estate."
         path="/contact"
       />
       <section className="pt-40 pb-20 md:pt-52 md:pb-24 border-b border-hair">

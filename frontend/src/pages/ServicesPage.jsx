@@ -25,8 +25,8 @@ export default function ServicesPage() {
   return (
     <main data-testid="services-page" className="bg-ivory">
       <SEO
-        title="Our Services — Mutual Funds, PMS, Insurance, Loans, Real Estate"
-        description="Explore Hetal Finserv's full range of financial services: Mutual Fund distribution, Portfolio Management Services, Insurance services, Loans, and Real Estate advisory — all under one roof in Pune."
+        title="Our Services — Mutual Funds, PMS, Loans, Real Estate"
+        description="Explore Hetal Finserv's full range of financial services: Mutual Fund distribution, Portfolio Management Services, Loans, and Real Estate advisory — all under one roof in Pune."
         path="/services"
       />
       {/* Page hero */}

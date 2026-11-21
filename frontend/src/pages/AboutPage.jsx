@@ -16,7 +16,7 @@ export default function AboutPage() {
     <main data-testid="about-page" className="bg-ivory">
       <SEO
         title="About Us — Sandeep & Tanuja Dubal"
-        description="Meet the team behind Hetal Finserv — AMFI and MahaRERA registered, an IRDAI Certified BQP, a SEBI-recognised PMS distribution empanelment, and 20+ years of experience helping Pune families make confident financial decisions."
+        description="Meet the team behind Hetal Finserv — AMFI and MahaRERA registered, a SEBI-recognised PMS distribution empanelment, and 20+ years of experience helping Pune families make confident financial decisions."
         path="/about"
       />
       {/* Hero */}
@@ -42,7 +42,7 @@ export default function AboutPage() {
             >
               Hetal Finserv Private Limited is a Pune-based financial services company,
               purpose-built to be your one-stop partner for wealth, protection, credit, and
-              real estate. Backed by AMFI and MahaRERA registrations, an IRDAI Certified BQP, and a
+              real estate. Backed by AMFI and MahaRERA registrations, and a
               SEBI-recognised Portfolio Management Services distribution empanelment, we help
               individuals, families and businesses make informed, confident decisions —
               with the discretion and rigour usually reserved for institutions.

@@ -6,7 +6,7 @@ export const SITE = {
   logo: "https://customer-assets-7cd3h4nn.emergentagent.net/job_hetal-trust/artifacts/22yu1f2i_HFPL_Profile_Picture.png",
   tagline: "It's Not Just a Strategy. It's Personal.",
   subTagline:
-    "One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and Real Estate.",
+    "One-stop financial partner for Mutual Funds, PMS, Loans and Real Estate.",
   phone: "+91 87670 95307",
   phoneAlt: "+91 94230 16559",
   phoneClean: "+918767095307",
@@ -34,11 +34,6 @@ export const REGISTRATIONS = [
     label: "MahaRERA Broker",
     detail: "A52100043460 · Maharashtra",
     tag: "MAHARERA",
-  },
-  {
-    label: "IRDAI Certified BQP",
-    detail: "Sandeep Dubal · BQP Reg. 00115138383",
-    tag: "IRDAI",
   },
   {
     label: "PMS Distributor",
@@ -75,16 +70,6 @@ export const REGULATORS = [
     brandColor: "#00437A",
     verifyUrl: "https://www.sebi.gov.in/",
     regNo: "SEBI-regulated distributor",
-  },
-  {
-    key: "irdai",
-    name: "IRDAI",
-    full: "Insurance Regulatory & Development Authority of India",
-    domain: "irdai.gov.in",
-    brandColor: "#B8232F",
-    verifyUrl:
-      "https://www.irdai.gov.in/",
-    regNo: "Sandeep Dubal · Certified BQP · Reg. 00115138383",
   },
   {
     key: "maharera",
@@ -150,21 +135,8 @@ export const SERVICES = [
     img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    id: "insurance",
-    number: "03",
-    title: "Insurance Services",
-    tagline: "Life, Health, Motor, Home, Travel & Commercial — guided by an IRDAI Certified BQP.",
-    bullets: [
-      "Life & term insurance",
-      "Health & critical illness cover",
-      "Motor, home, travel policies",
-      "Group, Marine/Cargo, Fire, Commercial",
-    ],
-    img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
     id: "loans",
-    number: "04",
+    number: "03",
     title: "Loan Services",
     tagline: "Home, Personal, Business, Education & Gold Loans via 25+ banks & NBFCs.",
     bullets: [
@@ -177,7 +149,7 @@ export const SERVICES = [
   },
   {
     id: "real-estate",
-    number: "05",
+    number: "04",
     title: "Real Estate",
     tagline: "MahaRERA Registered Broker — residential, commercial & luxury properties.",
     bullets: [
@@ -190,7 +162,7 @@ export const SERVICES = [
   },
   {
     id: "channel-partner",
-    number: "06",
+    number: "05",
     title: "Channel Partner",
     tagline: "Zero investment. Full support. Attractive commissions on referrals.",
     bullets: [
@@ -214,7 +186,7 @@ export const MANIFESTO = [
     number: "02",
     kicker: "The Structure",
     title: "One firm. Four registrations and certifications.",
-    body: "AMFI (ARN-254254). MahaRERA (A52100043460). IRDAI Certified BQP (Sandeep Dubal). PMS Distributor (APRN00234). Government-registered Pvt Ltd. Every conversation, every recommendation, and every rupee moved is backed by the correct license — and full disclosure of every commission we earn.",
+    body: "AMFI (ARN-254254). MahaRERA (A52100043460). PMS Distributor (APRN00234). Government-registered Pvt Ltd. Every conversation, every recommendation, and every rupee moved is backed by the correct license — and full disclosure of every commission we earn.",
   },
   {
     number: "03",
@@ -300,7 +272,7 @@ export const LEADERSHIP = [
     career: "Prior to founding Hetal Finserv, Sandeep held senior leadership positions as Deputy Vice President at Kotak Mahindra Group, Senior AVP at Max Financial Services, Chief Manager at Bharti AXA Life Insurance, Branch Head at Exide Life Insurance, and Associate Circle Head at HDFC Financial Services.",
     achievements: [
       { year: "20+ yrs", title: "Financial services experience across India" },
-      { year: "4 registrations", title: "AMFI · MahaRERA · IRDAI Certified BQP · PMS" },
+      { year: "3 registrations", title: "AMFI · MahaRERA · PMS" },
       { year: "NRI focus", title: "FATCA/CRS-compliant advisory for NRI clients worldwide" },
       { year: "48+", title: "Financial products & services under one roof" },
     ],
@@ -318,7 +290,6 @@ export const LEADERSHIP = [
       "Client Relationship Management",
       "Operations & Compliance Oversight",
       "AMFI Registered Mutual Fund Distributor",
-      "IRDAI Certified Insurance Consultant",
       "Certified in Financial Planning Practice",
     ],
     achievements: [
@@ -361,7 +332,7 @@ export const TESTIMONIALS = [
 export const FAQS = [
   {
     q: "Who are the founders of Hetal Finserv and what are their qualifications?",
-    a: "Hetal Finserv was founded by Sandeep Dubal and co-founded by Tanuja Dubal. Sandeep brings 20+ years of rich experience in financial services. He is a Certified Financial Goal Planner (CFGP — NISM & PGP Academy), holds the Investment Foundations® Certificate (CFA Institute), an Award in International Wealth Management (Moody's Analytics), Practising Goal Planner — Advanced Level (HSBC & PGP Academy), and a Professional Certificate in Global Wealth Management (The Wealth Company). He is also a MahaRERA Real Estate Consultant and IRDAI Certified BQP.",
+    a: "Hetal Finserv was founded by Sandeep Dubal and co-founded by Tanuja Dubal. Sandeep brings 20+ years of rich experience in financial services. He is a Certified Financial Goal Planner (CFGP — NISM & PGP Academy), holds the Investment Foundations® Certificate (CFA Institute), an Award in International Wealth Management (Moody's Analytics), Practising Goal Planner — Advanced Level (HSBC & PGP Academy), and a Professional Certificate in Global Wealth Management (The Wealth Company). He is also a MahaRERA Real Estate Consultant.",
   },
   {
     q: "Is Hetal Finserv AMFI registered?",
@@ -381,7 +352,7 @@ export const FAQS = [
   },
   {
     q: "What makes Hetal Finserv different from other advisors?",
-    a: "We are a truly one-stop shop with 4 registrations and certifications — AMFI (ARN-254254), MahaRERA (A52100043460), PMS (APRN00234) and an IRDAI Certified BQP (Sandeep Dubal). Our founders are personally involved with every client, ensuring personalised advice with complete transparency and 20+ years of experience.",
+    a: "We are a truly one-stop shop with 3 registrations — AMFI (ARN-254254), MahaRERA (A52100043460) and PMS (APRN00234). Our founders are personally involved with every client, ensuring personalised advice with complete transparency and 20+ years of experience.",
   },
   {
     q: "How do I become a Channel Partner?",

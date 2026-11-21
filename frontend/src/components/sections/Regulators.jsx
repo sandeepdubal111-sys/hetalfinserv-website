@@ -23,8 +23,8 @@ export default function Regulators() {
           </div>
           <div className="col-span-12 md:col-span-6">
             <p className="text-obsidian max-w-lg leading-relaxed">
-              Our registrations and certifications — AMFI, SEBI (PMS), MahaRERA, IRDAI
-              (BQP) and NISM. Every recommendation is backed by the correct license
+              Our registrations and certifications — AMFI, SEBI (PMS), MahaRERA
+              and NISM. Every recommendation is backed by the correct license
               and disclosed in full.
             </p>
           </div>

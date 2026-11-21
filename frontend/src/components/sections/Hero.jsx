@@ -108,7 +108,7 @@ export default function Hero() {
             transition={{ duration: 0.9, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 max-w-xl text-lg md:text-xl text-[color:var(--hf-ink)]/80 leading-relaxed"
           >
-            One-stop financial partner for Mutual Funds, PMS, Insurance, Loans and
+            One-stop financial partner for Mutual Funds, PMS, Loans and
             Real Estate. Founded by certified experts. Personally delivered — from Pune,
             across India.
           </motion.p>
