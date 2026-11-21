@@ -314,8 +314,7 @@ export default function Footer() {
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
             Sandeep Dubal holds an IRDAI Broker Qualified Person (BQP) certification,
-            Reg. No. 00115138383 (training valid till 09-Apr-2029) · Hetal Finserv Pvt.
-            Ltd. is not an insurance broker and does not sell insurance directly
+            Reg. No. 00115138383 (training valid till 09-Apr-2029)
           </p>
 
           <p
