@@ -344,7 +344,7 @@ export const FAQS = [
   },
   {
     q: "What is Hetal Finserv's PMS Distributor registration?",
-    a: "We are a registered PMS Distributor with APRN No. APRN00234, offering Portfolio Management Services to HNI investors through leading PMS providers in India.",
+    a: "We are an APMI Registered PMS Distributor (APRN No. APRN00234), offering Portfolio Management Services to HNI investors through leading PMS providers in India.",
   },
   {
     q: "Is Hetal Finserv RERA registered?",

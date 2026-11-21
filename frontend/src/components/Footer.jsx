@@ -322,7 +322,7 @@ export default function Footer() {
             data-testid="pms-disclosure"
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
-            SEBI-recognised PMS Distributor · APRN00234 · Valid 20-Feb-2024 to 19-Feb-2027
+            APMI Registered PMS Distributor · APRN00234 · Valid 20-Feb-2024 to 19-Feb-2027
           </p>
 
           <ul
