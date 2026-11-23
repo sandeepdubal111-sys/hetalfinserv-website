@@ -1,6 +1,7 @@
-// Meta Pixel loader. Nothing is loaded or sent until the visitor clicks "Accept".
+// Meta Pixel + Google Analytics 4 loader. Nothing is loaded or sent until the visitor clicks "Accept".
 // Choice is remembered in the browser (localStorage key "hf_consent": "granted" | "denied").
 export const PIXEL_ID = "1308288704255526";
+export const GA_ID = "G-KH56FTPTDL";
 const KEY = "hf_consent";
 
 export function getConsent() {
@@ -28,12 +29,29 @@ export function initPixel() {
   /* eslint-enable */
   window.fbq("init", PIXEL_ID);
   window.fbq("track", "PageView");
+  initGA();
 }
+
+// GA4: loaded only after consent. Route changes are picked up by GA4 enhanced measurement (history events).
+function initGA() {
+  if (window.gtag) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  const g = document.createElement("script");
+  g.async = true;
+  g.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  document.head.appendChild(g);
+  window.gtag("js", new Date());
+  window.gtag("config", GA_ID);
+}
+
+const GA_EVENT = { Lead: "generate_lead", Contact: "contact" };
 
 // Safe to call anywhere: does nothing unless the visitor accepted.
 export function track(eventName, params) {
   if (getConsent() !== "granted" || !window.fbq) return;
   window.fbq("track", eventName, params || {});
+  if (window.gtag) window.gtag("event", GA_EVENT[eventName] || eventName, params || {});
 }
 
 export function trackPageView() {
