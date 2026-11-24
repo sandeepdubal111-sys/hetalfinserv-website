@@ -42,6 +42,9 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 logger = logging.getLogger(__name__)
+# httpx logs full request URLs at INFO; the CRM worker URL contains a secret key, so keep it out of the logs.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 app = FastAPI(title="Hetal Finserv API")
 api_router = APIRouter(prefix="/api")
