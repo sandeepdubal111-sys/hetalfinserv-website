@@ -33,6 +33,9 @@ EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Hetal Finserv")
 EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_FROM_ADDRESS", "no-reply@hetalfinserv.com")
 EMAIL_FROM = f"{EMAIL_FROM_NAME} <{EMAIL_FROM_ADDRESS}>"
 LEAD_NOTIFY_TO = os.environ.get("LEAD_NOTIFY_TO", "info@hetalfinserv.com")
+# Full URL of the Cloudflare Worker route that adds the lead to Zoho CRM and sends the WhatsApp alert.
+# Includes the secret key, so it is set only as an environment variable on the host. Empty = feature off.
+LEAD_WORKER_URL = os.environ.get("LEAD_WORKER_URL", "")
 
 # Direct Google Gemini integration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -173,6 +176,24 @@ def _lead_email_html(lead: "Lead") -> str:
     """
 
 
+async def _push_lead_to_crm(lead: "Lead") -> None:
+    """Fire-and-forget: Zoho CRM lead + WhatsApp alert via the Cloudflare Worker. Never breaks the API."""
+    if not LEAD_WORKER_URL:
+        logger.info("LEAD_WORKER_URL not set — skipping CRM push")
+        return
+    try:
+        async with httpx.AsyncClient(timeout=15) as hc:
+            resp = await hc.post(LEAD_WORKER_URL, json={
+                "name": lead.name, "phone": lead.phone, "email": lead.email or "",
+                "service": lead.service or "", "message": lead.message or "",
+                "source": lead.source or "website",
+            })
+            resp.raise_for_status()
+            logger.info(f"Lead {lead.id} pushed to CRM worker")
+    except Exception as e:
+        logger.error(f"CRM push failed for {lead.id}: {type(e).__name__}")
+
+
 async def _notify_lead(lead: "Lead") -> None:
     """Fire-and-forget email to the admin inbox. Never blocks or breaks the API."""
     if not RESEND_API_KEY:
@@ -210,6 +231,7 @@ async def create_lead(payload: LeadCreate):
     await db.leads.insert_one(_serialize(lead.model_dump()))
     # Fire-and-forget notification — never fails the request
     asyncio.create_task(_notify_lead(lead))
+    asyncio.create_task(_push_lead_to_crm(lead))
     return lead
 
 
