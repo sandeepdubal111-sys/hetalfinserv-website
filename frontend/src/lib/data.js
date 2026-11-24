@@ -265,7 +265,6 @@ export const LEADERSHIP = [
       "Practising Goal Planner (Advanced) — HSBC & PGP Academy",
       "Professional Certificate in Global Wealth Management — The Wealth Company",
       "MahaRERA Real Estate Consultant",
-      "IRDAI Certified BQP · Reg. 00115138383",
       "AMFI Registered Mutual Fund Distributor (ARN-254254)",
     ],
     education: "Master's degree, Physics — Fergusson College, Pune",
