@@ -310,6 +310,15 @@ export default function Footer() {
 
           <p
             className="mt-4 font-mono-label"
+            data-testid="irdai-disclosure"
+            style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
+          >
+            Sandeep Dubal holds an IRDAI Broker Qualified Person (BQP) certification,
+            Reg. No. 00115138383 (training valid till 09-Apr-2029)
+          </p>
+
+          <p
+            className="mt-4 font-mono-label"
             data-testid="pms-disclosure"
             style={{ color: "rgba(253,249,238,0.65)", fontSize: "0.78rem" }}
           >
